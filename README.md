@@ -11,17 +11,40 @@ TODO: Add simple diagram that explains the architecture.
 
 ## How to Use
 
+### Prerequisites
+
+- npm
+
 ### Build
 
-TODO: Explain how the whole project can be build.
+Use `npm` to install dependencies:
+```console
+$ npm install
+```
+
+Build production version:
+```console
+$ npm run build
+```
 
 ### Test
 
-TODO: Explain how unit- or integreation tests can be executed.
+TODO: Explain how unit- or integration tests can be executed.
 
 ### Run
 
-TODO: Explain how to run the project (client, server etc.).
+Run developer version:
+```console
+$ npm run dev
+```
+
+Or start a built production version:
+```console
+$ npm run start
+```
+
+Then open the app in the browser at the link shown in your terminal.
+
 
 ## License
 
