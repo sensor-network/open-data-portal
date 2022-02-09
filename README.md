@@ -29,7 +29,17 @@ $ npm run build
 
 ### Test
 
-TODO: Explain how unit- or integration tests can be executed.
+Run all tests:
+````console
+$ npm run test
+````
+Tests can also be run in `watch`-mode while developing to have them re-run each compilation:
+````console
+$ npm run test:watch
+````
+
+***Note: This project currently does not have a significant test-base. This will be done in the future.***
+
 
 ### Run
 

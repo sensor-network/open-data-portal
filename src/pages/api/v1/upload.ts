@@ -16,7 +16,7 @@ const Request = z.object({
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
         conductivity_unit: z.string().optional(),
-    }).strict()
+    })
 }).strict();
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -30,8 +30,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         return;
     }
 
+    // TODO: Possibly check authorization?
+
     try {
         const requestInput = Request.parse(req.body);   // validate input
+
+        // TODO: Convert input to SI units
+        // TODO: Upload to database
 
         res.status(201)     // 201: created
             .json(requestInput);
@@ -39,7 +44,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     catch (e) {
         if (e instanceof ZodError) {
             console.log("Error parsing request json:\n", e.flatten())
-            res.status(400)
+            res.status(400)     // 400: bad request (syntax error)
                 .json(e.flatten());
         }
         else {
