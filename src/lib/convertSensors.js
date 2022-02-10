@@ -21,5 +21,8 @@ export default function (sensors) {
         // converted.conductivity = convertConductivity(sensors.conductivity, unit);
     }
 
+    // Push back items that dont need to be converted.
+    converted.ph_level = sensors.ph_level;
+
     return converted;
 }
