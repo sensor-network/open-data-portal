@@ -37,22 +37,38 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     // TODO: Possibly check authorization?
 
     try {
-        const requestInput = Request.parse(req.body);   // validate input
+        if (!(req.body instanceof Array)) {
+            console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
+            res.status(400)
+                .json({ error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`})
+        }
+        let measurements = [];
+        for (const measurement of req.body) {
+                const requestInput = Request.parse(measurement);
+                let responseObject = {
+                    timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
+                    latitude: requestInput.latitude,
+                    longitude: requestInput.longitude,
+                    sensors: convertSensors(requestInput.sensors)
+                }
+                measurements.push(responseObject);
+        }
+        //const requestInput = Request.parse(req.body);   // validate input
         
         // TODO: Convert input to SI units
-        let responseObject = {
+        /*let responseObject = {
             timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
             latitude: requestInput.latitude,
             longitude: requestInput.longitude,
             sensors: convertSensors(requestInput.sensors)
-        }
+        }*/
 
         // TODO: Upload to database
 
 
         // Successfully respond to caller 
         res.status(201)     // 201: created
-            .json(responseObject);
+            .json(measurements);
     }
     catch (e) {
         if (e instanceof ZodError) {
