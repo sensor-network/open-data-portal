@@ -1,6 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
 
+import convertTimestamp from "lib/convertTimestamp";
+import convertSensors from "lib/convertSensors";
+import { ConversionError } from "lib/CustomErrors";
+
 // Incoming requests must follow this schema
 const Request = z.object({
     timestamp: z.string()
@@ -34,18 +38,32 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
 
     try {
         const requestInput = Request.parse(req.body);   // validate input
-
+        
         // TODO: Convert input to SI units
+        let responseObject = {
+            timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
+            latitude: requestInput.latitude,
+            longitude: requestInput.longitude,
+            sensors: convertSensors(requestInput.sensors)
+        }
+
         // TODO: Upload to database
 
+
+        // Successfully respond to caller 
         res.status(201)     // 201: created
-            .json(requestInput);
+            .json(responseObject);
     }
     catch (e) {
         if (e instanceof ZodError) {
             console.log("Error parsing request json:\n", e.flatten())
             res.status(400)     // 400: bad request (syntax error)
                 .json(e.flatten());
+        }
+        else if (e instanceof ConversionError) {    // custom error-class to separate faulty input data
+            console.log("ERROR:", e.message)
+            res.status(400)     // 400: bad request
+                .json({error: e.message});
         }
         else {
             console.error(e);
