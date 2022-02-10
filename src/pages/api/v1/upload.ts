@@ -20,7 +20,7 @@ const Request = z.object({
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
         conductivity_unit: z.string().optional(),
-    })
+    }).strict()
 }).strict();
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -51,17 +51,20 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
                     longitude: requestInput.longitude,
                     sensors: convertSensors(requestInput.sensors)
                 }
+                console.log(responseObject.sensors)
+                if (Object.keys(responseObject.sensors).length === 0) {
+                    console.log("LEN = 0")
+                    throw new ZodError([{
+                        code: 'too_small',
+                        minimum: 1,
+                        inclusive: true,
+                        type: "array",
+                        path: ["sensors"],
+                        message: "Must contain at least one data-value. Did you specify only a unit?"
+                    }])
+                }
                 measurements.push(responseObject);
         }
-        //const requestInput = Request.parse(req.body);   // validate input
-        
-        // TODO: Convert input to SI units
-        /*let responseObject = {
-            timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
-            latitude: requestInput.latitude,
-            longitude: requestInput.longitude,
-            sensors: convertSensors(requestInput.sensors)
-        }*/
 
         // TODO: Upload to database
 

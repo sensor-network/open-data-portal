@@ -22,7 +22,8 @@ export default function (sensors) {
     }
 
     // Push back items that dont need to be converted.
-    converted.ph_level = sensors.ph_level;
+    if (sensors.ph_level)
+        converted.ph_level = sensors.ph_level;
 
     return converted;
 }
