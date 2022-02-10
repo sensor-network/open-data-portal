@@ -16,18 +16,19 @@
         "tags" : [ "Upload" ],
         "description" : "Uploads a new set of measurements to the database",
         "operationId" : "uploadMeasurements",
-        "consumes" : [ "application/json" ],
-        "parameters" : [ {
-          "in" : "body",
-          "name" : "data",
+        "requestBody" : {
           "description" : "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can provide multiple measurements at once simply by providing multiple `Measurements`-objects in the array. Note that all objects has to be a valid input for the request to be successful.",
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Measurement"
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/Measurement"
+                }
+              }
             }
           }
-        } ],
+        },
         "responses" : {
           "201" : {
             "description" : "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response.",
