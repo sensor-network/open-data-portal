@@ -27,5 +27,5 @@ export default function(value, fromUnit) {
     if (ret < 0)
         throw new ConversionError(`Provided temperature value '${value}' is below absolute zero.`);
 
-    return ret;
+    return Number(ret.toPrecision(7));
 }
