@@ -1,0 +1,210 @@
+{
+  "openapi" : "3.0.0",
+  "servers" : [ {
+    "description" : "Open Data Portal",
+    "url" : "http://localhost:3000/api/v1"
+  } ],
+  "info" : {
+    "version" : "0.2",
+    "title" : "Sensor Network - Open Data Portal API",
+    "description" : "The API for fetching data about the Karlskrona Archipelago's water quality"
+  },
+  "paths" : {
+    "/upload" : {
+      "post" : {
+        "summary" : "Uploads a new set of measurements to the database",
+        "tags" : [ "Upload" ],
+        "description" : "Uploads a new set of measurements to the database",
+        "operationId" : "uploadMeasurements",
+        "requestBody" : {
+          "description" : "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can provide multiple measurements at once simply by providing multiple `Measurements`-objects in the array. Note that all objects has to be a valid input for the request to be successful.",
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "items" : {
+                  "$ref" : "#/components/schemas/Measurement"
+                }
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UploadResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The provided JSON-body could not be parsed correctly. Response JSON contains information what could not be parsed, either the entire form (speciffied in field `formErrors`) or a specific field (specified in `fieldErrors`).",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "properties" : {
+                    "formErrors" : {
+                      "type" : "array",
+                      "items" : {
+                        "type" : "string",
+                        "example" : "Expected array, received object"
+                      }
+                    },
+                    "fieldErrors" : {
+                      "type" : "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405" : {
+            "description" : "Method not allowed. The endpoint only accepts POST-requests.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "properties" : {
+                    "error" : {
+                      "type" : "string",
+                      "example" : "Method GET is not allowed for this endpoint."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "properties" : {
+                    "error" : {
+                      "type" : "string",
+                      "example" : "Error uploading data"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Measurement" : {
+        "type" : "object",
+        "required" : [ "timestamp", "UTC_offset", "latitude", "longitude", "sensors" ],
+        "properties" : {
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2022-02-03:04:05:06"
+          },
+          "UTC_offset" : {
+            "type" : "number",
+            "format" : "integer",
+            "example" : 2
+          },
+          "latitude" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 56.16082
+          },
+          "longitude" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 15.58671
+          },
+          "sensors" : {
+            "$ref" : "#/components/schemas/Sensors"
+          }
+        },
+        "description" : "The given contract to upload data to the database."
+      },
+      "Sensors" : {
+        "type" : "object",
+        "minProperties" : 1,
+        "properties" : {
+          "temperature" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 20.6
+          },
+          "temperature_unit" : {
+            "type" : "string",
+            "example" : "C"
+          },
+          "conductivity" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 4.8
+          },
+          "conductivity_unit" : {
+            "type" : "string",
+            "example" : "Spm"
+          },
+          "ph_level" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 7.1
+          }
+        },
+        "description" : "At least one of the value-properties should be supplied. Supplying only a unit will throw an error. Units defaults to their SI-representative if not specified."
+      },
+      "UploadResponse" : {
+        "type" : "object",
+        "required" : [ "timestamp", "latitude", "longitude", "sensors" ],
+        "properties" : {
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "example" : "2022-02-03T02:05:06.000"
+          },
+          "latitude" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 56.16082
+          },
+          "longitude" : {
+            "type" : "number",
+            "format" : "float",
+            "example" : 15.58671
+          },
+          "sensors" : {
+            "type" : "object",
+            "properties" : {
+              "temperature" : {
+                "type" : "number",
+                "format" : "float",
+                "example" : 293.75
+              },
+              "conductivity" : {
+                "type" : "number",
+                "format" : "float",
+                "example" : 4.8
+              },
+              "ph_level" : {
+                "type" : "number",
+                "format" : "float",
+                "example" : 7.1
+              }
+            }
+          }
+        },
+        "description" : "The response objects from the `upload` endpoint. All data is converted to SI units (timestamp is in UTC+0), which is how they are stored in the database."
+      }
+    }
+  }
+}
