@@ -58,4 +58,12 @@ Then open the app in the browser at the link shown in your terminal.
 
 ## License
 
-TODO: Add license and copyright notice.
+Copyright (c) 2022 FULL_NAME_1, FULL_NAME_2, FULL_NAME_3
+
+This work (source code) is licensed under [MIT](./LICENSE/MIT.txt).
+
+Files other than source code are licensed as follows:
+
+- Documentation and screenshots are licensed under [CC BY-SA 4.0](./LICENSES/CC-BY-SA-4.0.txt).
+
+See the [LICENSES](./LICENSES/) folder in the root of this project for license details.
