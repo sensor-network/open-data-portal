@@ -1,98 +1,92 @@
 {
-  "openapi" : "3.0.0",
-  "servers" : [ {
-    "description" : "Open Data Portal",
-    "url" : "http://localhost:3000/api/v1"
-  } ],
-  "info" : {
-    "version" : "0.2",
-    "title" : "Sensor Network - Open Data Portal API",
-    "description" : "The API for fetching data about the Karlskrona Archipelago's water quality"
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sensor Network - Open Data Portal API",
+    "description": "The API for fetching data about the Karlskrona Archipelago's water quality",
+    "version": "0.2"
   },
-  "paths" : {
-    "/upload" : {
-      "post" : {
-        "summary" : "Uploads a new set of measurements to the database",
-        "tags" : [ "Upload" ],
-        "description" : "Uploads a new set of measurements to the database",
-        "operationId" : "uploadMeasurements",
-        "requestBody" : {
-          "description" : "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can provide multiple measurements at once simply by providing multiple `Measurements`-objects in the array. Note that all objects has to be a valid input for the request to be successful.",
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "array",
-                "items" : {
-                  "$ref" : "#/components/schemas/Measurement"
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Open Data Portal"
+    }
+  ],
+  "paths": {
+    "/upload": {
+      "post": {
+        "tags": [
+          "Upload"
+        ],
+        "summary": "Uploads a new set of measurements to the database",
+        "description": "Uploads a new set of measurements to the database",
+        "operationId": "uploadMeasurements",
+        "parameters": [
+          {
+            "name": "api_key",
+            "in": "query",
+            "description": "An API key is required in order to post data. These are not available to the public. If you feel like you are entitled one, please contact us and we'll look into it.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "d0b3d630-0646-4fb2-93c3-ef6527161692"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can provide multiple measurements at once simply by providing multiple `Measurement`-objects in the array. Note that all objects has to be a valid input for the request to be successful.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Measurement"
                 }
               }
             }
           }
         },
-        "responses" : {
-          "201" : {
-            "description" : "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/UploadResponse"
+        "responses": {
+          "201": {
+            "description": "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UploadResponse"
                   }
                 }
               }
             }
           },
-          "400" : {
-            "description" : "The provided JSON-body could not be parsed correctly. Response JSON contains information what could not be parsed, either the entire form (speciffied in field `formErrors`) or a specific field (specified in `fieldErrors`).",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "formErrors" : {
-                      "type" : "array",
-                      "items" : {
-                        "type" : "string",
-                        "example" : "Expected array, received object"
-                      }
-                    },
-                    "fieldErrors" : {
-                      "type" : "object"
-                    }
-                  }
+          "400": {
+            "description": "The provided JSON-body could not be parsed correctly. Response JSON contains information what could not be parsed, either the entire form (speciffied in field `formErrors`) or a specific field (specified in `fieldErrors`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_400"
                 }
               }
             }
           },
-          "405" : {
-            "description" : "Method not allowed. The endpoint only accepts POST-requests.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "error" : {
-                      "type" : "string",
-                      "example" : "Method GET is not allowed for this endpoint."
-                    }
-                  }
+          "405": {
+            "description": "Method not allowed. The endpoint only accepts POST-requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_405"
                 }
               }
             }
           },
-          "500" : {
-            "description" : "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object",
-                  "properties" : {
-                    "error" : {
-                      "type" : "string",
-                      "example" : "Error uploading data"
-                    }
-                  }
+          "500": {
+            "description": "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/inline_response_500"
                 }
               }
             }
@@ -101,109 +95,154 @@
       }
     }
   },
-  "components" : {
-    "schemas" : {
-      "Measurement" : {
-        "type" : "object",
-        "required" : [ "timestamp", "UTC_offset", "latitude", "longitude", "sensors" ],
-        "properties" : {
-          "timestamp" : {
-            "type" : "string",
-            "format" : "date-time",
-            "example" : "2022-02-03:04:05:06"
+  "components": {
+    "schemas": {
+      "Measurement": {
+        "required": [
+          "UTC_offset",
+          "latitude",
+          "longitude",
+          "sensors",
+          "timestamp"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
           },
-          "UTC_offset" : {
-            "type" : "number",
-            "format" : "integer",
-            "example" : 2
+          "UTC_offset": {
+            "type": "number",
+            "format": "integer",
+            "example": 2
           },
-          "latitude" : {
-            "type" : "number",
-            "format" : "float",
-            "example" : 56.16082
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16082
           },
-          "longitude" : {
-            "type" : "number",
-            "format" : "float",
-            "example" : 15.58671
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58671
           },
-          "sensors" : {
-            "$ref" : "#/components/schemas/Sensors"
+          "sensors": {
+            "$ref": "#/components/schemas/Sensors"
           }
         },
-        "description" : "The given contract to upload data to the database."
+        "description": "The given contract to upload data to the database."
       },
-      "Sensors" : {
-        "type" : "object",
-        "minProperties" : 1,
-        "properties" : {
-          "temperature" : {
-            "type" : "number",
-            "format" : "float",
-            "example" : 20.6
+      "Sensors": {
+        "minProperties": 1,
+        "type": "object",
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": 20.6
           },
-          "temperature_unit" : {
-            "type" : "string",
-            "example" : "C"
+          "temperature_unit": {
+            "type": "string",
+            "example": "C"
           },
-          "conductivity" : {
-            "type" : "number",
-            "format" : "float",
-            "example" : 4.8
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": 4.8
           },
-          "conductivity_unit" : {
-            "type" : "string",
-            "example" : "Spm"
+          "conductivity_unit": {
+            "type": "string",
+            "example": "Spm"
           },
-          "ph_level" : {
-            "type" : "number",
-            "format" : "float",
-            "example" : 7.1
+          "ph_level": {
+            "type": "number",
+            "format": "float",
+            "example": 7.1
           }
         },
-        "description" : "At least one of the value-properties should be supplied. Supplying only a unit will throw an error. Units defaults to their SI-representative if not specified."
+        "description": "At least one of the value-properties should be supplied. Supplying only a unit will throw an error. Units defaults to their SI-representative if not specified."
       },
-      "UploadResponse" : {
-        "type" : "object",
-        "required" : [ "timestamp", "latitude", "longitude", "sensors" ],
-        "properties" : {
-          "timestamp" : {
-            "type" : "string",
-            "format" : "date-time",
-            "example" : "2022-02-03T02:05:06.000"
+      "UploadResponse": {
+        "required": [
+          "latitude",
+          "longitude",
+          "sensors",
+          "timestamp"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
           },
-          "latitude" : {
-            "type" : "number",
-            "format" : "float",
-            "example" : 56.16082
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16082
           },
-          "longitude" : {
-            "type" : "number",
-            "format" : "float",
-            "example" : 15.58671
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58671
           },
-          "sensors" : {
-            "type" : "object",
-            "properties" : {
-              "temperature" : {
-                "type" : "number",
-                "format" : "float",
-                "example" : 293.75
-              },
-              "conductivity" : {
-                "type" : "number",
-                "format" : "float",
-                "example" : 4.8
-              },
-              "ph_level" : {
-                "type" : "number",
-                "format" : "float",
-                "example" : 7.1
-              }
+          "sensors": {
+            "$ref": "#/components/schemas/UploadResponse_sensors"
+          }
+        },
+        "description": "The response objects from the `upload` endpoint. All data is converted to SI units (timestamp is in UTC+0), which is how they are stored in the database."
+      },
+      "inline_response_400": {
+        "type": "object",
+        "properties": {
+          "formErrors": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "Expected array, received object"
             }
+          },
+          "fieldErrors": {
+            "type": "object"
           }
-        },
-        "description" : "The response objects from the `upload` endpoint. All data is converted to SI units (timestamp is in UTC+0), which is how they are stored in the database."
+        }
+      },
+      "inline_response_405": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Method GET is not allowed for this endpoint."
+          }
+        }
+      },
+      "inline_response_500": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Error uploading data"
+          }
+        }
+      },
+      "UploadResponse_sensors": {
+        "type": "object",
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": 293.75
+          },
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": 4.8
+          },
+          "ph_level": {
+            "type": "number",
+            "format": "float",
+            "example": 7.1
+          }
+        }
       }
     }
   }

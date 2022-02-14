@@ -29,7 +29,7 @@ const reqInput = [
 
 const resOutput = [
     {
-        timestamp: "2022-02-09T08:58:50.000Z",
+        timestamp: "2022-02-09 08:58:50",
         latitude: 56.34534523,
         longitude : 15.21341234,
         sensors: {
@@ -37,7 +37,7 @@ const resOutput = [
         }
     },
     {
-        timestamp: "2022-02-09T11:58:50.000Z",
+        timestamp: "2022-02-09 11:58:50",
         latitude: 56.34534523,
         longitude : 15.21341234,
         sensors: {
@@ -48,9 +48,9 @@ const resOutput = [
 ];
 
 describe("The endpoint returns the correct response after a valid input", () => {
-    // Test requires a valid server to test against, and is therefore not run by default.
+    // Test requires a valid server to test against, and is therefore not run by default. Run manually by removing "skip"
     test.skip("", async () => {
-        const response = await fetch(`${BASE_URL}/api/v1/upload`, {
+        const response = await fetch(`${BASE_URL}/api/v1/upload?api_key=${process.env.NEXT_PUBLIC_API_KEY1}`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body  : JSON.stringify(reqInput)
