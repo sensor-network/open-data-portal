@@ -61,7 +61,7 @@ Then open the app in the browser at the link shown in your terminal.
 
 ## License
 
-Copyright (c) 2022 FULL_NAME_1, FULL_NAME_2, FULL_NAME_3
+Copyright (c) 2022 Julius Marminge, André Varga, Arlind Iseni, Majed Fakhr Eldin, Nils Persson Suorra
 
 This work (source code) is licensed under [MIT](./LICENSE/MIT.txt).
 
