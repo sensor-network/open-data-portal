@@ -48,7 +48,8 @@ const resOutput = [
 ];
 
 describe("The endpoint returns the correct response after a valid input", () => {
-    test("", async () => {
+    // Test requires a valid server to test against, and is therefore not run by default.
+    test.skip("", async () => {
         const response = await fetch(`${BASE_URL}/api/v1/upload`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
