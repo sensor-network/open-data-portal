@@ -16,7 +16,24 @@ TODO: Add simple diagram that explains the architecture.
 
 ### Prerequisites
 
-- npm
+- [NodeJS 12.22.0](https://nodejs.org/en/) or later
+
+### Initial setup
+
+1. Clone the repo:
+```console
+$ git clone https://github.com/sensor-network/open-data-portal.git
+```
+
+2. Create a `.env`-file in the project root `/` and fill in the following:
+```
+NEXT_PUBLIC_DB_URL   = <your connection string for your database>
+NEXT_PUBLIC_API_KEY1 = <static api keys used to securely upload data using the `/upload` endpoint>
+NEXT_PUBLIC_API_KEY2 = <static api keys used to securely upload data using the `/upload` endpoint>
+NEXT_PUBLIC_API_KEY3 = <static api keys used to securely upload data using the `/upload` endpoint>
+NEXT_PUBLIC_API_KEY4 = <static api keys used to securely upload data using the `/upload` endpoint>
+NEXT_PUBLIC_API_KEY5 = <static api keys used to securely upload data using the `/upload` endpoint>
+```
 
 ### Build
 
