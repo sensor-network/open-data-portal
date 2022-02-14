@@ -28,5 +28,6 @@ jobs:
         with:
           node-version: 12
       - run: npm ci
+      - run: npm run dev  # tests uses local webserver
       - run: npm test
       - run: npm run build
