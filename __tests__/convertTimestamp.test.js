@@ -2,16 +2,16 @@ import convertTimestamp from "src/lib/convertTimestamp";
 
 // Format: YYYY-MM-DDTHH:mm:ss
 const test_cases1 = [
-    {input_timestamp: "2022-01-01:12:34:56", offset: 0, expected_output: new Date("2022-01-01T12:34:56.000Z")},
-    {input_timestamp: "2022-01-01:12:34:56", offset: 1, expected_output: new Date("2022-01-01T11:34:56.000Z")},
-    {input_timestamp: "2022-01-01:12:34:56", offset: -1, expected_output: new Date("2022-01-01T13:34:56.000Z")},
-    {input_timestamp: "2022-01-01:00:00:00", offset: 1, expected_output: new Date("2021-12-31T23:00:00.000Z")},
+    {input_timestamp: "2022-01-01:12:34:56", offset: 0, expected_output: "2022-01-01 12:34:56"},
+    {input_timestamp: "2022-01-01:12:34:56", offset: 1, expected_output: "2022-01-01 11:34:56"},
+    {input_timestamp: "2022-01-01:12:34:56", offset: -1, expected_output: "2022-01-01 13:34:56"},
+    {input_timestamp: "2022-01-01:00:00:00", offset: 1, expected_output: "2021-12-31 23:00:00"},
 
 ];
 
 // Format: YYYY-MM-DDTHH:mm:ss.xxxZ
 const test_cases2 = [
-    {input_timestamp: "2022-01-01T12:34:56.000Z", offset: 0, expected_output: new Date("2022-01-01T12:34:56.000Z")}
+    {input_timestamp: "2022-01-01T12:34:56.000Z", offset: 0, expected_output: "2022-01-01 12:34:56"}
 ]
 
 

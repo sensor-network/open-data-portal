@@ -1,12 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
+import mysql from 'mysql2/promise';
 
 import convertTimestamp from "lib/convertTimestamp";
 import convertSensors from "lib/convertSensors";
 import { ConversionError } from "lib/CustomErrors";
 
 // Incoming requests must follow this schema
-const Request = z.object({
+const Measurement = z.object({
     timestamp: z.string()
         .refine((str) => (
             new Date(str).getTime() / 1000 >= 0     // checks if string can be parsed as Date
@@ -19,11 +20,13 @@ const Request = z.object({
         temperature_unit: z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
-        conductivity_unit: z.string().optional(),
+        conductivity_unit: z.enum(
+            ["Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm"]
+        ).optional(),
     }).strict()
 }).strict();
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     // Only allow POST-requests for this endpoint.
     if (req.method !== "POST") {
         console.log(`Error: Method ${req.method} not allowed.`)
@@ -40,36 +43,90 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         if (!(req.body instanceof Array)) {
             console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
             res.status(400)
-                .json({ error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`})
+                .json({ error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`});
+            return;
         }
+
+        // Basic authorization of predefined API keys. Some more sophisticated authorization may be done in the future.
+        const api_key = req.query.api_key;
+        if (!api_key) {
+            console.log("ERROR: You have to provide an api_key as query parameter.");
+            res.status(403).json({ error: "No API key provided." });
+            return;
+        }
+        if (api_key !== process.env.NEXT_PUBLIC_API_KEY1 &&
+            api_key !== process.env.NEXT_PUBLIC_API_KEY2 &&
+            api_key !== process.env.NEXT_PUBLIC_API_KEY3 &&
+            api_key !== process.env.NEXT_PUBLIC_API_KEY4 &&
+            api_key !== process.env.NEXT_PUBLIC_API_KEY5
+        ) {
+            console.log("ERROR: The provided api_key could not be verified.");
+            res.status(403).json({ error: "The provided API key could not be verified." });
+            return;
+        }
+
+        // Try establishing a connection to the database.
+        if (process.env.NEXT_PUBLIC_DB_URL === null || 
+            process.env.NEXT_PUBLIC_DB_URL === undefined) 
+            throw new Error("The server was not provided with a database-url");
+        const connection = await mysql.createConnection(process.env.NEXT_PUBLIC_DB_URL)
+        
+        await connection.connect();
+
+
         let measurements = [];
         for (const measurement of req.body) {
-                const requestInput = Request.parse(measurement);
-                let responseObject = {
-                    timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
-                    latitude: requestInput.latitude,
-                    longitude: requestInput.longitude,
-                    sensors: convertSensors(requestInput.sensors)
-                }
-                console.log(responseObject.sensors)
-                if (Object.keys(responseObject.sensors).length === 0) {
-                    console.log("LEN = 0")
-                    throw new ZodError([{
-                        code: 'too_small',
-                        minimum: 1,
-                        inclusive: true,
-                        type: "array",
-                        path: ["sensors"],
-                        message: "Must contain at least one data-value. Did you specify only a unit?"
-                    }])
-                }
-                measurements.push(responseObject);
+            const requestInput = Measurement.parse(measurement);
+            let responseObject = {
+                timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
+                latitude: requestInput.latitude,
+                longitude: requestInput.longitude,
+                sensors: convertSensors(requestInput.sensors)
+            }
+            if (Object.keys(responseObject.sensors).length === 0) {
+                throw new ZodError([{
+                    code: 'too_small',
+                    minimum: 1,
+                    inclusive: true,
+                    type: "array",
+                    path: ["sensors"],
+                    message: "Must contain at least one data-value. Did you specify only a unit?"
+                }])
+            }
+
+            const SRID = 4326; // For GeoLocation in DB
+            console.log(responseObject.timestamp);
+            const query = mysql.format(`
+                INSERT INTO Data (
+                    date,
+                    position,
+                    pH,
+                    temperature,
+                    conductivity
+                ) VALUES (
+                    ?,
+                    ST_GeomFromText('POINT(? ?)', ?),
+                    ?,
+                    ?,
+                    ?
+                )`, 
+                [
+                    responseObject.timestamp,
+                    responseObject.latitude, responseObject.longitude, SRID,
+                    responseObject.sensors.ph_level ?? null,
+                    responseObject.sensors.temperature ?? null,
+                    responseObject.sensors.conductivity ?? null
+                ]
+            );
+            await connection.execute(query);    
+
+            measurements.push(responseObject);
         }
 
-        // TODO: Upload to database
+        // Close connection to the database
+        connection.destroy();
 
-
-        // Successfully respond to caller 
+        // Respond with the inserted data
         res.status(201)     // 201: created
             .json(measurements);
     }

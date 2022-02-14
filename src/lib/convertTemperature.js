@@ -1,10 +1,10 @@
 import {ConversionError} from "lib/CustomErrors";
-export default function(value, fromUnit) {
+export default function(temperature, fromUnit) {
     // Converts the provided temperature measurement from the given unit to Kelvin
     // Returns the temperature value in Kelvin if successful, else -1
-    value = Number(value);
+    const value = Number(temperature);
     if (isNaN(value))
-        throw new ConversionError(`Provided temperature value '${value}' could not be parsed as a number.`);
+        throw new ConversionError(`Provided temperature value '${temperature}' could not be parsed as a number.`);
 
     let ret;
     switch (fromUnit) {
