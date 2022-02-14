@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2022 FULL_NAME_1, FULL_NAME_2, FULL_NAME_3
+Copyright (c) 2022 Julius Marminge, André Varga, Arlind Iseni, Majed Fakhr Eldin, Nils Persson Suorra
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
