@@ -1,5 +1,6 @@
-import {ConversionError} from "lib/CustomErrors";
-export default function(temperature, fromUnit) {
+import {ConversionError} from "../CustomErrors";
+
+export function temperatureToKelvin(temperature, fromUnit) {
     // Converts the provided temperature measurement from the given unit to Kelvin
     // Returns the temperature value in Kelvin if successful, else -1
     const value = Number(temperature);

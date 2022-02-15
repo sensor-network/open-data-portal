@@ -2,9 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
 import mysql from 'mysql2/promise';
 
-import convertTimestamp from "lib/convertTimestamp";
-import convertSensors from "lib/convertSensors";
-import { ConversionError } from "lib/CustomErrors";
+import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
+import { sensorDataAsSI } from "src/lib/conversions/convertSensors";
+import { ConversionError } from "src/lib/CustomErrors";
 
 // Incoming requests must follow this schema
 const Measurement = z.object({
@@ -21,7 +21,7 @@ const Measurement = z.object({
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
         conductivity_unit: z.enum(
-            ["Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm"]
+            ["Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"]
         ).optional(),
     }).strict()
 }).strict();
@@ -36,8 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
         return;
     }
-
-    // TODO: Possibly check authorization?
 
     try {
         if (!(req.body instanceof Array)) {
@@ -65,23 +63,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return;
         }
 
-        // Try establishing a connection to the database.
-        if (process.env.NEXT_PUBLIC_DB_URL === null || 
-            process.env.NEXT_PUBLIC_DB_URL === undefined) 
-            throw new Error("The server was not provided with a database-url");
-        const connection = await mysql.createConnection(process.env.NEXT_PUBLIC_DB_URL)
-        
+        // Establish connection to database
+        const connection = await mysql.createConnection({
+            host: process.env.NEXT_PUBLIC_DB_HOST,
+            user: process.env.NEXT_PUBLIC_DB_USER,
+            password: process.env.NEXT_PUBLIC_DB_PASSWORD,
+            database: process.env.NEXT_PUBLIC_DB_DATABASE,
+            ssl: {"rejectUnauthorized":true},
+            timezone: "+00:00"
+        });
         await connection.connect();
 
-
+        // Iterate all the measurements, parse them using Zod and insert the data into the database
         let measurements = [];
         for (const measurement of req.body) {
             const requestInput = Measurement.parse(measurement);
             let responseObject = {
-                timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
+                timestamp: timestampToUTC(requestInput.timestamp, requestInput.UTC_offset),
                 latitude: requestInput.latitude,
                 longitude: requestInput.longitude,
-                sensors: convertSensors(requestInput.sensors)
+                sensors: sensorDataAsSI(requestInput.sensors)
             }
             if (Object.keys(responseObject.sensors).length === 0) {
                 throw new ZodError([{
@@ -94,8 +95,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }])
             }
 
+            // Prepare SQL-query with correct parameters
             const SRID = 4326; // For GeoLocation in DB
-            console.log(responseObject.timestamp);
             const query = mysql.format(`
                 INSERT INTO Data (
                     date,
@@ -118,8 +119,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     responseObject.sensors.conductivity ?? null
                 ]
             );
-            await connection.execute(query);    
-
+            // Then execute the query asynchronously
+            await connection.execute(query);
             measurements.push(responseObject);
         }
 

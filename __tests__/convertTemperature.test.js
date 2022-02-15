@@ -1,4 +1,4 @@
-import convertTemperature from "src/lib/convertTemperature";
+import {temperatureToKelvin} from "../src/lib/conversions/convertTemperature";
 
 const valid_test_cases = [
     {input_temperature: 0,       temperature_unit: "K", expected_output: 0},
@@ -21,14 +21,14 @@ const invalid_test_cases = [
 describe("Temperatures can be converted to SI-unit (K) correctly", () => {
     test("Valid input shall return the expected output", () => {
         for (const {input_temperature, temperature_unit, expected_output} of valid_test_cases) {
-            const output = convertTemperature(input_temperature, temperature_unit);
+            const output = temperatureToKelvin(input_temperature, temperature_unit);
             expect(output).toBeCloseTo(expected_output, 3);
         }
     })
 
     test("Invalid input should throw errors", () => {
         for (const {input, temperature_unit} of invalid_test_cases) {
-            expect(() => {convertTemperature(input, temperature_unit)}).toThrowError()
+            expect(() => {temperatureToKelvin(input, temperature_unit)}).toThrowError()
         }
     })
 });
