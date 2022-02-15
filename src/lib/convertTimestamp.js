@@ -1,6 +1,4 @@
-
 export default function (timestamp, offset) {
-    console.log("timestamp", timestamp)
     let dateInUTC;
     if (offset < 0)
         dateInUTC = new Date(`${timestamp}-${-offset}`);
