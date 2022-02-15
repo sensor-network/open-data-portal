@@ -80,7 +80,7 @@ Then open the app in the browser at the link shown in your terminal.
 
 Copyright (c) 2022 Julius Marminge, André Varga, Arlind Iseni, Majed Fakhr Eldin, Nils Persson Suorra
 
-This work (source code) is licensed under [MIT](./LICENSE/MIT.txt).
+This work (source code) is licensed under [MIT](./LICENSES/MIT.txt).
 
 Files other than source code are licensed as follows:
 
