@@ -1,5 +1,6 @@
-import {ConversionError} from "lib/CustomErrors";
-export default function (conductivity, unit) {
+import {ConversionError} from "../CustomErrors";
+
+export function conductivityToSpm(conductivity, unit) {
     // Converts the given `conductivity` from the given unit to `Siemens per metre`
     // Returns the conductivity in Spm (Siemens per metre) if successful, else `null`.
     const value = Number(conductivity);

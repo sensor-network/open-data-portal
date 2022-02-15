@@ -2,9 +2,9 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
 import mysql from 'mysql2/promise';
 
-import convertTimestamp from "lib/convertTimestamp";
-import convertSensors from "lib/convertSensors";
-import { ConversionError } from "lib/CustomErrors";
+import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
+import { sensorDataAsSI } from "src/lib/conversions/convertSensors";
+import { ConversionError } from "src/lib/CustomErrors";
 
 // Incoming requests must follow this schema
 const Measurement = z.object({
@@ -79,10 +79,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         for (const measurement of req.body) {
             const requestInput = Measurement.parse(measurement);
             let responseObject = {
-                timestamp: convertTimestamp(requestInput.timestamp, requestInput.UTC_offset),
+                timestamp: timestampToUTC(requestInput.timestamp, requestInput.UTC_offset),
                 latitude: requestInput.latitude,
                 longitude: requestInput.longitude,
-                sensors: convertSensors(requestInput.sensors)
+                sensors: sensorDataAsSI(requestInput.sensors)
             }
             if (Object.keys(responseObject.sensors).length === 0) {
                 throw new ZodError([{

@@ -1,4 +1,4 @@
-import convertConductivity from "src/lib/convertConductivity"
+import {conductivityToSpm} from "../src/lib/conversions/convertConductivity"
 
 const basic_test_cases = [
     {conductivity: 1, unit: "Spm", expected_output: 1},
@@ -27,21 +27,21 @@ const invalid_test_cases = [
 describe("Conductivity measurements can be properly converted", () => {
     test("Conversion rates are correct", () => {
         for (const {conductivity, unit, expected_output} of basic_test_cases) {
-            const output = convertConductivity(conductivity, unit);
+            const output = conductivityToSpm(conductivity, unit);
             expect(output).toEqual(expected_output);
         }
     });
 
     test("Valid input is converted correctly", () => {
         for (const {conductivity, unit, expected_output} of more_valid_tests) {
-            const output = convertConductivity(conductivity, unit);
+            const output = conductivityToSpm(conductivity, unit);
             expect(output).toBeCloseTo(expected_output, 3);
         }
     });
 
     test("Passing invalid values should throw an error.", () => {
         for (const {conductivity, unit} of invalid_test_cases) {
-            expect(() => convertConductivity(conductivity, unit)).toThrow();
+            expect(() => conductivityToSpm(conductivity, unit)).toThrow();
         }
     });
 });

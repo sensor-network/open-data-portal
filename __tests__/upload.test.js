@@ -49,7 +49,7 @@ const resOutput = [
 
 describe("The endpoint returns the correct response after a valid input", () => {
     // Test requires a valid server to test against, and is therefore not run by default. Run manually by removing "skip"
-    test.skip("", async () => {
+    test("", async () => {
         const response = await fetch(`${BASE_URL}/api/v1/upload?api_key=${process.env.NEXT_PUBLIC_API_KEY1}`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},

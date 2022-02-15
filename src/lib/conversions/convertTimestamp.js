@@ -1,4 +1,5 @@
-export default function (timestamp, offset) {
+export function timestampToUTC(timestamp, offset) {
+    // Converts the timestamp to UTC and returns it as a string formatted like "YYYY-MM-DD HH:MM:SS"
     let dateInUTC;
     if (offset < 0)
         dateInUTC = new Date(`${timestamp}-${-offset}`);
