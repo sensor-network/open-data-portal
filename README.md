@@ -10,8 +10,9 @@ Open Data Portal for Waterquality Sensor Data
 TODO: Add brief introduction.
 
 ## Architecture Overview
+The diagram shows the different parts of the system and how they interact with each other. The external sensor system can be found [here](https://github.com/sensor-network/sensor-collector).
 
-TODO: Add simple diagram that explains the architecture.
+![Architecture Overview Diagram](docs/architecture.png)
 
 ## How to Use
 
