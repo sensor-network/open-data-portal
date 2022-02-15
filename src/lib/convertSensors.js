@@ -6,7 +6,7 @@ export default function (sensors) {
     let converted = {}
 
     // Convert temperature
-    if (sensors.temperature) {
+    if (!(sensors.temperature === undefined || sensors.temperature === null)) {
         const unit = sensors.temperature_unit ?? "K";
         try {
             converted.temperature = convertTemperature(sensors.temperature, unit);
@@ -16,7 +16,7 @@ export default function (sensors) {
     }
 
     // Convert conductivity 
-    if (sensors.conductivity) {
+    if (!(sensors.conductivity === undefined || sensors.conductivity === null)) {
         const unit = sensors.conductivity_unit ?? "Spm";
         try {
             converted.conductivity = convertConductivity(sensors.conductivity, unit);
@@ -25,8 +25,8 @@ export default function (sensors) {
         }
     }
 
-    // Push back items that dont need to be converted.
-    if (sensors.ph_level)
+    // Push back items that don't need to be converted.
+    if (!(sensors.ph_level === undefined || sensors.ph_level === null))
         converted.ph_level = sensors.ph_level;
 
     return converted;

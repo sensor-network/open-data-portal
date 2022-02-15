@@ -21,7 +21,7 @@ const Measurement = z.object({
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
         conductivity_unit: z.enum(
-            ["Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm"]
+            ["Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"]
         ).optional(),
     }).strict()
 }).strict();
@@ -74,7 +74,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
         await connection.connect();
 
-
+        // Iterate all the measurements, parse them using Zod and insert the data into the database
         let measurements = [];
         for (const measurement of req.body) {
             const requestInput = Measurement.parse(measurement);
@@ -95,8 +95,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 }])
             }
 
-            const SRID = 4326; // For GeoLocation in DB
             // Prepare SQL-query with correct parameters
+            const SRID = 4326; // For GeoLocation in DB
             const query = mysql.format(`
                 INSERT INTO Data (
                     date,
@@ -113,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 )`, 
                 [
                     responseObject.timestamp,
-                    responseObject.longitude, responseObject.latitude, SRID,
+                    responseObject.latitude, responseObject.longitude, SRID,
                     responseObject.sensors.ph_level ?? null,
                     responseObject.sensors.temperature ?? null,
                     responseObject.sensors.conductivity ?? null

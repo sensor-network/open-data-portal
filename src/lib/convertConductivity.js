@@ -38,8 +38,13 @@ export default function (conductivity, unit) {
         break;
     
     case "uS/cm":
-    case "uSpcm":   // (microiemens per centimeter)
+    case "uSpcm":   // (microsiemens per centimeter)
         ret = value * 1E-4;
+        break;
+
+    case "PPM":
+    case "ppm":   // (parts per million)
+        ret = value * 1.56 * 1E-4;
         break;
 
     default:

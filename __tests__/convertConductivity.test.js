@@ -9,6 +9,8 @@ const basic_test_cases = [
     {conductivity: 1, unit: "mhopcm", expected_output: 100},
     {conductivity: 1, unit: "mSpcm", expected_output: 0.1},
     {conductivity: 1, unit: "uSpcm", expected_output: 1E-4},
+    {conductivity: 1, unit: "ppm", expected_output: 0.000156},
+
 ]
 
 const more_valid_tests = [
