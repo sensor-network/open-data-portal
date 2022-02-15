@@ -37,8 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
 
-    // TODO: Possibly check authorization?
-
     try {
         if (!(req.body instanceof Array)) {
             console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
@@ -65,12 +63,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             return;
         }
 
-        // Try establishing a connection to the database.
-        if (process.env.NEXT_PUBLIC_DB_URL === null || 
-            process.env.NEXT_PUBLIC_DB_URL === undefined) 
-            throw new Error("The server was not provided with a database-url");
-        const connection = await mysql.createConnection(process.env.NEXT_PUBLIC_DB_URL)
-        
+        // Establish connection to database
+        const connection = await mysql.createConnection({
+            host: process.env.NEXT_PUBLIC_DB_HOST,
+            user: process.env.NEXT_PUBLIC_DB_USER,
+            password: process.env.NEXT_PUBLIC_DB_PASSWORD,
+            database: process.env.NEXT_PUBLIC_DB_DATABASE,
+            ssl: {"rejectUnauthorized":true},
+            timezone: "+00:00"
+        });
         await connection.connect();
 
 
@@ -95,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             }
 
             const SRID = 4326; // For GeoLocation in DB
-            console.log(responseObject.timestamp);
+            // Prepare SQL-query with correct parameters
             const query = mysql.format(`
                 INSERT INTO Data (
                     date,
@@ -112,14 +113,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 )`, 
                 [
                     responseObject.timestamp,
-                    responseObject.latitude, responseObject.longitude, SRID,
+                    responseObject.longitude, responseObject.latitude, SRID,
                     responseObject.sensors.ph_level ?? null,
                     responseObject.sensors.temperature ?? null,
                     responseObject.sensors.conductivity ?? null
                 ]
             );
-            await connection.execute(query);    
-
+            // Then execute the query asynchronously
+            await connection.execute(query);
             measurements.push(responseObject);
         }
 
