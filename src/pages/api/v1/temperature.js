@@ -30,7 +30,8 @@ export default async function handler(req, res){
     console.log(data);
     console.log("hello");
 
-    res.status(200).json({ status: 'Success'});
+    //Celsius? Maybe don't send when temp is null?
+    res.status(200).json({ content: data});
   }
   catch(e) {
     console.error(e);
