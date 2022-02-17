@@ -14,7 +14,7 @@ export default async function handler(req, res) {
         await connection.connect();
 
         // Creates and executes the query and then closes the connection
-        const query = mysql.format('SELECT pH, date FROM Data;');
+        const query = mysql.format('SELECT pH, date FROM Data WHERE pH IS NOT NULL;');
         const [data] = await connection.execute(query);
         connection.destroy();
 
