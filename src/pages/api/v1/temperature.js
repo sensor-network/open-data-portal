@@ -27,10 +27,13 @@ export default async function handler(req, res){
     //Disconnecting from the database
     connection.destroy();
 
-    console.log(data);
-    console.log("hello");
+    let unit = req.query.unit;
+    if(!unit){
+      unit = 'K'
+    }
 
-    //Celsius? Maybe don't send when temp is null?
+    console.log(data);
+    
     res.status(200).json({ content: data});
   }
   catch(e) {
