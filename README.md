@@ -1,4 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/sensor-network/open-data-portal/actions/workflows/integrate.yml/badge.svg)](https://github.com/sensor-network/open-data-portal/actions/workflows/integrate.yml)
 
 # open-data-portal
 
@@ -9,8 +10,9 @@ Open Data Portal for Waterquality Sensor Data
 TODO: Add brief introduction.
 
 ## Architecture Overview
+The diagram shows the different parts of the system and how they interact with each other. The external sensor system can be found [here](https://github.com/sensor-network/sensor-collector).
 
-TODO: Add simple diagram that explains the architecture.
+![Architecture Overview Diagram](docs/architecture.png)
 
 ## How to Use
 
@@ -80,7 +82,7 @@ Then open the app in the browser at the link shown in your terminal.
 
 Copyright (c) 2022 Julius Marminge, André Varga, Arlind Iseni, Majed Fakhr Eldin, Nils Persson Suorra
 
-This work (source code) is licensed under [MIT](./LICENSE/MIT.txt).
+This work (source code) is licensed under [MIT](./LICENSES/MIT.txt).
 
 Files other than source code are licensed as follows:
 

@@ -1,4 +1,7 @@
 module.exports = {
   reactStrictMode: true,
-  distDir: 'build',
+  // for docker
+  experimental: {
+    outputStandalone: true,
+  },
 }
