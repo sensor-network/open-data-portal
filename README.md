@@ -1,5 +1,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/sensor-network/open-data-portal/actions/workflows/integrate.yml/badge.svg)](https://github.com/sensor-network/open-data-portal/actions/workflows/integrate.yml)
+[![Container](https://github.com/sensor-network/open-data-portal/actions/workflows/docker.yml/badge.svg)](https://github.com/sensor-network/open-data-portal/actions/workflows/docker.yml)
 
 # open-data-portal
 
@@ -16,11 +17,13 @@ The diagram shows the different parts of the system and how they interact with e
 
 ## How to Use
 
-### Prerequisites
+### From source
+
+#### Prerequisites
 
 - [NodeJS 12.22.0](https://nodejs.org/en/) or later
 
-### Initial setup
+#### Initial setup
 
 1. Clone the repo:
 ```console
@@ -37,7 +40,7 @@ NEXT_PUBLIC_API_KEY4 = <static api keys used to securely upload data using the `
 NEXT_PUBLIC_API_KEY5 = <static api keys used to securely upload data using the `/upload` endpoint>
 ```
 
-### Build
+#### Build
 
 Use `npm` to install dependencies:
 ```console
@@ -49,7 +52,7 @@ Build production version:
 $ npm run build
 ```
 
-### Test
+#### Test
 
 Run all tests:
 ````console
@@ -63,7 +66,7 @@ $ npm run test:watch
 ***Note: This project currently does not have a significant test-base. This will be done in the future.***
 
 
-### Run
+#### Run
 
 Run developer version:
 ```console
@@ -77,6 +80,11 @@ $ npm run start
 
 Then open the app in the browser at the link shown in your terminal.
 
+### Using Docker Container
+
+You can also run the application inside a Docker Container.
+
+TODO: Explain how to use with docker
 
 ## License
 
