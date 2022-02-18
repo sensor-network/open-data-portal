@@ -1,6 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 //This file will be responsible for querying only the the temperature and the date columns.
 import mysql from "mysql2/promise"
+import { temperatureFromKelvin } from "../../../lib/conversions/convertTemperature.js"
 
 export default async function handler(req, res){
   
@@ -32,7 +33,12 @@ export default async function handler(req, res){
       unit = 'K'
     }
 
-    console.log(data);
+    //Checks if the unit is not kelvin.
+    if(!(unit === 'k' || unit === 'K')){
+      for(const objIndex in data){
+        data[objIndex].temperature = temperatureFromKelvin(data[objIndex].temperature, unit);
+      }
+    }
     
     res.status(200).json({ content: data});
   }
