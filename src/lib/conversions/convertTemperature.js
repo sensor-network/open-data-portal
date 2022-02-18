@@ -30,3 +30,31 @@ export function temperatureToKelvin(temperature, fromUnit) {
 
     return Number(ret.toPrecision(7));
 }
+
+export function temperatureFromKelvin(temperature, toUnit){
+    //Converts the provided tmperature measurement from Kelvin to the given unit
+    // Returns the temperature value in Kelvin if successful, else -1
+    const value = Number(temperature);
+    if(isNaN(value))
+        throw new ConversionError(`Provided temperature value '${temperature}' could not be parsed as a number.`);
+
+    let ret;
+    switch (toUnit){
+        case 'K':
+        case 'k':
+            ret = value;
+            break;
+        case 'C':
+        case 'c':
+            ret = temperature - 273.15;
+            break;
+        case 'F':
+        case 'f':
+            ret = (value - 273.15) * 9/5 + 32;
+            break;
+        default:
+            throw new ConversionError(`Provided temperature unit '${toUnit}' is not supported. Read the documentation for valid parameters.`);
+    }
+
+    return Number(ret.toPrecision(7));
+}
