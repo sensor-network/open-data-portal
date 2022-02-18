@@ -28,7 +28,7 @@ export function temperatureToKelvin(temperature, fromUnit) {
     if (ret < 0)
         throw new ConversionError(`Provided temperature value '${value}' is below absolute zero.`);
 
-    return Number(ret.toPrecision(7));
+    return ret;
 }
 
 export function temperatureFromKelvin(temperature, toUnit){
@@ -56,5 +56,5 @@ export function temperatureFromKelvin(temperature, toUnit){
             throw new ConversionError(`Provided temperature unit '${toUnit}' is not supported. Read the documentation for valid parameters.`);
     }
 
-    return Number(ret.toPrecision(7));
+    return ret;
 }
