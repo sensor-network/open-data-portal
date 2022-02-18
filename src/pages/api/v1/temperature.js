@@ -19,7 +19,7 @@ export default async function handler(req, res){
     await connection.connect();
     
     //Specifying mySQL query
-    const query = "SELECT temperature, date FROM Data;";
+    const query = "SELECT temperature, date FROM Data WHERE temperature IS NOT NULL;";
 
     //Executing the query
     const [data] = await connection.execute(query);
