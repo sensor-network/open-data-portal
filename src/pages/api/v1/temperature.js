@@ -5,6 +5,16 @@ import { temperatureFromKelvin } from "../../../lib/conversions/convertTemperatu
 
 export default async function handler(req, res){
   
+  // Only allow GET-requests for this endpoint. I do not know how to test this
+  if (req.method !== "GET") {
+    console.log(`Error: Method ${req.method} not allowed.`)
+    res.status(405)        // 405: method not allowed
+        .json({ error:
+            `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
+    });
+    return;
+}
+
   try{
 
     //Connecting to the database
@@ -32,14 +42,20 @@ export default async function handler(req, res){
     if(!unit){
       unit = 'K'
     }
-
-    //Checks if the unit is not kelvin.
-    if(!(unit === 'k' || unit === 'K')){
-      for(const objIndex in data){
-        data[objIndex].temperature = temperatureFromKelvin(data[objIndex].temperature, unit);
+    try{
+      //Checks if the unit is not kelvin.
+      if(!(unit === 'k' || unit === 'K')){
+        for(const objIndex in data){
+          data[objIndex].temperature = temperatureFromKelvin(data[objIndex].temperature, unit);
+        }
       }
     }
-    
+    //If the unit is not C, K or F
+    catch(e){
+      console.error(e);
+      res.status(400).json({error: e.message});
+    }
+
     res.status(200).json(data);
   }
   catch(e) {
