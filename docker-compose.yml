@@ -1,0 +1,32 @@
+# Use root/example as user/password credentials
+version: '3.1'
+
+services:
+  # mySQL Database
+  db:
+    image: mysql:8
+    platform: linux/x86_64/v8
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: sensor_network
+    restart: always
+    volumes:
+      - ./db/mysql:/var/lib/mysql  # data-volume
+      - ./db/init:/docker-entrypoint-initdb.d/:ro   # database init-scripts
+
+  # Open Data Portal Web Application with API
+  node:
+    # Public Image from Github Container Regitry
+    # image: ghcr.io/sensor-network/open-data-portal:main
+    # Locally build image from source
+    image: open-data-portal
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_DB_HOST: db
+      NEXT_PUBLIC_DB_USER: admin
+      NEXT_PUBLIC_DB_PASSWORD: admin
+      NEXT_PUBLIC_DB_DATABASE: sensor_network
+      NEXT_PUBLIC_API_KEY: default

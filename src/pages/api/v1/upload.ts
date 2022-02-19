@@ -52,12 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             res.status(403).json({ error: "No API key provided." });
             return;
         }
-        if (api_key !== process.env.NEXT_PUBLIC_API_KEY1 &&
-            api_key !== process.env.NEXT_PUBLIC_API_KEY2 &&
-            api_key !== process.env.NEXT_PUBLIC_API_KEY3 &&
-            api_key !== process.env.NEXT_PUBLIC_API_KEY4 &&
-            api_key !== process.env.NEXT_PUBLIC_API_KEY5
-        ) {
+        if (api_key !== process.env.NEXT_PUBLIC_API_KEY) {
             console.log("ERROR: The provided api_key could not be verified.");
             res.status(403).json({ error: "The provided API key could not be verified." });
             return;
@@ -69,7 +64,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             user: process.env.NEXT_PUBLIC_DB_USER,
             password: process.env.NEXT_PUBLIC_DB_PASSWORD,
             database: process.env.NEXT_PUBLIC_DB_DATABASE,
-            ssl: {"rejectUnauthorized":true},
             timezone: "+00:00"
         });
         await connection.connect();
