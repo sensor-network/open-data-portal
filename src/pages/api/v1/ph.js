@@ -1,12 +1,14 @@
 import mysql from 'mysql2/promise';
 
-const NOT_ALLOWED = 405;
+const STATUS_METHOD_NOT_ALLOWED = 405;
+const STATUS_OK = 200;
+const STATUS_SERVER_ERROR = 500;
 
 export default async function handler(req, res) {
     // Only allow GET-requests
     if (req.method !== "GET") {
         console.log(`Error: Method ${req.method} not allowed.`)
-        res.status(NOT_ALLOWED)
+        res.status(STATUS_METHOD_NOT_ALLOWED)
             .json({ error:
                 `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
         });
@@ -19,7 +21,7 @@ export default async function handler(req, res) {
         user     : process.env.NEXT_PUBLIC_DB_USER,
         password : process.env.NEXT_PUBLIC_DB_PASSWORD,
         database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        ssl      : {"rejectUnauthorized":true},
+        // ssl      : {"rejectUnauthorized":true},
         timezone : "+00:00"
     });
         await connection.connect();
@@ -30,10 +32,10 @@ export default async function handler(req, res) {
         connection.destroy();
 
         // Returning the data
-        res.status(200).json({content: data});
+        res.status(STATUS_OK).json({content: data});
         
     } catch (error) {
         console.log(error);
-        res.status(500).json({ error: "Error fetching pH data from the database" })
+        res.status(STATUS_SERVER_ERROR).json({ error: "Error fetching pH data from the database" })
     }
 }
