@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 //This file will be responsible for querying only the the temperature and the date columns.
 import mysql from "mysql2/promise"
-
+import moment from "moment"
 
 export default async function handler(req, res){
   
@@ -16,6 +16,9 @@ export default async function handler(req, res){
 }
 
   try{
+    
+    const startDate = moment(req.query.startDate, 'YYYY-MM-DD', true);
+    const endDate = moment(req.query.endDate, 'YYYY-MM-DD', true);
     //Connecting to the database
     const connection = await mysql.createConnection({
       host     : process.env.NEXT_PUBLIC_DB_HOST,
