@@ -16,9 +16,14 @@ export default async function handler(req, res){
 }
 
   try{
-    
+
     const startDate = moment(req.query.startDate, 'YYYY-MM-DD', true);
     const endDate = moment(req.query.endDate, 'YYYY-MM-DD', true);
+
+    if(startDate.isValid() !== true || endDate.isValid() !== true){
+      res.status(400).json({error: "Invalid parameters. Please, read the documentation for valid parameters"})
+      return;
+    }
     //Connecting to the database
     const connection = await mysql.createConnection({
       host     : process.env.NEXT_PUBLIC_DB_HOST,
@@ -32,7 +37,7 @@ export default async function handler(req, res){
     await connection.connect();
     
     //Specifying mySQL query
-    const query = "";
+    const query = "SELECT * FROM Data;";
 
     //Executing the query
     const [data] = await connection.execute(query);
