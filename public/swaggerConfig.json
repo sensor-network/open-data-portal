@@ -180,6 +180,63 @@
           }
         }
       }
+    },
+    "/ph":{
+      "get": {
+        "tags": [
+          "pH"
+        ],
+        "summary": "Gets a list of pH values along with the date when it was taken",
+        "description": "Retrieves a JSON object with the property \"content\" which consists of an array with objects containing the pH value along with the date",
+        "operationId": "getpH",
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json":{
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/pHResponse"
+                  }
+                }
+              }
+            }
+          },
+          "405":{
+            "description": "Method not allowed. The endpoint only accepts GET-requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -293,6 +350,22 @@
           }
         },
         "description": "The response from \"GET: / temperature\"-endpoint."
+      },
+      "pHResponse": {
+        "type": "object",
+        "properties": {
+          "pH": {
+            "type": "number",
+            "format": "float",
+            "example": "5.09119985487793"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2017-08-16T20:19:44.000Z"
+          }
+        },
+        "description": "The response from \"GET: / pH\"-endpoint."
       },
       "inline_response_400": {
         "type": "object",
