@@ -4,8 +4,7 @@ version: '3.1'
 services:
   # mySQL Database
   db:
-    image: mysql:8
-    platform: linux/x86_64/v8
+    image: ghcr.io/sensor-network/open-data-portal-db:main
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: admin
@@ -13,15 +12,14 @@ services:
       MYSQL_DATABASE: sensor_network
     restart: always
     volumes:
-      - ./db/mysql:/var/lib/mysql  # data-volume
-      - ./db/init:/docker-entrypoint-initdb.d/:ro   # database init-scripts
+     - ./db/mysql:/var/lib/mysql  # data-volume
 
   # Open Data Portal Web Application with API
   node:
     # Public Image from Github Container Regitry
-    # image: ghcr.io/sensor-network/open-data-portal:main
+    image: ghcr.io/sensor-network/open-data-portal-app:main
     # Locally build image from source
-    image: open-data-portal
+    # image: open-data-portal
     ports:
       - "3000:3000"
     environment:
