@@ -124,7 +124,7 @@
           "Fetch by data-type"
         ],
         "summary": "Gets a list of temperatures along with the date when it was taken",
-        "description": "Retrieves a JSON object with the property \"content\" which consists of an array with objects containing the temperature along with the date",
+        "description": "Retrieves a JSON object with the property \"content\" which consists of an array with objects containing the temperature along with the date in the UTC timezone",
         "operationId": "getTemperature",
         "parameters": [
           {
