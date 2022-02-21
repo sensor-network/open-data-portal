@@ -1,10 +1,12 @@
 import mysql from 'mysql2/promise';
 
+const NOT_ALLOWED = 405;
+
 export default async function handler(req, res) {
     // Only allow GET-requests
     if (req.method !== "GET") {
         console.log(`Error: Method ${req.method} not allowed.`)
-        res.status(405)        // 405: method not allowed
+        res.status(NOT_ALLOWED)
             .json({ error:
                 `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
         });
