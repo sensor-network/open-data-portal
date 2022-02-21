@@ -114,6 +114,12 @@ Or start a built production version:
 $ npm run start
 ```
 
+In case you dont have a database running, you can also run a containerized database to go along with the application using 
+```bash
+$ docker compose up db
+```
+The default credentials for this database can be found in [docker-compose.yml](./docker-compose.yml)
+
 Then open the app in the browser at the link shown in your terminal.
 
 
