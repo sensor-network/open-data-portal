@@ -93,6 +93,93 @@
           }
         }
       }
+    },
+    "/temperature":{
+      "get": {
+        "tags": [
+          "Temperature"
+        ],
+        "summary": "Gets a list of temperatures along with the date when it was taken",
+        "description": "Retrieves a JSON object with the property \"content\" which consists of an array with objects containing the temperature along with the date",
+        "operationId": "getTemperature",
+        "parameters": [
+          {
+            "name": "unit",
+            "in": "query",
+            "description": "Optional. Sends the temperature based on what the unit is. Available units are \"K\", \"k\", \"C\", \"c\", \"F\" and \"f\". If no unit is given, then the temperature unit is Kelvin",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "unit=C"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json":{
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TemperatureResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the \"unit\" parameter receives a value other than the available units mentioned above",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Provided temperature unit is not supported. Read the documentation for valid parameters."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405":{
+            "description": "Method not allowed. The endpoint only accepts GET-requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -190,6 +277,22 @@
           }
         },
         "description": "The response objects from the `upload` endpoint. All data is converted to SI units (timestamp is in UTC+0), which is how they are stored in the database."
+      },
+      "TemperatureResponse": {
+        "type": "object",
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": "289.0350036621094"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2007-12-11T18:05:11.000Z"
+          }
+        },
+        "description": "The response from \"GET: / temperature\"-endpoint."
       },
       "inline_response_400": {
         "type": "object",
