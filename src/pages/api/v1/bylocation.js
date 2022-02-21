@@ -1,6 +1,10 @@
 import mysql from "mysql2/promise"
 import {z, ZodError} from "zod";
 
+const STATUS_OK = 200
+const STATUS_BAD_REQUEST = 400
+const STATUS_SERVER_ERROR = 500
+
 const QuerySchema = z.object({
     latitude: z.preprocess(   // preprocess converts the string-query to a number
         lat => Number(z.string().parse(lat)),   // validates the string could be parsed as number
@@ -25,7 +29,7 @@ export default async function (req, res) {
         user     : process.env.NEXT_PUBLIC_DB_USER,
         password : process.env.NEXT_PUBLIC_DB_PASSWORD,
         database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        ssl      : {"rejectUnauthorized":true},
+        // ssl      : {"rejectUnauthorized":true},
         timezone : "+00:00"
     });
     await connection.connect();
@@ -61,18 +65,18 @@ export default async function (req, res) {
     connection.destroy();
 
     // Respond with appropriate status code and json
-    res.status(200).json({content: data});
+    res.status(STATUS_OK).json({content: data});
   }
 
   catch (e) {
       if (e instanceof ZodError) {
           console.log("Error parsing query params:\n", e.flatten())
-          res.status(400)     // 400: bad request (syntax error)
+          res.status(STATUS_BAD_REQUEST)     // 400: bad request (syntax error)
               .json(e.flatten());
       }
       else {
           // internal server error
-          res.status(500).json({error: "Internal server error"})
+          res.status(STATUS_SERVER_ERROR).json({error: "Internal server error"})
       }
   }
 } 
