@@ -6,6 +6,12 @@ import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
 import { sensorDataAsSI } from "src/lib/conversions/convertSensors";
 import { ConversionError } from "src/lib/CustomErrors";
 
+const STATUS_CREATED = 201
+const STATUS_BAD_REQUEST = 400
+const STATUS_FORBIDDEN = 403
+const STATUS_METHOD_NOT_ALLOWED = 405
+const STATUS_SERVER_ERROR = 500
+
 // Incoming requests must follow this schema
 const Measurement = z.object({
     timestamp: z.string()
@@ -30,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Only allow POST-requests for this endpoint.
     if (req.method !== "POST") {
         console.log(`Error: Method ${req.method} not allowed.`)
-        res.status(405)        // 405: method not allowed
+        res.status(STATUS_METHOD_NOT_ALLOWED)        // 405: method not allowed
             .json({ error:
                 `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
         });
@@ -40,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
         if (!(req.body instanceof Array)) {
             console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
-            res.status(400)
+            res.status(STATUS_BAD_REQUEST)
                 .json({ error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`});
             return;
         }
@@ -49,12 +55,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const api_key = req.query.api_key;
         if (!api_key) {
             console.log("ERROR: You have to provide an api_key as query parameter.");
-            res.status(403).json({ error: "No API key provided." });
+            res.status(STATUS_FORBIDDEN).json({ error: "No API key provided." });
             return;
         }
         if (api_key !== process.env.NEXT_PUBLIC_API_KEY) {
             console.log("ERROR: The provided api_key could not be verified.");
-            res.status(403).json({ error: "The provided API key could not be verified." });
+            res.status(STATUS_FORBIDDEN).json({ error: "The provided API key could not be verified." });
             return;
         }
 
@@ -64,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             user: process.env.NEXT_PUBLIC_DB_USER,
             password: process.env.NEXT_PUBLIC_DB_PASSWORD,
             database: process.env.NEXT_PUBLIC_DB_DATABASE,
+            // ssl      : {"rejectUnauthorized":true},
             timezone: "+00:00"
         });
         await connection.connect();
@@ -122,23 +129,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         connection.destroy();
 
         // Respond with the inserted data
-        res.status(201)     // 201: created
+        res.status(STATUS_CREATED)
             .json(measurements);
     }
     catch (e) {
         if (e instanceof ZodError) {
             console.log("Error parsing request json:\n", e.flatten())
-            res.status(400)     // 400: bad request (syntax error)
+            res.status(STATUS_BAD_REQUEST)
                 .json(e.flatten());
         }
         else if (e instanceof ConversionError) {    // custom error-class to separate faulty input data
             console.log("ERROR:", e.message)
-            res.status(400)     // 400: bad request
+            res.status(STATUS_BAD_REQUEST)
                 .json({error: e.message});
         }
         else {
             console.error(e);
-            res.status(500)     // 500: internal server error
+            res.status(STATUS_SERVER_ERROR)
                 .json({error: "Error uploading data"});
         }
     }
