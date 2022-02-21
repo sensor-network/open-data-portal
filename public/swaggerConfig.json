@@ -112,7 +112,7 @@
             "explode": true,
             "schema": {
               "type": "string",
-              "example": "unit=C"
+              "example": "C"
             }
           }
         ],
