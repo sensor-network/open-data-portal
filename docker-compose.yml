@@ -10,6 +10,8 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
     restart: always
+    ports:
+      - "3306:3306"
     volumes:
      - ./db/mysql:/var/lib/mysql  # Link a volume from host to persist the data
 
