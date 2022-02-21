@@ -24,6 +24,10 @@ export default async function handler(req, res){
       res.status(400).json({error: "Invalid parameters. Please, read the documentation for valid parameters"})
       return;
     }
+    if(startDate.isAfter(endDate)){
+      res.status(400).json({error: "Start date can't be after End date!"})
+      return;
+    }
     //Connecting to the database
     const connection = await mysql.createConnection({
       host     : process.env.NEXT_PUBLIC_DB_HOST,
