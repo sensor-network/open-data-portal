@@ -43,13 +43,13 @@ export default async function(req, res) {
 
         // Prepare query, then execute
         const query = mysql.format(`
-            SELECT id, date, conductivity
+            SELECT date, conductivity
             FROM Data
             WHERE conductivity IS NOT NULL
             ORDER BY id ASC;
         `);
         const [data] = await connection.execute(query);
-        connection.destroy();
+        await connection.end();
 
         // Convert conductivity if needed (siemens per meter or moh per meter)
         if (!["Spm", "S/m", "mho/m", "mhopm"].includes(unit)) {
