@@ -8,14 +8,14 @@
   "servers": [
     {
       "url": "http://localhost:3000/api/v1",
-      "description": "Open Data Portal"
+      "description": "Developer Server"
     }
   ],
   "paths": {
     "/upload": {
       "post": {
         "tags": [
-          "Upload"
+          "Upload new data"
         ],
         "summary": "Uploads a new set of measurements to the database",
         "description": "Uploads a new set of measurements to the database",
@@ -30,7 +30,7 @@
             "explode": true,
             "schema": {
               "type": "string",
-              "example": "d0b3d630-0646-4fb2-93c3-ef6527161692"
+              "example": "default"
             }
           }
         ],
@@ -66,7 +66,19 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/inline_response_400"
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Expected array, received object"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
+                    }
+                  }
                 }
               }
             }
@@ -76,7 +88,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/inline_response_405"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method GET is not allowed for this endpoint."
+                    }
+                  }
                 }
               }
             }
@@ -86,7 +104,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/inline_response_500"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error uploading data"
+                    }
+                  }
                 }
               }
             }
@@ -97,16 +121,16 @@
     "/temperature":{
       "get": {
         "tags": [
-          "Temperature"
+          "Fetch by data-type"
         ],
         "summary": "Gets a list of temperatures along with the date when it was taken",
-        "description": "Retrieves a JSON object with the property \"content\" which consists of an array with objects containing the temperature along with the date",
+        "description": "Retrieves a JSON object with the property `content` which consists of an array with objects containing the temperature along with the date in the UTC timezone",
         "operationId": "getTemperature",
         "parameters": [
           {
             "name": "unit",
             "in": "query",
-            "description": "Optional. Sends the temperature based on what the unit is. Available units are \"K\", \"k\", \"C\", \"c\", \"F\" and \"f\". If no unit is given, then the temperature unit is Kelvin",
+            "description": "Optional. Sends the temperature based on what the unit is. Available units are `K`, `k`, `C`, `c`, `F` and `f`. If no unit is given, then the temperature unit is Kelvin",
             "required": false,
             "style": "form",
             "explode": true,
@@ -131,7 +155,7 @@
             }
           },
           "400": {
-            "description": "If the \"unit\" parameter receives a value other than the available units mentioned above",
+            "description": "If the `unit` parameter receives a value other than the available units mentioned above",
             "content": {
               "application/json": {
                 "schema": {
@@ -163,7 +187,7 @@
             }
           },
           "500": {
-            "description": "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
             "content": {
               "application/json": {
                 "schema": {
@@ -172,6 +196,261 @@
                     "error": {
                       "type": "string",
                       "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ph":{
+      "get": {
+        "tags": [
+          "Fetch by data-type"
+        ],
+        "summary": "Gets a list of pH values along with the date when it was taken",
+        "description": "Retrieves a JSON object with the property `content` which consists of an array with objects containing the pH value along with the date",
+        "operationId": "getpH",
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json":{
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/pHResponse"
+                  }
+                }
+              }
+            }
+          },
+          "405":{
+            "description": "Method not allowed. The endpoint only accepts GET-requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Expected array, received object"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/":{
+      "get": {
+        "tags": [
+          "Fetch generic data"
+        ],
+        "summary": "Gets a list of all data",
+        "description": "Retrieves a JSON object with the property `content` which consists of an array with objects containing all the data in the UTC timezone",
+        "operationId": "getAll",
+        "parameters": [
+          {
+            "name": "tempunit",
+            "in": "query",
+            "description": "Optional. Sends the temperature based on what the unit is. Available units are `K`, `k`, `C`, `c`, `F` and `f`. If no unit is given, then the temperature unit is Kelvin",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "C"
+            }
+          },
+          {
+            "name": "conductunit",
+            "in": "query",
+            "description": "Optional. Sends the conductivity based on what the unit is. Available units are `Spm`, `mhopm`, `mSpm`, `uSpm`, `Spcm`, `mhopcm`, `mSpcm`, `uSpcm`, `PPM`, and `ppm`. If no unit is given, then the conductivity unit is Spm",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "ppm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json":{
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/IndexResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the `tempunit` or the `conductunit` parameter receives a value other than the available units mentioned above",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "One of the provided units is not supported. Read the documentation for valid parameters."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405":{
+            "description": "Method not allowed. The endpoint only accepts GET-requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bylocation": {
+      "get": {
+        "tags": ["Fetch generic data"],
+        "summary": "Outputs measurements for a given location",
+        "description": "Queries database and selects all given measurments avaiable at user-specified location. Location is specified with the query parameters 'long', 'lat', 'rad' in the SRID 4326 system.",
+        "operationId": "getLocationData",
+        "parameters": [
+          {
+            "name": "long",
+            "in": "query",
+            "description": "stands for longitude, ranges from -180 to 180 degrees.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "15.845884248605415"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "stands for latitude, ranges from -90 to 90 degrees.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "56.00694388528538" 
+            }
+          },
+          {
+            "name": "rad",
+            "in": "query",
+            "description": "stands for radius, defaults to 200 meters.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "200"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationContent"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "client server error prevented the data from being parsed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error parsing query params"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
                     }
                   }
                 }
@@ -196,7 +475,8 @@
         "properties": {
           "timestamp": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "example": "2022-02-12 15:12:34"
           },
           "UTC_offset": {
             "type": "number",
@@ -260,7 +540,8 @@
         "properties": {
           "timestamp": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "example": "2022-02-22 13:12:34"
           },
           "latitude": {
             "type": "number",
@@ -294,38 +575,57 @@
         },
         "description": "The response from \"GET: / temperature\"-endpoint."
       },
-      "inline_response_400": {
+      "pHResponse": {
         "type": "object",
         "properties": {
-          "formErrors": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "example": "Expected array, received object"
-            }
+          "pH": {
+            "type": "number",
+            "format": "float",
+            "example": "5.09119985487793"
           },
-          "fieldErrors": {
-            "type": "object"
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2017-08-16T20:19:44.000Z"
           }
-        }
+        },
+        
+        "description": "The response from \"GET: / pH\"-endpoint."
       },
-      "inline_response_405": {
+      "IndexResponse": {
         "type": "object",
         "properties": {
-          "error": {
+          "pH": {
+            "type": "number",
+            "format": "float",
+            "example": "7.568819899694824"
+          },
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": "289.0350035621094"
+          },
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": "0.014349699941708317"
+          },
+          "date": {
             "type": "string",
-            "example": "Method GET is not allowed for this endpoint."
-          }
-        }
-      },
-      "inline_response_500": {
-        "type": "object",
-        "properties": {
-          "error": {
+            "format": "date-time",
+            "example": "2017-08-16T20:19:44.000Z"
+          },
+          "position": {
             "type": "string",
-            "example": "Error uploading data"
+            "format": "point",
+            "example": {
+              "x": 15.428787798375415,
+              "y": 56.19131790472419
+              }
           }
-        }
+        },
+        
+        "description": "The response from \"GET: / Index\"-endpoint."
       },
       "UploadResponse_sensors": {
         "type": "object",
@@ -346,6 +646,52 @@
             "example": 7.1
           }
         }
+      },
+      "LocationContent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "format": "int",
+            "example": "2"
+          },
+          "pH": {
+            "type": "number",
+            "format": "float",
+            "example": "7.568819899694824"
+          },
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": "14.315364365373466"
+          },
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": "4.8896979698989978"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-01-16T20:19:44.000Z"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": "15.845884248605417"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": "56.00694388528538"
+          },
+          "distance in meters": {
+            "type": "number",
+            "format": "float",
+            "example": "253.35262336326636"
+          }
+        },
+        "description": "The response from \"GET: / bylocation\"-endpoint."
       }
     }
   }
