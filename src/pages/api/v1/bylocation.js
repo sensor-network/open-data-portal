@@ -62,7 +62,7 @@ export default async function (req, res) {
     const [data] = await connection.execute(query);
 
     // Close connection to the database
-    connection.destroy();
+    await connection.end();
 
     // Respond with appropriate status code and json
     res.status(STATUS_OK).json({content: data});

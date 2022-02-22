@@ -41,7 +41,7 @@ export default async function handler(req, res){
         const [data] = await connection.execute(query);
 
         //Disconnecting from the database
-        connection.destroy();
+        await connection.end();
 
         let unit = req.query.unit || 'K';   // fallback to `Kelvin` if not specified
         if(unit.toUpperCase() !== 'K'){
