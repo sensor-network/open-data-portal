@@ -36,13 +36,20 @@ export default async function (req, res) {
 
     //query parameters
     const SRID = 4326 //default spatial reference system
-      // Try parsing params using Zod schema
+    // Try parsing params using Zod schema
     const params = QuerySchema.parse(req.query);
     
     // Prepare the query
+
     const query = mysql.format(`
       SELECT 
-        *, 
+        id,
+        pH,
+        temperature,
+        conductivity,
+        date,
+        ST_Y(position) as longitude,
+        ST_X(position) as latitude,
         ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) as 'distance in meters'
       FROM 
         Data 
@@ -80,3 +87,4 @@ export default async function (req, res) {
       }
   }
 } 
+
