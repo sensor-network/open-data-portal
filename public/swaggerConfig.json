@@ -268,7 +268,7 @@
         }
       }
     },
-    "/all":{
+    "index":{
       "get": {
         "tags": [
           "Fetch by data-type"
@@ -310,7 +310,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/AllResponse"
+                    "$ref": "#/components/schemas/IndexResponse"
                   }
                 }
               }
@@ -499,7 +499,7 @@
         
         "description": "The response from \"GET: / pH\"-endpoint."
       },
-      "AllResponse": {
+      "IndexResponse": {
         "type": "object",
         "properties": {
           "pH": {
@@ -532,7 +532,7 @@
           }
         },
         
-        "description": "The response from \"GET: / All\"-endpoint."
+        "description": "The response from \"GET: / Index\"-endpoint."
       },
       "UploadResponse_sensors": {
         "type": "object",
