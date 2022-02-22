@@ -126,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         // Close connection to the database
-        connection.destroy();
+        await connection.end();
 
         // Respond with the inserted data
         res.status(STATUS_CREATED)
