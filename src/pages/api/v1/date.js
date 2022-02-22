@@ -55,7 +55,7 @@ export default async function handler(req, res){
     const [data] = await connection.execute(query);
     
     //Disconnecting from the database
-    connection.destroy();
+    await connection.end();
     
     
     res.status(STATUS_OK).json(data);
