@@ -1,17 +1,21 @@
 import mysql from "mysql2/promise"
 import {z, ZodError} from "zod";
 
+const STATUS_OK = 200
+const STATUS_BAD_REQUEST = 400
+const STATUS_SERVER_ERROR = 500
+
 const QuerySchema = z.object({
-    latitude: z.preprocess(   // preprocess converts the string-query to a number
+    lat: z.preprocess(   // preprocess converts the string-query to a number
         lat => Number(z.string().parse(lat)),   // validates the string could be parsed as number
         z.number().gte(-90).lte(90)  // then validate the number is in valid range
     ),
-    longitude: z.preprocess(
+    long: z.preprocess(
         long => Number(z.string().parse(long)),
         z.number().gte(-180).lte(180)
     ),
 
-    radius: z.preprocess(
+    rad: z.preprocess(
         rad => Number(z.string().default("200").parse(rad)),
         z.number().positive()
     )
@@ -25,7 +29,7 @@ export default async function (req, res) {
         user     : process.env.NEXT_PUBLIC_DB_USER,
         password : process.env.NEXT_PUBLIC_DB_PASSWORD,
         database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        ssl      : {"rejectUnauthorized":true},
+        // ssl      : {"rejectUnauthorized":true},
         timezone : "+00:00"
     });
     await connection.connect();
@@ -39,17 +43,17 @@ export default async function (req, res) {
     const query = mysql.format(`
       SELECT 
         *, 
-        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) as 'distance in meters'
+        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) as 'distance in meters'
       FROM 
         Data 
       WHERE 
-        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) < ?
+        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) < ?
       ORDER BY 
-        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) ASC;
+        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) ASC;
     `, 
       [
         params.long, params.lat, SRID,
-        params.long, params.lat, SRID, params.radius,
+        params.long, params.lat, SRID, params.rad,
         params.long, params.lat, SRID
       ]
     ); 
@@ -61,18 +65,18 @@ export default async function (req, res) {
     connection.destroy();
 
     // Respond with appropriate status code and json
-    res.status(200).json({content: data});
+    res.status(STATUS_OK).json({content: data});
   }
 
   catch (e) {
       if (e instanceof ZodError) {
           console.log("Error parsing query params:\n", e.flatten())
-          res.status(400)     // 400: bad request (syntax error)
+          res.status(STATUS_BAD_REQUEST)
               .json(e.flatten());
       }
       else {
-          // internal server error
-          res.status(500).json({error: "Internal server error"})
+          console.error(e)
+          res.status(STATUS_SERVER_ERROR).json({error: "Internal server error"})
       }
   }
 } 
