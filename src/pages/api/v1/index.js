@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         user     : process.env.NEXT_PUBLIC_DB_USER,
         password : process.env.NEXT_PUBLIC_DB_PASSWORD,
         database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        ssl      : {"rejectUnauthorized":true},
+        // ssl      : {"rejectUnauthorized":true},
         timezone : "+00:00"
     });
         await connection.connect();
