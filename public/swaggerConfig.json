@@ -268,6 +268,93 @@
         }
       }
     },
+    "/conductivity":{
+      "get": {
+        "tags": [
+          "Fetch by data-type"
+        ],
+        "summary": "Gets a list of conductivity-values along with the date when the measurement was taken",
+        "description": "Retrieves a JSON array with objects containing the conductivity along with the date. All dates are in UTC timezone",
+        "operationId": "getConductivity",
+        "parameters": [
+          {
+            "name": "unit",
+            "in": "query",
+            "description": "Optional. Sends the temperature based on what the unit is. Available units are (most of which are derived from Siemens per meter (milli/micro, meter/centimeters etc)) `Spm`, `S/m`, `mhopm`, `mho/m`, `mSpm`, `mS/m`, `uSpm`, `uS/m`, `Spcm`, `S/cm`, `mhopmc`, `mho/cm`, `mSpcm`, `mS/cm`, `uSpcm`, `uS/cm`, `ppm` and `PPM`. The default unit is Siemens per meter.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "uSpcm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json":{
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConductivityResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the `unit` parameter receives a value other than the available units mentioned above",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Provided conductivity unit 'ohm' is not supported. Read the documentation for valid parameters."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405":{
+            "description": "Method not allowed. The endpoint only accepts GET-requests.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/":{
       "get": {
         "tags": [
@@ -497,7 +584,23 @@
           }
         },
         
-        "description": "The response from \"GET: / pH\"-endpoint."
+        "description": "The response from `GET: / pH`-endpoint."
+      },
+      "ConductivityResponse": {
+        "type": "object",
+        "properties": {
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": "0.04345324521234"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-02-15T10:44:00.000Z"
+          }
+        },
+        "description": "The response from `GET: /conductivity`-endpoint."
       },
       "IndexResponse": {
         "type": "object",
@@ -532,7 +635,7 @@
           }
         },
         
-        "description": "The response from \"GET: / Index\"-endpoint."
+        "description": "The response from `GET: /`-endpoint."
       },
       "UploadResponse_sensors": {
         "type": "object",
