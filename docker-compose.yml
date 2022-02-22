@@ -2,18 +2,22 @@
 version: '3.1'
 
 services:
-  # Sensor Network's mySQL database, built using `./db/Dockerfile`
+  # mySQL Database with init-scripts from ./db/init
   db:
-    image: ghcr.io/sensor-network/open-data-portal-db:main
+    image: mysql:8
+    # specifying platform to override ARM-machines trying to pull non-existing ARM version of the image
+    platform: linux/x86_64
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: sensor_network
     restart: always
     ports:
       - "3306:3306"
     volumes:
-     - ./db/mysql:/var/lib/mysql  # Link a volume from host to persist the data
+      - ./db/init:/docker-entrypoint-initdb.d   # Link init scripts to the container
+      - ./db/mysql:/var/lib/mysql  # Link a volume from host to persist the data
 
   # Open Data Portal Web Application with API, built using `./Dockerfile`
   app:
