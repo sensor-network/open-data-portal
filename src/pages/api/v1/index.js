@@ -34,7 +34,7 @@ export default async function handler(req, res) {
         // Creates and executes the query and then closes the connection
         const query = mysql.format('SELECT * FROM Data;');
         const [data] = await connection.execute(query);
-        connection.destroy();
+        await connection.end();
     
         let unit = req.query.tempunit || 'K';   // fallback to `Kelvin` if not specified
         if(unit.toUpperCase() !== 'K'){
