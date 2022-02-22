@@ -3,13 +3,14 @@ name: Create and publish a Docker image
 on:
   push:
     branches: ['main']
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  APP_IMAGE_NAME: ${{ github.repository }}-app
 
 jobs:
-  build-and-push-image:
+  build-and-push-app-image:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,9 +31,9 @@ jobs:
         id: meta
         uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}
 
-      - name: Build and push Docker image
+      - name: Build and push Docker image (app)
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .

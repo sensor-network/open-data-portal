@@ -26,30 +26,38 @@ This application can be built and run in two ways:
 If you want to build the application image yourself, you can
 
 1. Clone the repo: 
-```
+```bash
 $ git clone https://github.com/sensor-network/open-data-portal.git
 $ cd open-data-portal
 ```
 2. Build the image: 
-```
+```bash
 $ docker build -t open-data-portal .
 ```
 
 #### Run
-If you built the image locally you can now just run the application using Docker Compose. Depending on your version of docker/docker compose:
+You can now run the application using Docker Compose.
+
+If you build the image locally:
+1. In `docker-compose.yml`, change `image` to use your locally built image.
+```yml
+# ...
+app:
+  image: open-data-portal
+# ...
 ```
+2. Then, depending on your version of docker/docker compose:
+```bash
 $ docker compose up
 # or,
 $ docker-compose up
 ```
 
-If you didn't build the image you can use the publicly available image from `ghcr`:
-1. In `docker-compose.yml`, uncomment the line `image: ghcr.io/sensor-network/open-data-portal:main` and comment out the line `image: open-data-portal`
-2. Run the application using Docker Compose as described above.
+If you didn't build the image you can use the publicly available image from `ghcr`, in which case you can skip step 1 above.
 
 The application will then start at `localhost:3000`
 
-### From source (supply your own database)
+### From source
 #### Prerequisites
 
 - [Node.js 12.22.0](https://nodejs.org/en/) or later
@@ -57,7 +65,7 @@ The application will then start at `localhost:3000`
 #### Initial setup
 
 1. Clone the repo:
-```console
+```bash
 $ git clone https://github.com/sensor-network/open-data-portal.git
 $ cd open-data-portal
 ```
@@ -69,25 +77,25 @@ $ cd open-data-portal
 - NEXT_PUBLIC_API_KEY
 
 3. Install the project's dependencies:
-```console
+```bash
 $ npm install
 ```
 
 #### Build
 
-Build an optimized production version:
-```console
+Build an optimized production version of the app:
+```bash
 $ npm run build
 ```
 
 #### Test
 
 Run all tests:
-```console
+```bash
 $ npm test
 ````
 Tests can also be run in `watch`-mode while developing to have them re-run each compilation:
-````console
+````bash
 $ npm test:watch
 ````
 
@@ -97,14 +105,20 @@ $ npm test:watch
 #### Run
 
 Run developer version with fast refresh:
-```console
+```bash
 $ npm run dev
 ```
 
 Or start a built production version:
-```console
+```bash
 $ npm run start
 ```
+
+In case you dont have a database running, you can also run a containerized database to go along with the application using 
+```bash
+$ docker compose up db
+```
+The default credentials for this database can be found in [docker-compose.yml](./docker-compose.yml)
 
 Then open the app in the browser at the link shown in your terminal.
 

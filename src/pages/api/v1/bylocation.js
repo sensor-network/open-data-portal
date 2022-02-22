@@ -29,7 +29,7 @@ export default async function (req, res) {
         user     : process.env.NEXT_PUBLIC_DB_USER,
         password : process.env.NEXT_PUBLIC_DB_PASSWORD,
         database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        ssl      : {"rejectUnauthorized":true},
+        // ssl      : {"rejectUnauthorized":true},
         timezone : "+00:00"
     });
     await connection.connect();
@@ -69,7 +69,7 @@ export default async function (req, res) {
     const [data] = await connection.execute(query);
 
     // Close connection to the database
-    connection.destroy();
+    await connection.end();
 
     // Respond with appropriate status code and json
     res.status(STATUS_OK).json({content: data});
