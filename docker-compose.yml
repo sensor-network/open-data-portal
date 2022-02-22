@@ -4,9 +4,7 @@ version: '3.1'
 services:
   # mySQL Database with init-scripts from ./db/init
   db:
-    image: mysql:8
-    # specifying platform to override ARM-machines trying to pull non-existing ARM version of the image
-    platform: linux/x86_64
+    image: mysql:8-oracle
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: admin
