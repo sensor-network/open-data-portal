@@ -46,8 +46,8 @@ export default async function handler(req, res){
     await connection.connect();
     
     //Specifying mySQL query
-    const query = "SELECT * FROM Data WHERE date >= \"" + startDate.format("YYYY-MM-DD") + 
-      "\" AND date <= \"" + endDate.format("YYYY-MM-DD") + "\" ORDER BY date;";
+    const query = "SELECT * FROM Data WHERE date(date) >= \"" + startDate.format("YYYY-MM-DD") + 
+      "\" AND date(date) <= \"" + endDate.format("YYYY-MM-DD") + "\" ORDER BY date;";
     
       console.log(query);
 
