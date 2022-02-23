@@ -267,6 +267,15 @@
           }
         }
       }
+    },
+    "/date": {
+      "get": {
+        "tags": [
+          "Fetch by data-type"
+        ],
+        "summary": "Gets all data between two time intervals",
+        "description": ""
+      }
     }
   },
   "components": {
