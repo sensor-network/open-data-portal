@@ -274,7 +274,96 @@
           "Fetch by data-type"
         ],
         "summary": "Gets all data between two time intervals",
-        "description": ""
+        "description": "Retrieves a JSON array with objects containing all the data within the given time interval. The data is ordered by the date in UTC.",
+        "operationId": "getDate",
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Required. The start date for the time interval. The only accepted format is YYYY-MM-DD",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "2019-05-31"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Required. The end date for the time interval. The only accepted format is YYYY-MM-DD",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "2019-08-25"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/dataResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If the parameters are omitted or are not in the correct format YYYY-MM-DD.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Invalid parameters. Please, read the documentation for valid parameters."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -392,6 +481,10 @@
         },
         "description": "The response from \"GET: / temperature\"-endpoint."
       },
+      "getDate": {
+        "$ref": "#/components/schemas/dataResponse",
+        "description": "The response from \"GET: / temperature\"-endpoint."
+      },
       "pHResponse": {
         "type": "object",
         "properties": {
@@ -425,6 +518,41 @@
             "type": "number",
             "format": "float",
             "example": 7.1
+          }
+        }
+      },
+      "dataResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "format": "integer",
+            "example": "542"
+          },
+          "pH": {
+            "type": "number",
+            "format": "float",
+            "example": "7.149479866027832"
+          },
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": "289.0350036621094"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2007-12-11T18:05:11.000Z"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": "15.845884248605417"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": "56.00694388528538"
           }
         }
       }
