@@ -39,17 +39,35 @@ export default async function handler(req, res){
       user     : process.env.NEXT_PUBLIC_DB_USER,
       password : process.env.NEXT_PUBLIC_DB_PASSWORD,
       database : process.env.NEXT_PUBLIC_DB_DATABASE,
-      //ssl      : {"rejectUnauthorized":true},
+      ssl      : {"rejectUnauthorized":true},
       timezone : "+00:00"
     });
 
     await connection.connect();
     
     //Specifying mySQL query
-    const query = "SELECT * FROM Data WHERE date(date) >= \"" + startDate.format("YYYY-MM-DD") + 
-      "\" AND date(date) <= \"" + endDate.format("YYYY-MM-DD") + "\" ORDER BY date;";
+    const query = mysql.format(`
+      SELECT
+        id,
+        pH,
+        temperature,
+        conductivity,
+        date,
+        ST_Y(position) as longitude,
+        ST_X(position) as latitude
+      FROM
+        Data
+      WHERE
+        date(date) >= ? AND date(date) <= ?
+      ORDER BY
+        date;
+    `,
+    [
+      startDate.format("YYYY-MM-DD"),
+      endDate.format("YYYY-MM-DD")
+    ]);
     
-      console.log(query);
+      //console.log(query);
 
     //Executing the query
     const [data] = await connection.execute(query);
