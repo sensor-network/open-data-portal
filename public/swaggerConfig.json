@@ -662,6 +662,10 @@
         },
         "description": "The response from \"GET: / temperature\"-endpoint."
       },
+      "getDate": {
+        "$ref": "#/components/schemas/dataResponse",
+        "description": "The response from \"GET: / temperature\"-endpoint."
+      },
       "pHResponse": {
         "type": "object",
         "properties": {
