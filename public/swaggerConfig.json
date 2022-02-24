@@ -3,7 +3,7 @@
   "info": {
     "title": "Sensor Network - Open Data Portal API",
     "description": "The API for fetching data about the Karlskrona Archipelago's water quality",
-    "version": "0.2"
+    "version": "1.0"
   },
   "servers": [
     {
