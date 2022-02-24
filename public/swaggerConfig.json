@@ -35,7 +35,7 @@
           }
         ],
         "requestBody": {
-          "description": "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can provide multiple measurements at once simply by providing multiple `Measurement`-objects in the array. Note that all objects has to be a valid input for the request to be successful.",
+          "description": "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can provide multiple measurements at once simply by providing multiple `Measurement`-objects in the array. Note that all objects has to be a valid input for the request to be successful. Temperature can be supplied as `K`- kelvin, `C`- celsius and `F` - fahrenheit. Conductivity can be supplied as variations of `Spm`- Siemens per metre, `mhopm`- mho per metre, `ppm`- parts per million.",
           "content": {
             "application/json": {
               "schema": {
@@ -62,7 +62,7 @@
             }
           },
           "400": {
-            "description": "The provided JSON-body could not be parsed correctly. Response JSON contains information what could not be parsed, either the entire form (speciffied in field `formErrors`) or a specific field (specified in `fieldErrors`).",
+            "description": "The provided JSON-body could not be parsed correctly. Response JSON contains information what could not be parsed, either the entire form - eg. a required field is missing or an unknown field is specified (specified in field `formErrors`) or a specific field - eg. supplied unit is not supported (specified in `fieldErrors`).",
             "content": {
               "application/json": {
                 "schema": {
@@ -77,6 +77,22 @@
                     },
                     "fieldErrors": {
                       "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Your request could not be verified. You either didn't supply an API key or it was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "The provided API key could not be verified."
                     }
                   }
                 }
@@ -397,7 +413,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/IndexResponse"
+                    "$ref": "#/components/schemas/dataResponse"
                   }
                 }
               }
@@ -831,41 +847,6 @@
             "example": "56.00694388528538"
           }
         }
-      },
-      "IndexResponse": {
-        "type": "object",
-        "properties": {
-          "pH": {
-            "type": "number",
-            "format": "float",
-            "example": "7.568819899694824"
-          },
-          "temperature": {
-            "type": "number",
-            "format": "float",
-            "example": "289.0350035621094"
-          },
-          "conductivity": {
-            "type": "number",
-            "format": "float",
-            "example": "0.014349699941708317"
-          },
-          "date": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2017-08-16T20:19:44.000Z"
-          },
-          "position": {
-            "type": "string",
-            "format": "point",
-            "example": {
-              "x": 15.428787798375415,
-              "y": 56.19131790472419
-              }
-          }
-        },
-        
-        "description": "The response from `GET: /`-endpoint."
       },
       "UploadResponse_sensors": {
         "type": "object",
