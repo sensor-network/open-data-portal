@@ -32,7 +32,18 @@ export default async function handler(req, res) {
         await connection.connect();
 
         // Creates and executes the query and then closes the connection
-        const query = mysql.format('SELECT * FROM Data;');
+        const query = mysql.format(`
+            SELECT
+                id,
+                pH,
+                temperature,
+                conductivity,
+                date,
+                ST_Y(position) as longitude,
+                ST_X(position) as latitude
+            FROM
+                Data
+        `);
         const [data] = await connection.execute(query);
         await connection.end();
     
