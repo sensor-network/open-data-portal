@@ -30,30 +30,18 @@ If you want to build the application image yourself, you can
 $ git clone https://github.com/sensor-network/open-data-portal.git
 $ cd open-data-portal
 ```
-2. Build the image: 
+2. Build a local image: 
 ```bash
-$ docker build -t open-data-portal .
+$ docker compose build app 
 ```
 
 #### Run
 You can now run the application using Docker Compose.
+If you build the image locally, it will use the local image. Otherwise, it will pull the latest version from the registry.
 
-If you build the image locally:
-1. In `docker-compose.yml`, change `image` to use your locally built image.
-```yml
-# ...
-app:
-  image: open-data-portal
-# ...
-```
-2. Then, depending on your version of docker/docker compose:
 ```bash
 $ docker compose up
-# or,
-$ docker-compose up
 ```
-
-If you didn't build the image you can use the publicly available image from `ghcr`, in which case you can skip step 1 above.
 
 The application will then start at `localhost:3000`
 
