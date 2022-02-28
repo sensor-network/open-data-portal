@@ -2,15 +2,19 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
 import mysql from 'mysql2/promise';
 
+import { getConnectionPool } from "src/lib/database";
+
 import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
 import { sensorDataAsSI } from "src/lib/conversions/convertSensors";
 import { ConversionError } from "src/lib/CustomErrors";
 
-const STATUS_CREATED = 201
-const STATUS_BAD_REQUEST = 400
-const STATUS_FORBIDDEN = 403
-const STATUS_METHOD_NOT_ALLOWED = 405
-const STATUS_SERVER_ERROR = 500
+import {
+    STATUS_CREATED,
+    STATUS_BAD_REQUEST,
+    STATUS_FORBIDDEN,
+    STATUS_METHOD_NOT_ALLOWED,
+    STATUS_SERVER_ERROR
+} from "src/lib/httpStatusCodes"
 
 // Incoming requests must follow this schema
 const Measurement = z.object({
@@ -26,13 +30,14 @@ const Measurement = z.object({
         temperature_unit: z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
-        conductivity_unit: z.enum(
-            ["Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"]
-        ).optional(),
+        conductivity_unit: z.enum([
+            "Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm",
+            "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"
+        ]).optional(),
     }).strict()
 }).strict();
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function (req: NextApiRequest, res: NextApiResponse) {
     // Only allow POST-requests for this endpoint.
     if (req.method !== "POST") {
         console.log(`Error: Method ${req.method} not allowed.`)
@@ -43,37 +48,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
     }
 
+    if (!(req.body instanceof Array)) {
+        console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
+        res.status(STATUS_BAD_REQUEST)
+            .json({error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`});
+        return;
+    }
+
+    // Basic authorization of predefined API keys. Some more sophisticated authorization may be done in the future.
+    const api_key = req.query.api_key;
+    if (!api_key) {
+        console.log("ERROR: You have to provide an api_key as query parameter.");
+        res.status(STATUS_FORBIDDEN).json({ error: "No API key provided." });
+        return;
+    }
+    if (api_key !== process.env.NEXT_PUBLIC_API_KEY) {
+        console.log("ERROR: The provided api_key could not be verified.");
+        res.status(STATUS_FORBIDDEN).json({ error: "The provided API key could not be verified." });
+        return;
+    }
+
     try {
-        if (!(req.body instanceof Array)) {
-            console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
-            res.status(STATUS_BAD_REQUEST)
-                .json({ error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`});
-            return;
-        }
-
-        // Basic authorization of predefined API keys. Some more sophisticated authorization may be done in the future.
-        const api_key = req.query.api_key;
-        if (!api_key) {
-            console.log("ERROR: You have to provide an api_key as query parameter.");
-            res.status(STATUS_FORBIDDEN).json({ error: "No API key provided." });
-            return;
-        }
-        if (api_key !== process.env.NEXT_PUBLIC_API_KEY) {
-            console.log("ERROR: The provided api_key could not be verified.");
-            res.status(STATUS_FORBIDDEN).json({ error: "The provided API key could not be verified." });
-            return;
-        }
-
         // Establish connection to database
-        const connection = await mysql.createConnection({
-            host: process.env.NEXT_PUBLIC_DB_HOST,
-            user: process.env.NEXT_PUBLIC_DB_USER,
-            password: process.env.NEXT_PUBLIC_DB_PASSWORD,
-            database: process.env.NEXT_PUBLIC_DB_DATABASE,
-            // ssl      : {"rejectUnauthorized":true},
-            timezone: "+00:00"
-        });
-        await connection.connect();
+        const connection = await getConnectionPool();
 
         // Iterate all the measurements, parse them using Zod and insert the data into the database
         let measurements = [];
@@ -121,12 +118,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 ]
             );
             // Then execute the query asynchronously
-            await connection.execute(query);
+            await connection.query(query);
             measurements.push(responseObject);
         }
-
-        // Close connection to the database
-        await connection.end();
 
         // Respond with the inserted data
         res.status(STATUS_CREATED)

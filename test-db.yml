@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  test-db:
+    image: mysql:8-oracle
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+      MYSQL_DATABASE: sensor_network
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/init:/docker-entrypoint-initdb.d   # database init-scripts

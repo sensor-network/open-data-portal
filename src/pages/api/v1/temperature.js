@@ -1,13 +1,18 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 //This file will be responsible for querying only the the temperature and the date columns.
 import mysql from "mysql2/promise"
-import { temperatureFromKelvin } from "../../../lib/conversions/convertTemperature.js"
-import {ConversionError} from "../../../lib/CustomErrors";
 
-const STATUS_OK = 200
-const STATUS_BAD_REQUEST = 400
-const STATUS_METHOD_NOT_ALLOWED = 405
-const STATUS_SERVER_ERROR = 500
+import { getConnectionPool } from "src/lib/database";
+
+import { temperatureFromKelvin } from "../../../lib/conversions/convertTemperature.js"
+import { ConversionError } from "../../../lib/CustomErrors";
+
+import {
+    STATUS_OK,
+    STATUS_BAD_REQUEST,
+    STATUS_METHOD_NOT_ALLOWED,
+    STATUS_SERVER_ERROR
+} from "src/lib/httpStatusCodes";
 
 export default async function handler(req, res){
     // Only allow GET-requests for this endpoint. I do not know how to test this
@@ -23,25 +28,13 @@ export default async function handler(req, res){
     try {
 
         //Connecting to the database
-        const connection = await mysql.createConnection({
-            host     : process.env.NEXT_PUBLIC_DB_HOST,
-            user     : process.env.NEXT_PUBLIC_DB_USER,
-            password : process.env.NEXT_PUBLIC_DB_PASSWORD,
-            database : process.env.NEXT_PUBLIC_DB_DATABASE,
-            // ssl      : {"rejectUnauthorized":true},
-            timezone : "+00:00"
-        });
-
-        await connection.connect();
+        const connection = await getConnectionPool();
 
         //Specifying mySQL query
         const query = "SELECT temperature, date FROM Data WHERE temperature IS NOT NULL;";
 
         //Executing the query
-        const [data] = await connection.execute(query);
-
-        //Disconnecting from the database
-        await connection.end();
+        const [data] = await connection.query(query);
 
         let unit = req.query.unit || 'K';   // fallback to `Kelvin` if not specified
         if(unit.toUpperCase() !== 'K'){

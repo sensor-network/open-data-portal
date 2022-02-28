@@ -1,4 +1,4 @@
-import {timestampToUTC} from "../src/lib/conversions/convertTimestamp";
+import {timestampToUTC} from "../../../src/lib/conversions/convertTimestamp";
 
 // Format: YYYY-MM-DDTHH:mm:ss
 const test_cases1 = [

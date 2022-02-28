@@ -1,5 +1,5 @@
-import {temperatureToKelvin} from "../src/lib/conversions/convertTemperature";
-import {temperatureFromKelvin} from "../src/lib/conversions/convertTemperature";
+import {temperatureToKelvin} from "../../../src/lib/conversions/convertTemperature";
+import {temperatureFromKelvin} from "../../../src/lib/conversions/convertTemperature";
 
 const valid_test_cases = [
     {input_temperature: 0,       temperature_unit: "K", expected_output: 0},
