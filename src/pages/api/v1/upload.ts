@@ -70,15 +70,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 
     try {
         // Establish connection to database
-        const connection = await mysql.createConnection({
-            host: process.env.NEXT_PUBLIC_DB_HOST,
-            user: process.env.NEXT_PUBLIC_DB_USER,
-            password: process.env.NEXT_PUBLIC_DB_PASSWORD,
-            database: process.env.NEXT_PUBLIC_DB_DATABASE,
-            // ssl      : {"rejectUnauthorized":true},
-            timezone: "+00:00"
-        });
-        await connection.connect();
+        const connection = await getConnectionPool();
 
         // Iterate all the measurements, parse them using Zod and insert the data into the database
         let measurements = [];
@@ -126,12 +118,9 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
                 ]
             );
             // Then execute the query asynchronously
-            await connection.execute(query);
+            await connection.query(query);
             measurements.push(responseObject);
         }
-
-        // Close connection to the database
-        await connection.end();
 
         // Respond with the inserted data
         res.status(STATUS_CREATED)
