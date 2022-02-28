@@ -1,5 +1,5 @@
-import {conductivityToSpm} from "../src/lib/conversions/convertConductivity"
-import {conductivityFromSpm} from "../src/lib/conversions/convertConductivity"
+import {conductivityToSpm} from "../../../src/lib/conversions/convertConductivity"
+import {conductivityFromSpm} from "../../../src/lib/conversions/convertConductivity"
 
 const basic_test_cases = [
     {conductivity: 1, unit: "Spm", expected_output: 1},
