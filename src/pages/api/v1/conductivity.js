@@ -1,6 +1,8 @@
 import mysql from 'mysql2/promise'
 import { z, ZodError} from "zod";
 
+import { getConnectionPool } from "src/lib/database";
+
 import {ConversionError} from "../../../lib/CustomErrors";
 import {conductivityFromSpm} from "../../../lib/conversions/convertConductivity";
 
@@ -12,10 +14,10 @@ import {
 } from "src/lib/httpStatusCodes";
 
 const QuerySchema = z.object({
-    unit: z.enum(
-        ["Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm",
-         "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"]
-    ).optional().default("Spm")
+    unit: z.enum([
+        "Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm",
+        "S/cm", "Spcm", "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"
+    ]).optional().default("Spm")
 }).strict();
 
 export default async function(req, res) {
@@ -33,15 +35,7 @@ export default async function(req, res) {
         const { unit } = QuerySchema.parse(req.query);
 
         // Establish connection and connect to db
-        const connection = await mysql.createConnection({
-            host: process.env.NEXT_PUBLIC_DB_HOST,
-            user     : process.env.NEXT_PUBLIC_DB_USER,
-            password : process.env.NEXT_PUBLIC_DB_PASSWORD,
-            database : process.env.NEXT_PUBLIC_DB_DATABASE,
-            // ssl      : {"rejectUnauthorized":true},
-            timezone : "+00:00"
-        });
-        await connection.connect();
+        const connection = await getConnectionPool();
 
         // Prepare query, then execute
         const query = mysql.format(`
@@ -50,8 +44,7 @@ export default async function(req, res) {
             WHERE conductivity IS NOT NULL
             ORDER BY id ASC;
         `);
-        const [data] = await connection.execute(query);
-        await connection.end();
+        const [data] = await connection.query(query);
 
         // Convert conductivity if needed (siemens per meter or moh per meter)
         if (!["Spm", "S/m", "mho/m", "mhopm"].includes(unit)) {

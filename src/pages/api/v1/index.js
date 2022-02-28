@@ -1,8 +1,11 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import mysql from 'mysql2/promise';
+
+import { getConnectionPool } from "src/lib/database";
+
 import { temperatureFromKelvin } from "../../../lib/conversions/convertTemperature.js";
 import { conductivityFromSpm } from "../../../lib/conversions/convertConductivity.js";
-import {ConversionError} from "../../../lib/CustomErrors";
+import { ConversionError } from "../../../lib/CustomErrors";
 
 import {
     STATUS_OK,
@@ -22,16 +25,8 @@ export default async function handler(req, res) {
         return;
     }
     try {
-      // Connecting to database
-      const connection = await mysql.createConnection({
-        host     : process.env.NEXT_PUBLIC_DB_HOST,
-        user     : process.env.NEXT_PUBLIC_DB_USER,
-        password : process.env.NEXT_PUBLIC_DB_PASSWORD,
-        database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        // ssl      : {"rejectUnauthorized":true},
-        timezone : "+00:00"
-    });
-        await connection.connect();
+        // Connecting to database
+        const connection = await getConnectionPool();
 
         // Creates and executes the query and then closes the connection
         const query = mysql.format(`
@@ -46,8 +41,7 @@ export default async function handler(req, res) {
             FROM
                 Data
         `);
-        const [data] = await connection.execute(query);
-        await connection.end();
+        const [data] = await connection.query(query);
     
         let unit = req.query.tempunit || 'K';   // fallback to `Kelvin` if not specified
         if(unit.toUpperCase() !== 'K'){

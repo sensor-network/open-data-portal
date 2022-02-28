@@ -1,5 +1,7 @@
 import mysql from 'mysql2/promise';
 
+import { getConnectionPool } from "src/lib/database";
+
 import {
     STATUS_OK,
     STATUS_METHOD_NOT_ALLOWED,
@@ -17,21 +19,12 @@ export default async function handler(req, res) {
         return;
     }
     try {
-      // Connecting to database
-      const connection = await mysql.createConnection({
-        host     : process.env.NEXT_PUBLIC_DB_HOST,
-        user     : process.env.NEXT_PUBLIC_DB_USER,
-        password : process.env.NEXT_PUBLIC_DB_PASSWORD,
-        database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        // ssl      : {"rejectUnauthorized":true},
-        timezone : "+00:00"
-    });
-        await connection.connect();
+        // Connecting to database
+        const connection = await getConnectionPool();
 
-        // Creates and executes the query and then closes the connection
+        // Creates and executes the query
         const query = mysql.format('SELECT pH, date FROM Data WHERE pH IS NOT NULL;');
-        const [data] = await connection.execute(query);
-        await connection.end();
+        const [data] = await connection.query(query);
 
         // Returning the data
         res.status(STATUS_OK).json({content: data});

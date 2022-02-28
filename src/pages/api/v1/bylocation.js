@@ -1,6 +1,8 @@
 import mysql from "mysql2/promise"
 import {z, ZodError} from "zod";
 
+import { getConnectionPool } from "src/lib/database";
+
 import {
     STATUS_OK,
     STATUS_BAD_REQUEST,
@@ -26,15 +28,7 @@ const QuerySchema = z.object({
 export default async function (req, res) {
   try {
     // Establish database connection and connect
-    const connection = await mysql.createConnection({
-        host     : process.env.NEXT_PUBLIC_DB_HOST,
-        user     : process.env.NEXT_PUBLIC_DB_USER,
-        password : process.env.NEXT_PUBLIC_DB_PASSWORD,
-        database : process.env.NEXT_PUBLIC_DB_DATABASE,
-        // ssl      : {"rejectUnauthorized":true},
-        timezone : "+00:00"
-    });
-    await connection.connect();
+    const connection = await getConnectionPool();
 
     //query parameters
     const SRID = 4326 //default spatial reference system
@@ -68,10 +62,7 @@ export default async function (req, res) {
     ); 
 
     // Execute the query
-    const [data] = await connection.execute(query);
-
-    // Close connection to the database
-    await connection.end();
+    const [data] = await connection.query(query);
 
     // Respond with appropriate status code and json
     res.status(STATUS_OK).json({content: data});
