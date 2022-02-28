@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "docker compose -f test-db.yml up -d && jest",
+    "test": "jest",
     "test:watch": "jest --watch"
   },
   "dependencies": {
