@@ -78,7 +78,12 @@ $ npm run build
 
 #### Test
 
-Run all tests:
+In order to run the tests, you need to start up the test database:
+```bash
+$ docker compose -f test-db.yml up
+```
+
+Wait until you see that the database is ready for connections (usually < 10s). Then, you can run the tests:
 ```bash
 $ npm test
 ````
