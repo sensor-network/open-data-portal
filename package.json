@@ -6,7 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "docker compose -f test-db.yml up -d && jest",
     "test:watch": "jest --watch"
   },
   "dependencies": {
@@ -14,6 +14,7 @@
     "moment": "^2.29.1",
     "mysql2": "^2.3.3",
     "next": "^12.1.0",
+    "node-mocks-http": "^1.11.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "sharp": "^0.30.1",
