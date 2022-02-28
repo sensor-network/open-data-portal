@@ -1,8 +1,10 @@
 import mysql from 'mysql2/promise';
 
-const STATUS_METHOD_NOT_ALLOWED = 405;
-const STATUS_OK = 200;
-const STATUS_SERVER_ERROR = 500;
+import {
+    STATUS_OK,
+    STATUS_METHOD_NOT_ALLOWED,
+    STATUS_SERVER_ERROR
+} from "src/lib/httpStatusCodes";
 
 export default async function handler(req, res) {
     // Only allow GET-requests

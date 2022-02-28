@@ -4,10 +4,12 @@ import { temperatureFromKelvin } from "../../../lib/conversions/convertTemperatu
 import { conductivityFromSpm } from "../../../lib/conversions/convertConductivity.js";
 import {ConversionError} from "../../../lib/CustomErrors";
 
-const STATUS_OK = 200
-const STATUS_BAD_REQUEST = 400
-const STATUS_METHOD_NOT_ALLOWED = 405
-const STATUS_SERVER_ERROR = 500
+import {
+    STATUS_OK,
+    STATUS_BAD_REQUEST,
+    STATUS_METHOD_NOT_ALLOWED,
+    STATUS_SERVER_ERROR
+} from "src/lib/httpStatusCodes";
 
 export default async function handler(req, res) {
     // Only allow GET-requests

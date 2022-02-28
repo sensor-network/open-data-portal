@@ -1,9 +1,11 @@
 import mysql from "mysql2/promise"
 import {z, ZodError} from "zod";
 
-const STATUS_OK = 200
-const STATUS_BAD_REQUEST = 400
-const STATUS_SERVER_ERROR = 500
+import {
+    STATUS_OK,
+    STATUS_BAD_REQUEST,
+    STATUS_SERVER_ERROR
+} from "src/lib/httpStatusCodes";
 
 const QuerySchema = z.object({
     lat: z.preprocess(   // preprocess converts the string-query to a number
