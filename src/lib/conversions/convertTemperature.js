@@ -33,7 +33,7 @@ export function temperatureToKelvin(temperature, fromUnit) {
         throw new ZodError([{
             code: 'too_small',
             path: [ 'temperature' ],
-            message: ret < 0 ? 'Value should be greater than or equal to 273 Kelvin' : 'Value should be less than or equal to 313 Kelvin'
+            message: ret < 273 ? 'Value should be greater than or equal to 273 Kelvin' : 'Value should be less than or equal to 313 Kelvin'
         }]);
     return ret;
 }

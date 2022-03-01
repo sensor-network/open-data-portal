@@ -9,7 +9,7 @@ import {
 } from "src/lib/httpStatusCodes";
 
 describe('/upload API Endpoint', () => {
-    //console.log = jest.fn();    // silence the console logs during tests
+    console.log = jest.fn();    // silence the console logs during tests
     const api_key = process.env.NEXT_PUBLIC_API_KEY || 'default';
 
     function mockReqRes (method = 'POST') {
@@ -209,9 +209,9 @@ describe('/upload API Endpoint', () => {
         describe("the endpoint accepts only valid sensor data", () => {
             describe("the endpoint accepts only valid temperature inputs", () => {
                 /* NOTE: Shall we test e.g. string inputs? This is done in the converters? */
-                it("should not accept temperature values below 0 Kelvin", async () => {
+                it("should not accept temperature values below 273 Kelvin", async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: -1, temperature_unit: 'K'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: 272, temperature_unit: 'K'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
@@ -222,9 +222,9 @@ describe('/upload API Endpoint', () => {
                         })
                     );
                 });
-                it("should not accept temperature values below -273.15 Celsius", async () => {
+                it("should not accept temperature values below -0.15 Celsius", async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: -274, temperature_unit: 'C'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: -1, temperature_unit: 'C'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
@@ -235,9 +235,9 @@ describe('/upload API Endpoint', () => {
                         })
                     );
                 });
-                it("should not accept temperature values below -459.67 Fahrenheit", async () => {
+                it("should not accept temperature values below 31.73 Fahrenheit", async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: -460, temperature_unit: 'F'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: 31, temperature_unit: 'F'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
