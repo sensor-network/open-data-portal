@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
+import moment from 'moment';
 import mysql from 'mysql2/promise';
 
 import { getConnectionPool } from "src/lib/database";
@@ -20,8 +21,8 @@ import {
 const Measurement = z.object({
     timestamp: z.string()
         .refine((str) => (
-            new Date(str).getTime() / 1000 >= 0     // checks if string can be parsed as Date
-        ), { message: "String could not be parsed as Date" }),
+            moment(str, 'YYYY-MM-DD HH:mm:ss', true).isValid()  // Validates the timestamp is formatted correctly
+        ), { message: "Please provide timestamp formatted as YYYY-MM-DD HH:mm:ss" }),
     UTC_offset: z.number().gte(-12).lte(14),    // UTC ranges from -12 to 14
     latitude: z.number().gte(-90).lte(90),      // lat ranges from +-90 deg
     longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
@@ -29,7 +30,7 @@ const Measurement = z.object({
         temperature: z.number().optional(),
         temperature_unit: z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
-        conductivity: z.number().optional(),
+        conductivity: z.number().nonnegative().optional(),
         conductivity_unit: z.enum([
             "Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm",
             "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"
@@ -40,7 +41,7 @@ const Measurement = z.object({
 export default async function (req: NextApiRequest, res: NextApiResponse) {
     // Only allow POST-requests for this endpoint.
     if (req.method !== "POST") {
-        console.log(`Error: Method ${req.method} not allowed.`)
+        console.log(`ERROR: Method ${req.method} not allowed.`)
         res.status(STATUS_METHOD_NOT_ALLOWED)        // 405: method not allowed
             .json({ error:
                 `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
@@ -128,11 +129,19 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
     }
     catch (e) {
         if (e instanceof ZodError) {
-            console.log("Error parsing request json:\n", e.flatten())
+            /*
+             * e.issues can have path: ['sensors', '<ph_level>']. Want to remove the path
+             * 'sensors' so that the inner-path '<ph_level>' is shown, for better error messages
+             */
+            e.issues.forEach(issue => {
+                issue.path = issue.path.filter((path: string | number) => path !== 'sensors')
+            });
+            console.log("ERROR: Could not parse request json:\n", e.flatten())
             res.status(STATUS_BAD_REQUEST)
                 .json(e.flatten());
         }
-        else if (e instanceof ConversionError) {    // custom error-class to separate faulty input data
+        else if (e instanceof ConversionError) {
+            // should now be unreachable. all 'good' errors should now be ZodErrors.
             console.log("ERROR:", e.message)
             res.status(STATUS_BAD_REQUEST)
                 .json({error: e.message});
