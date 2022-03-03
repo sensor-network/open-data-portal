@@ -1,6 +1,9 @@
 import {ConversionError} from "../CustomErrors";
 import {ZodError} from "zod";
 
+const MIN_KELVIN = 263.15;
+const MAX_KELVIN = 303.15;
+
 export function temperatureToKelvin(temperature, fromUnit) {
     // Converts the provided temperature measurement from the given unit to Kelvin
     // Returns the temperature value in Kelvin if successful, else -1
@@ -28,14 +31,15 @@ export function temperatureToKelvin(temperature, fromUnit) {
             throw new ConversionError(`Provided temperature unit '${fromUnit}' is not supported. Read the documentation for valid parameters.`);
     }
 
-    if (ret < 273 || ret > 313)
+    let rounded = Math.round(ret * 1E3) / 1E3;  // round to 3 decimals
+    if (rounded < MIN_KELVIN || rounded > MAX_KELVIN)
         // Using ZodError here to have them formatted the same way as the rest of the BAD_REQUEST-errors are
         throw new ZodError([{
             code: 'too_small',
             path: [ 'temperature' ],
-            message: ret < 273 ? 'Value should be greater than or equal to 273 Kelvin' : 'Value should be less than or equal to 313 Kelvin'
+            message: ret < MIN_KELVIN ? `Value should be greater than or equal to ${MIN_KELVIN} Kelvin` : `Value should be less than or equal to ${MAX_KELVIN} Kelvin`
         }]);
-    return ret;
+    return rounded;
 }
 
 export function temperatureFromKelvin(temperature, toUnit){
@@ -63,5 +67,5 @@ export function temperatureFromKelvin(temperature, toUnit){
             throw new ConversionError(`Provided temperature unit '${toUnit}' is not supported. Read the documentation for valid parameters.`);
     }
 
-    return ret;
+    return Math.round(ret * 1E3) / 1E3;  // round to 3 decimals
 }

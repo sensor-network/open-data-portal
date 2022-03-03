@@ -136,7 +136,18 @@ describe('/upload API Endpoint', () => {
                     })
                 );
             });
-            it("[FOR NOW] should not accept timestamps formatted as YYYY-MM-DDThh:mm:ss.SSSZ", async () => {
+            it("should accept timestamps formatted as YYYY-MM-DD hh:mm:ss", async () => {
+                const { req, res } = mockReqRes();
+                req.body = [acceptedMeasurement];
+                await handler(req, res);
+                expect(res._getStatusCode()).toEqual(STATUS_CREATED);
+                expect(res._getJSONData()[0]).toEqual(
+                    expect.objectContaining({
+                        timestamp: "2022-01-01 00:00:00"
+                    })
+                );
+            });
+            it("should not accept timestamps formatted as YYYY-MM-DDThh:mm:ss.SSSZ", async () => {
                 const { req, res } = mockReqRes();
                 req.body = [{...acceptedMeasurement, timestamp: "2022-01-01T00:00:00.000Z"}];
                 await handler(req, res);
@@ -209,41 +220,41 @@ describe('/upload API Endpoint', () => {
         describe("the endpoint accepts only valid sensor data", () => {
             describe("the endpoint accepts only valid temperature inputs", () => {
                 /* NOTE: Shall we test e.g. string inputs? This is done in the converters? */
-                it("should not accept temperature values below 273 Kelvin", async () => {
+                it("should not accept temperature values below 263.15 Kelvin", async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: 272, temperature_unit: 'K'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: 263, temperature_unit: 'K'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ "Value should be greater than or equal to 273 Kelvin" ]
+                                temperature: [ "Value should be greater than or equal to 263.15 Kelvin" ]
                             }
                         })
                     );
                 });
-                it("should not accept temperature values below -0.15 Celsius", async () => {
+                it("should not accept temperature values below -10 Celsius", async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: -1, temperature_unit: 'C'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: -10.1, temperature_unit: 'C'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ "Value should be greater than or equal to 273 Kelvin" ]
+                                temperature: [ "Value should be greater than or equal to 263.15 Kelvin" ]
                             }
                         })
                     );
                 });
-                it("should not accept temperature values below 31.73 Fahrenheit", async () => {
+                it("should not accept temperature values below 14 Fahrenheit", async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: 31, temperature_unit: 'F'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: 13.9, temperature_unit: 'F'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ "Value should be greater than or equal to 273 Kelvin" ]
+                                temperature: [ "Value should be greater than or equal to 263.15 Kelvin" ]
                             }
                         })
                     );
@@ -327,11 +338,11 @@ describe('/upload API Endpoint', () => {
                         timestamp: "2022-01-01 01:00:00",
                         latitude: 0,
                         longitude: 0,
-                        sensors: expect.objectContaining({
+                        sensors: {
                             temperature: 273.15,
                             ph_level: 0,
                             conductivity: 0.0156
-                        })
+                        }
                     })
                 );
             });

@@ -15,7 +15,7 @@ import {
     STATUS_FORBIDDEN,
     STATUS_METHOD_NOT_ALLOWED,
     STATUS_SERVER_ERROR
-} from "src/lib/httpStatusCodes"
+} from "lib/httpStatusCodes"
 
 // Incoming requests must follow this schema
 const Measurement = z.object({
