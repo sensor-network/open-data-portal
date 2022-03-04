@@ -53,7 +53,7 @@ export class Temperature {
     asKelvin = () => this.unit.toKelvin(this.value);
 }
 
-export const parseTemperature = (value: number, unit: string) : Temperature => {
+export const parseTemperature = (value: number, unit: string = 'k') : Temperature => {
     let temperature : Temperature | undefined = undefined;
     Object.values(units).forEach(u => {
         if (unit.toLowerCase() === u.symbol) {

@@ -1,15 +1,14 @@
-import { temperatureToKelvin } from "./convertTemperature";
 import { conductivityToSpm } from "./convertConductivity";
+
+import { parseTemperature } from "lib/units/temperature";
 
 export function sensorDataAsSI(sensors) {
     // Converts all the sensor data provided. If units are not specified they will default to SI units.
     let converted = {}
 
-    // Convert temperature
     if (!(sensors.temperature === undefined || sensors.temperature === null)) {
-        const unit = sensors.temperature_unit ?? "K";
         try {
-            converted.temperature = temperatureToKelvin(sensors.temperature, unit);
+            converted.temperature = parseTemperature(sensors.temperature, sensors.temperature_unit).asKelvin();
         } catch (e) {
             throw e;
         }
