@@ -1,5 +1,5 @@
-import {temperatureToKelvin} from "./convertTemperature";
-import {conductivityToSpm} from "./convertConductivity";
+import { temperatureToKelvin } from "./convertTemperature";
+import { conductivityToSpm } from "./convertConductivity";
 
 export function sensorDataAsSI(sensors) {
     // Converts all the sensor data provided. If units are not specified they will default to SI units.

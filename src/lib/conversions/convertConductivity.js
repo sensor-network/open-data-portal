@@ -1,4 +1,8 @@
-import {ConversionError} from "../CustomErrors";
+import { ConversionError } from "../CustomErrors";
+import { ZodError } from "zod";
+
+const MIN_SPM = 0;
+const MAX_SPM = 10;
 
 export function conductivityToSpm(conductivity, unit) {
     // Converts the given `conductivity` from the given unit to `Siemens per metre`
@@ -46,7 +50,7 @@ export function conductivityToSpm(conductivity, unit) {
 
         case "PPM":
         case "ppm":   // (parts per million)
-            ret = value * 1.56 * 1E-4;
+            ret = value * 1.5625 * 1E-4;
             break;
 
         default:
@@ -54,7 +58,21 @@ export function conductivityToSpm(conductivity, unit) {
             throw new ConversionError(`Provided conductivity unit '${unit}' is not supported. Read the documentation for valid parameters.`);
     }
 
-    return Number(ret.toPrecision(7));
+    let rounded = Math.round(ret * 1E3) / 1E3;  // round to 3 decimals
+    if (rounded < MIN_SPM)
+        // Using ZodError here to have them formatted the same way as the rest of the BAD_REQUEST-errors are
+        throw new ZodError([{
+            code: 'too_small',
+            path: [ 'conductivity' ],
+            message: `Value should be greater than or equal to ${MIN_SPM} Siemens per metre`
+        }]);
+    else if (rounded > MAX_SPM)
+        throw new ZodError([{
+            code: 'too_large',
+            path: [ 'conductivity' ],
+            message: `Value should be less than or equal to ${MAX_SPM} Siemens per metre`
+        }]);
+    return rounded;
 }
 
 export function conductivityFromSpm(conductivity, unit) {
@@ -102,12 +120,12 @@ export function conductivityFromSpm(conductivity, unit) {
 
         case "PPM":
         case "ppm":   // (parts per million)
-            ret = value / 1.56 / 1E-4;
+            ret = value / 1.5625 / 1E-4;
             break;
 
         default:
             throw new ConversionError(`Provided conductivity unit '${unit}' is not supported. Read the documentation for valid parameters.`);
     }
 
-    return Number(ret.toPrecision(7));
+    return Math.round(ret * 1E3) / 1E3;
 }
