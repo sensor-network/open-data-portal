@@ -50,11 +50,19 @@ describe("Temperatures can be converted from Kelvin to Kelvin", () => {
         expect(toK(270, 'K')).toEqual(270);
         expect(toK(280.123, 'K')).toEqual(280.123);
         expect(toK(303.15, 'K')).toEqual(303.15);
+
+        expect(fromK(263.15, 'K')).toEqual(263.15);
+        expect(fromK(270, 'K')).toEqual(270);
+        expect(fromK(280.123, 'K')).toEqual(280.123);
+        expect(fromK(303.15, 'K')).toEqual(303.15);
     });
 
     it("should round values to 3 decimals", () => {
         expect(toK(264.123123, 'K').countDecimals()).toEqual(3);
         expect(toK(264.567567, 'K').countDecimals()).toEqual(3);
+
+        expect(fromK(264.123123, 'K').countDecimals()).toEqual(3);
+        expect(fromK(264.567567, 'K').countDecimals()).toEqual(3);
     });
 
     it("returns values rounded correctly", () => {
@@ -62,6 +70,11 @@ describe("Temperatures can be converted from Kelvin to Kelvin", () => {
         expect(toK(264.123, 'K')).toEqual(264.123);
         expect(toK(264.123123, 'K')).toEqual(264.123);
         expect(toK(264.567567, 'K')).toEqual(264.568);
+
+        expect(fromK(264, 'K')).toEqual(264.000);
+        expect(fromK(264.123, 'K')).toEqual(264.123);
+        expect(fromK(264.123123, 'K')).toEqual(264.123);
+        expect(fromK(264.567567, 'K')).toEqual(264.568);
     });
 });
 
