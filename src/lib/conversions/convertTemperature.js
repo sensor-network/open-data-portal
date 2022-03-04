@@ -32,12 +32,18 @@ export function temperatureToKelvin(temperature, fromUnit) {
     }
 
     let rounded = Math.round(ret * 1E3) / 1E3;  // round to 3 decimals
-    if (rounded < MIN_KELVIN || rounded > MAX_KELVIN)
+    if (rounded < MIN_KELVIN)
         // Using ZodError here to have them formatted the same way as the rest of the BAD_REQUEST-errors are
         throw new ZodError([{
             code: 'too_small',
             path: [ 'temperature' ],
-            message: ret < MIN_KELVIN ? `Value should be greater than or equal to ${MIN_KELVIN} Kelvin` : `Value should be less than or equal to ${MAX_KELVIN} Kelvin`
+            message: `Value should be greater than or equal to ${MIN_KELVIN} Kelvin`
+        }]);
+    else if (rounded > MAX_KELVIN)
+        throw new ZodError([{
+            code: 'too_large',
+            path: [ 'temperature' ],
+            message: `Value should be less than or equal to ${MAX_KELVIN} Kelvin`
         }]);
     return rounded;
 }
