@@ -299,7 +299,20 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                conductivity: [ "Value should be greater than or equal to 0" ]
+                                conductivity: [ "Value should be greater than or equal to 0 Siemens per metre" ]
+                            }
+                        })
+                    );
+                });
+                it("should not accept conductivity values greater than 10", async () => {
+                    const { req, res } = mockReqRes();
+                    req.body = [{...acceptedMeasurement, sensors: { conductivity: 10.1 }}];
+                    await handler(req, res);
+                    expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
+                    expect(res._getJSONData()).toEqual(
+                        expect.objectContaining({
+                            fieldErrors: {
+                                conductivity: [ "Value should be less than or equal to 10 Siemens per metre" ]
                             }
                         })
                     );
@@ -341,7 +354,7 @@ describe('/upload API Endpoint', () => {
                         sensors: {
                             temperature: 273.15,
                             ph_level: 0,
-                            conductivity: 0.0156
+                            conductivity: 0.016
                         }
                     })
                 );

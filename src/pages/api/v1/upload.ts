@@ -30,7 +30,7 @@ const Measurement = z.object({
         temperature: z.number().optional(),
         temperature_unit: z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
-        conductivity: z.number().nonnegative().optional(),
+        conductivity: z.number().optional(),
         conductivity_unit: z.enum([
             "Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm",
             "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"
