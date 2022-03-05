@@ -7,7 +7,7 @@ import {
     STATUS_FORBIDDEN, STATUS_BAD_REQUEST,
     STATUS_METHOD_NOT_ALLOWED
 } from "src/lib/httpStatusCodes";
-import { units } from "src/lib/units/temperature";
+import { UNITS } from "src/lib/units/temperature";
 
 describe('/upload API Endpoint', () => {
     console.log = jest.fn();    // silence the console logs during tests
@@ -233,41 +233,41 @@ describe('/upload API Endpoint', () => {
 
             describe("the endpoint accepts only valid temperature inputs", () => {
                 /* NOTE: Shall we test e.g. string inputs? This is done in the converters? */
-                it(`should not accept temperature values below ${units.KELVIN.minValue} Kelvin`, async () => {
+                it(`should not accept temperature values below ${UNITS.KELVIN.minValue} Kelvin`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: units.KELVIN.minValue-1, temperature_unit: 'K'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: UNITS.KELVIN.minValue-1, temperature_unit: 'K'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ `Value should be greater than or equal to ${units.KELVIN.minValue} Kelvin.` ]
+                                temperature: [ `Value should be greater than or equal to ${UNITS.KELVIN.minValue} Kelvin.` ]
                             }
                         })
                     );
                 });
-                it(`should not accept temperature values below ${units.CELSIUS.minValue} Celsius`, async () => {
+                it(`should not accept temperature values below ${UNITS.CELSIUS.minValue} Celsius`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: units.CELSIUS.minValue-1, temperature_unit: 'C'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: UNITS.CELSIUS.minValue-1, temperature_unit: 'C'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ `Value should be greater than or equal to ${units.CELSIUS.minValue} Celsius.` ]
+                                temperature: [ `Value should be greater than or equal to ${UNITS.CELSIUS.minValue} Celsius.` ]
                             }
                         })
                     );
                 });
-                it(`should not accept temperature values below ${units.FAHRENHEIT.minValue} Fahrenheit`, async () => {
+                it(`should not accept temperature values below ${UNITS.FAHRENHEIT.minValue} Fahrenheit`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: units.FAHRENHEIT.minValue-1, temperature_unit: 'F'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: UNITS.FAHRENHEIT.minValue-1, temperature_unit: 'F'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ `Value should be greater than or equal to ${units.FAHRENHEIT.minValue} Fahrenheit.` ]
+                                temperature: [ `Value should be greater than or equal to ${UNITS.FAHRENHEIT.minValue} Fahrenheit.` ]
                             }
                         })
                     );

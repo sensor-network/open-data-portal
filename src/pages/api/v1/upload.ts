@@ -28,7 +28,7 @@ const Measurement = z.object({
     longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
     sensors: z.object({
         temperature: z.number().optional(),
-        temperature_unit: z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
+        temperature_unit: z.string().optional(), //z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
         conductivity_unit: z.enum([
@@ -88,7 +88,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
                     code: 'too_small',
                     minimum: 1,
                     inclusive: true,
-                    type: "array",
+                    type: "number",
                     path: ["sensors"],
                     message: "Must contain at least one data-value. Did you specify only a unit?"
                 }])
