@@ -51,34 +51,10 @@ export class Temperature {
     asKelvin = () => this.unit.toKelvin(this.value);
 }
 
-export const parseTemperature = (value: number, unit: string = 'k') : Temperature => {
-    let temperature : Temperature | undefined = undefined;
-    Object.values(UNITS).forEach(u => {
-        if (unit.toLowerCase() === u.symbol) {
-            if (value < u.minValue)
-                throw new ZodError([{
-                    code: 'too_small',
-                    path: [ 'temperature' ],
-                    type: 'number',
-                    minimum: u.minValue,
-                    inclusive: true,
-                    message: `Value should be greater than or equal to ${u.minValue} ${u.name}.`
-                }]);
-            if (value > u.maxValue)
-                throw new ZodError([{
-                    code: 'too_big',
-                    path: [ 'temperature' ],
-                    type: 'number',
-                    maximum: u.maxValue,
-                    inclusive: true,
-                    message: `Value should be less than or equal to ${u.maxValue} ${u.name}.`
-                }]);
-
-            temperature = new Temperature(value, u);
-        }
-    });
-
-    if (!temperature) {
+export const parseUnit = (unit: string) => {
+    /* Returns a Unit from a given string. It throws a ZodError if the unit cannot be parsed. */
+    const parsed = Object.values(UNITS).find(u => u.symbol === unit.toLowerCase());
+    if (!parsed) {
         const options = Array.from(Object.values(UNITS), u => u.symbol);
         throw new ZodError([{
             code: "invalid_enum_value",
@@ -87,6 +63,33 @@ export const parseTemperature = (value: number, unit: string = 'k') : Temperatur
             message: `Unexpected unit ${unit.toLowerCase()}. Expected${options.map(o => ' ' + o)}.`
         }]);
     }
+    return parsed;
+}
 
-    return temperature;
+export const parseTemperature = (value: number, unit: string = 'k') : Temperature => {
+    /* Returns a Temperature from a given value and unit.
+     * It throws a ZodError if the unit cannot be parsed or if the value is out of range of the specified unit.
+     */
+    console.log(`Value ${value}, Unit ${unit}`)
+    const u = parseUnit(unit);
+    if (value < u.minValue)
+        throw new ZodError([{
+            code: 'too_small',
+            path: [ 'temperature' ],
+            type: 'number',
+            minimum: u.minValue,
+            inclusive: true,
+            message: `Value should be greater than or equal to ${u.minValue} ${u.name}.`
+        }]);
+    if (value > u.maxValue)
+        throw new ZodError([{
+            code: 'too_big',
+            path: [ 'temperature' ],
+            type: 'number',
+            maximum: u.maxValue,
+            inclusive: true,
+            message: `Value should be less than or equal to ${u.maxValue} ${u.name}.`
+        }]);
+
+    return new Temperature(value, u);
 }
