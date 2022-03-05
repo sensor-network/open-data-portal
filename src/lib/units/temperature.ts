@@ -1,7 +1,7 @@
 import { ZodError } from 'zod';
 
 const DECIMAL_COUNT = 3;
-const FLOOR_FACTOR = Math.pow(10, DECIMAL_COUNT);
+const ROUND_FACTOR = Math.pow(10, DECIMAL_COUNT);
 
 interface Unit {
     name: string;
@@ -26,16 +26,16 @@ export const UNITS : { [name: string]: Unit } = {
         symbol: 'c',
         minValue: -10,
         maxValue: 30,
-        toKelvin: v => Math.round((v + 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR,
-        fromKelvin: v => Math.round((v - 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR
+        toKelvin: v => Math.round((v + 273.15) * ROUND_FACTOR) / ROUND_FACTOR,
+        fromKelvin: v => Math.round((v - 273.15) * ROUND_FACTOR) / ROUND_FACTOR
     },
     FAHRENHEIT: {
         name: 'Fahrenheit',
         symbol: 'f',
         minValue: 14,
         maxValue: 86,
-        toKelvin: v => Math.round(((v + 459.67) * 5/9) * FLOOR_FACTOR) / FLOOR_FACTOR,
-        fromKelvin: v => Math.round(((v - 273.15) * 9/5 + 32) * FLOOR_FACTOR) / FLOOR_FACTOR
+        toKelvin: v => Math.round(((v + 459.67) * 5/9) * ROUND_FACTOR) / ROUND_FACTOR,
+        fromKelvin: v => Math.round(((v - 273.15) * 9/5 + 32) * ROUND_FACTOR) / ROUND_FACTOR
     }
 };
 
