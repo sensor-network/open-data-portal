@@ -28,13 +28,10 @@ const Measurement = z.object({
     longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
     sensors: z.object({
         temperature: z.number().optional(),
-        temperature_unit: z.string().optional(), //z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
+        temperature_unit: z.string().optional(),
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
-        conductivity_unit: z.enum([
-            "Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm",
-            "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"
-        ]).optional(),
+        conductivity_unit: z.string().optional(),
     }).strict()
 }).strict();
 
@@ -82,16 +79,6 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
                 latitude: requestInput.latitude,
                 longitude: requestInput.longitude,
                 sensors: sensorDataAsSI(requestInput.sensors)
-            }
-            if (Object.keys(responseObject.sensors).length === 0) {
-                throw new ZodError([{
-                    code: 'too_small',
-                    minimum: 1,
-                    inclusive: true,
-                    type: "number",
-                    path: ["sensors"],
-                    message: "Must contain at least one data-value. Did you specify only a unit?"
-                }])
             }
 
             // Prepare SQL-query with correct parameters
