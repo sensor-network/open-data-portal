@@ -99,34 +99,10 @@ export class Conductivity {
     asSiemensPerMeter = () => this.unit.toSiemensPerMeter(this.value);
 }
 
-export const parseConductivity = (value: number, unit: string = 'spm') : Conductivity => {
-    let conductivity : Conductivity | undefined = undefined;
-    Object.values(UNITS).forEach(u => {
-        if (u.symbols.includes(unit.toLowerCase())) {
-            if (value < u.minValue)
-                throw new ZodError([{
-                    code: 'too_small',
-                    path: [ 'conductivity' ],
-                    type: 'number',
-                    minimum: u.minValue,
-                    inclusive: true,
-                    message: `Value should be greater than or equal to ${u.minValue} ${u.name}.`
-                }]);
-            if (value > u.maxValue)
-                throw new ZodError([{
-                    code: 'too_big',
-                    path: [ 'conductivity' ],
-                    type: 'number',
-                    maximum: u.maxValue,
-                    inclusive: true,
-                    message: `Value should be less than or equal to ${u.maxValue} ${u.name}.`
-                }]);
-
-            conductivity = new Conductivity(value, u);
-        }
-    });
-
-    if (!conductivity) {
+export const parseUnit = (unit: string) => {
+    /* Returns a Unit from a given string. It throws a ZodError if the unit cannot be parsed. */
+    const parsed = Object.values(UNITS).find(u => u.symbols.includes(unit.toLowerCase()));
+    if (!parsed) {
         let options : Array<string> = [];
         Object.values(UNITS).forEach(u => {
             options = options.concat(u.symbols);
@@ -138,6 +114,32 @@ export const parseConductivity = (value: number, unit: string = 'spm') : Conduct
             message: `Unexpected unit ${unit.toLowerCase()}. Expected${options.map(o => ' ' + o)}.`
         }]);
     }
+    return parsed;
+}
 
-    return conductivity;
+export const parseConductivity = (value: number, unit: string = 'spm') : Conductivity => {
+    /* Returns a Conductivity from a given value and unit.
+     * It throws a ZodError if the unit cannot be parsed or if the value is out of range of the specified unit.
+     */
+    const u = parseUnit(unit);
+    if (value < u.minValue)
+        throw new ZodError([{
+            code: 'too_small',
+            path: [ 'conductivity' ],
+            type: 'number',
+            minimum: u.minValue,
+            inclusive: true,
+            message: `Value should be greater than or equal to ${u.minValue} ${u.name}.`
+        }]);
+    if (value > u.maxValue)
+        throw new ZodError([{
+            code: 'too_big',
+            path: [ 'conductivity' ],
+            type: 'number',
+            maximum: u.maxValue,
+            inclusive: true,
+            message: `Value should be less than or equal to ${u.maxValue} ${u.name}.`
+        }]);
+
+    return new Conductivity(value, u);
 }
