@@ -25,17 +25,22 @@ export default async function handler(req, res){
     }
 
     try {
+        const unit = parseUnit(req.query.unit || 'k');
 
         //Connecting to the database
         const connection = await getConnectionPool();
 
         //Specifying mySQL query
-        const query = "SELECT temperature, date FROM Data WHERE temperature IS NOT NULL;";
+        const query = mysql.format(`
+            SELECT
+                temperature, date
+            FROM Data 
+            WHERE temperature IS NOT NULL;
+        `);
 
         //Executing the query
         const [data] = await connection.query(query);
 
-        const unit = parseUnit(req.query.unit || 'k');
         for (const row of data) {
             row.temperature = unit.fromKelvin(row.temperature);
         }
