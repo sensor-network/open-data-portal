@@ -19,7 +19,7 @@ const Measurement = z.object({
     timestamp: z.string()
         .refine((str) => (
             moment(str, 'YYYY-MM-DD HH:mm:ss', true).isValid()  // Validates the timestamp is formatted correctly
-        ), { message: "Please provide timestamp formatted as YYYY-MM-DD HH:mm:ss" }),
+        ), { message: "Invalid format. Please provide timestamp formatted as YYYY-MM-DD HH:mm:ss" }),
     UTC_offset: z.number().gte(-12).lte(14),    // UTC ranges from -12 to 14
     latitude: z.number().gte(-90).lte(90),      // lat ranges from +-90 deg
     longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
