@@ -1,5 +1,39 @@
 import { Temperature, UNITS, parseTemperature } from "../../../src/lib/units/temperature";
 
+it("constructs Temperature-instances correctly", () => {
+    const tempInstance = new Temperature(20, UNITS.CELSIUS);
+    expect(tempInstance).toBeInstanceOf(Temperature);
+    expect(tempInstance.unit).toEqual(UNITS.CELSIUS);
+    expect(tempInstance.value).toEqual(20);
+    expect(tempInstance.asKelvin()).toEqual(293.15);
+});
+
+it("instantiates Temperatures as Kelvin if nothing else specified", () => {
+    const tempInstance = new Temperature(20);
+    expect(tempInstance).toBeInstanceOf(Temperature);
+    expect(tempInstance.unit).toEqual(UNITS.KELVIN);
+    expect(tempInstance.value).toEqual(20);
+    expect(tempInstance.asKelvin()).toEqual(20);
+});
+
+it("parses Temperatures as Kelvin if nothing else specified", () => {
+    expect(() => parseTemperature(UNITS.KELVIN.minValue - 1)).toThrow();
+
+    const minTemp : Temperature = parseTemperature(UNITS.KELVIN.minValue);
+    expect(minTemp).toBeInstanceOf(Temperature);
+    expect(minTemp.value).toEqual(UNITS.KELVIN.minValue);
+    expect(minTemp.unit).toEqual(UNITS.KELVIN);
+    expect(minTemp.asKelvin()).toEqual(UNITS.KELVIN.minValue);
+
+    const maxTemp : Temperature = parseTemperature(UNITS.KELVIN.maxValue);
+    expect(maxTemp).toBeInstanceOf(Temperature);
+    expect(maxTemp.value).toEqual(UNITS.KELVIN.maxValue);
+    expect(minTemp.unit).toEqual(UNITS.KELVIN);
+    expect(maxTemp.asKelvin()).toEqual(UNITS.KELVIN.maxValue);
+
+    expect(() => parseTemperature(UNITS.KELVIN.maxValue + 1)).toThrow();
+});
+
 it("parses Kelvin correctly", () => {
     expect(() => parseTemperature(UNITS.KELVIN.minValue - 1, 'k')).toThrow();
 
@@ -54,7 +88,7 @@ it("parses Fahrenheit correctly", () => {
     expect(() => parseTemperature(UNITS.FAHRENHEIT.maxValue + 1, 'f')).toThrow();
 });
 
-it("handles unknown UNITS", () => {
+it("handles unknown units", () => {
     expect(() => parseTemperature(20, 'e')).toThrow();
 });
 
