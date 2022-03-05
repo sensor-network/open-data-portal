@@ -70,7 +70,6 @@ export const parseTemperature = (value: number, unit: string = 'k') : Temperatur
     /* Returns a Temperature from a given value and unit.
      * It throws a ZodError if the unit cannot be parsed or if the value is out of range of the specified unit.
      */
-    console.log(`Value ${value}, Unit ${unit}`)
     const u = parseUnit(unit);
     if (value < u.minValue)
         throw new ZodError([{
