@@ -43,7 +43,7 @@ export class Temperature {
     value: number;
     unit: Unit;
 
-    constructor(value: number, unit: Unit) {
+    constructor(value: number, unit: Unit = UNITS.KELVIN) {
         this.value = value;
         this.unit  = unit;
     }
