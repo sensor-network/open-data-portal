@@ -12,34 +12,32 @@ interface Unit {
     fromKelvin: (v: number) => number;
 }
 
-const KELVIN: Unit = {
-    name: 'Kelvin',
-    symbol: 'k',
-    minValue: 263.15,
-    maxValue: 303.15,
-    toKelvin: v => v,
-    fromKelvin: v => v
+export const UNITS : { [name: string]: Unit } = {
+    KELVIN: {
+        name: 'Kelvin',
+        symbol: 'k',
+        minValue: 263.15,
+        maxValue: 303.15,
+        toKelvin: v => v,
+        fromKelvin: v => v
+    },
+    CELSIUS: {
+        name: 'Celsius',
+        symbol: 'c',
+        minValue: -10,
+        maxValue: 30,
+        toKelvin: v => Math.floor((v + 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR,
+        fromKelvin: v => Math.floor((v - 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR
+    },
+    FAHRENHEIT: {
+        name: 'Fahrenheit',
+        symbol: 'f',
+        minValue: 14,
+        maxValue: 86,
+        toKelvin: v => Math.floor(((v + 459.67) * 5/9) * FLOOR_FACTOR) / FLOOR_FACTOR,
+        fromKelvin: v => Math.floor(((v - 273.15) * 9/5 + 32) * FLOOR_FACTOR) / FLOOR_FACTOR
+    }
 };
-
-const CELSIUS: Unit = {
-    name: 'Celsius',
-    symbol: 'c',
-    minValue: -10,
-    maxValue: 30,
-    toKelvin: v => Math.floor((v + 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR,
-    fromKelvin: v => Math.floor((v - 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR
-};
-
-const FAHRENHEIT: Unit = {
-    name: 'Fahrenheit',
-    symbol: 'f',
-    minValue: 14,
-    maxValue: 86,
-    toKelvin: v => Math.floor(((v + 459.67) * 5/9) * FLOOR_FACTOR) / FLOOR_FACTOR,
-    fromKelvin: v => Math.floor(((v - 273.15) * 9/5 + 32) * FLOOR_FACTOR) / FLOOR_FACTOR
-};
-
-export const units = { KELVIN, CELSIUS, FAHRENHEIT };
 
 export class Temperature {
     value: number;
@@ -55,7 +53,7 @@ export class Temperature {
 
 export const parseTemperature = (value: number, unit: string = 'k') : Temperature => {
     let temperature : Temperature | undefined = undefined;
-    Object.values(units).forEach(u => {
+    Object.values(UNITS).forEach(u => {
         if (unit.toLowerCase() === u.symbol) {
             if (value < u.minValue)
                 throw new ZodError([{
@@ -81,11 +79,12 @@ export const parseTemperature = (value: number, unit: string = 'k') : Temperatur
     });
 
     if (!temperature) {
+        const options = Array.from(Object.values(UNITS), u => u.symbol);
         throw new ZodError([{
             code: "invalid_enum_value",
-            options: Array.from(Object.values(units), u => u.symbol),
-            path: [ 'temperature' ],
-            message: `Unexpected token ${unit}.`
+            options,
+            path: [ 'temperature_unit' ],
+            message: `Unexpected unit ${unit.toLowerCase()}. Expected${options.map(o => ' ' + o)}.`
         }]);
     }
 
