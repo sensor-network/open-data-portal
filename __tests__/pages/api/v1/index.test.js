@@ -1,4 +1,6 @@
 import { createMocks } from 'node-mocks-http';
+import { performance } from "perf_hooks";
+const MAX_QUERYTIME_MS = 100;
 
 import handler from 'src/pages/api/v1';
 import { getConnectionPool, endConnection } from 'src/lib/database';
@@ -53,7 +55,13 @@ describe('/ API Endpoint', () => {
         it("should return with status code 200[OK] and converted data if queried with valid unit-params", async () => {
             const { req, res } = mockReqRes();
             req.query = { tempunit: 'c', conductunit: 'ppm' };
+
+            // testing the time for query + conversions. necessary since there is only 1 element?
+            const startTime = performance.now();
             await handler(req, res);
+            const endTime = performance.now();
+            expect(endTime - startTime).toBeLessThan(MAX_QUERYTIME_MS);
+
             const data = res._getJSONData();
             expect(res._getStatusCode()).toEqual(STATUS_OK);
             expect(data).toBeInstanceOf(Array);
