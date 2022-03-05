@@ -312,7 +312,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                conductivity: [ "Value should be greater than or equal to 0 Siemens per metre" ]
+                                conductivity: [ "Value should be greater than or equal to 0 Siemens per meter." ]
                             }
                         })
                     );
@@ -325,7 +325,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                conductivity: [ "Value should be less than or equal to 10 Siemens per metre" ]
+                                conductivity: [ "Value should be less than or equal to 10 Siemens per meter." ]
                             }
                         })
                     );

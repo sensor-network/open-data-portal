@@ -1,5 +1,4 @@
-import { conductivityToSpm } from "./convertConductivity";
-
+import { parseConductivity } from "lib/units/conductivity";
 import { parseTemperature } from "lib/units/temperature";
 
 export function sensorDataAsSI(sensors) {
@@ -14,11 +13,9 @@ export function sensorDataAsSI(sensors) {
         }
     }
 
-    // Convert conductivity 
     if (!(sensors.conductivity === undefined || sensors.conductivity === null)) {
-        const unit = sensors.conductivity_unit ?? "Spm";
         try {
-            converted.conductivity = conductivityToSpm(sensors.conductivity, unit);
+            converted.conductivity = parseConductivity(sensors.conductivity, sensors.conductivity_unit).asSiemensPerMeter();
         } catch (e) {
             throw e;
         }
