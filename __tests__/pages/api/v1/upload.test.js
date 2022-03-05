@@ -46,7 +46,11 @@ describe('/upload API Endpoint', () => {
             req.body = {};
             await handler(req, res);
             expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
-            expect(res._getJSONData()).toHaveProperty('error');
+            expect(res._getJSONData()).toEqual(
+                expect.objectContaining({
+                    error: expect.stringContaining('Expected Array but got object')
+                })
+            );
         });
 
         it("should return with status code 400[BAD_REQUEST] and an error message if no request body is provided", async () => {
@@ -54,7 +58,11 @@ describe('/upload API Endpoint', () => {
             delete req.body;
             await handler(req, res);
             expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
-            expect(res._getJSONData()).toHaveProperty('error');
+            expect(res._getJSONData()).toEqual(
+                expect.objectContaining({
+                    error: expect.stringContaining('Expected Array but got undefined')
+                })
+            );
         });
 
         it("should return with status code 403[FORBIDDEN] and an error message if no api_key is provided", async () => {
@@ -62,7 +70,11 @@ describe('/upload API Endpoint', () => {
             delete req.query.api_key;
             await handler(req, res);
             expect(res._getStatusCode()).toEqual(STATUS_FORBIDDEN);
-            expect(res._getJSONData()).toEqual({ error: "No API key provided." });
+            expect(res._getJSONData()).toEqual(
+                expect.objectContaining({
+                    error: expect.stringContaining("No API key provided")
+                })
+            );
         });
 
         it("should return with status code 403[FORBIDDEN] and an error message if a bad api_key is provided", async () => {
@@ -70,14 +82,22 @@ describe('/upload API Endpoint', () => {
             req.query.api_key = 'something';
             await handler(req, res);
             expect(res._getStatusCode()).toEqual(STATUS_FORBIDDEN);
-            expect(res._getJSONData()).toEqual({ error: "The provided API key could not be verified." });
+            expect(res._getJSONData()).toEqual(
+                expect.objectContaining({
+                    error: expect.stringContaining("The provided API key could not be verified")
+                })
+            );
         });
 
         it("should return with status code 405[NOT_ALLOWED] and an error message if method is GET", async () => {
             const { req, res } = mockReqRes('GET');
             await handler(req, res);
             expect(res._getStatusCode()).toEqual(STATUS_METHOD_NOT_ALLOWED);
-            expect(res._getJSONData()).toHaveProperty('error');
+            expect(res._getJSONData()).toEqual(
+                expect.objectContaining({
+                    error: expect.stringContaining("Method GET is not allowed")
+                })
+            );
         });
     });
 
@@ -107,7 +127,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            UTC_offset: [ "Value should be greater than or equal to -12" ]
+                            UTC_offset: [ expect.stringContaining("Value should be greater than or equal to -12") ]
                         }
                     })
                 );
@@ -120,7 +140,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            UTC_offset: [ "Value should be less than or equal to 14" ]
+                            UTC_offset: [ expect.stringContaining("Value should be less than or equal to 14") ]
                         }
                     })
                 );
@@ -133,7 +153,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            timestamp: [ "Please provide timestamp formatted as YYYY-MM-DD HH:mm:ss" ]
+                            timestamp: [ expect.stringContaining('Invalid format') ]
                         }
                     })
                 );
@@ -157,7 +177,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            timestamp: [ "Please provide timestamp formatted as YYYY-MM-DD HH:mm:ss" ]
+                            timestamp: [ expect.stringContaining("Invalid format") ]
                         }
                     })
                 );
@@ -173,7 +193,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            latitude: [ "Value should be greater than or equal to -90" ]
+                            latitude: [ expect.stringContaining("Value should be greater than or equal to -90") ]
                         }
                     })
                 );
@@ -186,7 +206,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            latitude: [ "Value should be less than or equal to 90" ]
+                            latitude: [ expect.stringContaining("Value should be less than or equal to 90") ]
                         }
                     })
                 );
@@ -199,7 +219,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            longitude: [ "Value should be greater than or equal to -180" ]
+                            longitude: [ expect.stringContaining("Value should be greater than or equal to -180") ]
                         }
                     })
                 );
@@ -212,7 +232,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            longitude: [ "Value should be less than or equal to 180" ]
+                            longitude: [ expect.stringContaining("Value should be less than or equal to 180") ]
                         }
                     })
                 );
@@ -227,13 +247,12 @@ describe('/upload API Endpoint', () => {
                 expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
-                        formErrors: [ "Must contain at least one data-value. Did you specify only a unit?" ]
+                        formErrors: [ expect.stringContaining("Must contain at least") ]
                     })
                 );
             });
 
             describe("the endpoint accepts only valid temperature inputs", () => {
-                /* NOTE: Shall we test e.g. string inputs? This is done in the converters? */
                 it(`should not accept temperature values below ${TEMP_UNITS.KELVIN.minValue} Kelvin`, async () => {
                     const { req, res } = mockReqRes();
                     req.body = [{...acceptedMeasurement, sensors: { temperature: TEMP_UNITS.KELVIN.minValue-1, temperature_unit: 'K'}}];
@@ -242,7 +261,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ `Value should be greater than or equal to ${TEMP_UNITS.KELVIN.minValue} Kelvin.` ]
+                                temperature: [ expect.stringContaining(`Value should be greater than or equal to ${TEMP_UNITS.KELVIN.minValue} Kelvin`) ]
                             }
                         })
                     );
@@ -255,7 +274,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ `Value should be greater than or equal to ${TEMP_UNITS.CELSIUS.minValue} Celsius.` ]
+                                temperature: [ expect.stringContaining(`Value should be greater than or equal to ${TEMP_UNITS.CELSIUS.minValue} Celsius`) ]
                             }
                         })
                     );
@@ -268,7 +287,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ `Value should be greater than or equal to ${TEMP_UNITS.FAHRENHEIT.minValue} Fahrenheit.` ]
+                                temperature: [ expect.stringContaining(`Value should be greater than or equal to ${TEMP_UNITS.FAHRENHEIT.minValue} Fahrenheit`) ]
                             }
                         })
                     );
@@ -284,7 +303,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                ph_level: [ "Value should be greater than or equal to 0" ]
+                                ph_level: [ expect.stringContaining("Value should be greater than or equal to 0") ]
                             }
                         })
                     );
@@ -297,7 +316,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                ph_level: [ "Value should be less than or equal to 14" ]
+                                ph_level: [ expect.stringContaining("Value should be less than or equal to 14") ]
                             }
                         })
                     );
@@ -313,7 +332,9 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                conductivity: [ `Value should be greater than or equal to ${COND_UNITS.SIEMENS_PER_METER.minValue} ${COND_UNITS.SIEMENS_PER_METER.name}.` ]
+                                conductivity: [ expect.stringContaining(
+                                    `Value should be greater than or equal to ${COND_UNITS.SIEMENS_PER_METER.minValue} ${COND_UNITS.SIEMENS_PER_METER.name}`
+                                ) ]
                             }
                         })
                     );
@@ -326,7 +347,9 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                conductivity: [ `Value should be less than or equal to ${COND_UNITS.PARTS_PER_MILLION.maxValue} ${COND_UNITS.PARTS_PER_MILLION.name}.` ]
+                                conductivity: [ expect.stringContaining(
+                                    `Value should be less than or equal to ${COND_UNITS.PARTS_PER_MILLION.maxValue} ${COND_UNITS.PARTS_PER_MILLION.name}`
+                                ) ]
                             }
                         })
                     );
@@ -342,16 +365,17 @@ describe('/upload API Endpoint', () => {
                 const data = res._getJSONData();
                 expect(res._getStatusCode()).toEqual(STATUS_CREATED);
                 expect(data.length).toEqual(1);
-                expect(data).toEqual([{
+                expect(data[0]).toEqual(
+                    expect.objectContaining({
                     timestamp: "2022-01-01 00:00:00",
                     latitude: 0,
                     longitude: 0,
-                    sensors: {
+                    sensors: expect.objectContaining({
                         temperature: 300,
                         ph_level: 0,
                         conductivity: 0
-                    }
-                }]);
+                    })
+                }));
             });
             it("should upload converted data if units are provided", async () => {
                 const {req, res} = mockReqRes();
@@ -365,11 +389,11 @@ describe('/upload API Endpoint', () => {
                         timestamp: "2022-01-01 01:00:00",
                         latitude: 0,
                         longitude: 0,
-                        sensors: {
+                        sensors: expect.objectContaining({
                             temperature: 273.15,
                             ph_level: 0,
                             conductivity: 0.016
-                        }
+                        })
                     })
                 );
             });
