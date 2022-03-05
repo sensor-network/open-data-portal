@@ -26,16 +26,16 @@ export const UNITS : { [name: string]: Unit } = {
         symbol: 'c',
         minValue: -10,
         maxValue: 30,
-        toKelvin: v => Math.floor((v + 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR,
-        fromKelvin: v => Math.floor((v - 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR
+        toKelvin: v => Math.round((v + 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR,
+        fromKelvin: v => Math.round((v - 273.15) * FLOOR_FACTOR) / FLOOR_FACTOR
     },
     FAHRENHEIT: {
         name: 'Fahrenheit',
         symbol: 'f',
         minValue: 14,
         maxValue: 86,
-        toKelvin: v => Math.floor(((v + 459.67) * 5/9) * FLOOR_FACTOR) / FLOOR_FACTOR,
-        fromKelvin: v => Math.floor(((v - 273.15) * 9/5 + 32) * FLOOR_FACTOR) / FLOOR_FACTOR
+        toKelvin: v => Math.round(((v + 459.67) * 5/9) * FLOOR_FACTOR) / FLOOR_FACTOR,
+        fromKelvin: v => Math.round(((v - 273.15) * 9/5 + 32) * FLOOR_FACTOR) / FLOOR_FACTOR
     }
 };
 
@@ -44,7 +44,7 @@ export class Temperature {
     unit: Unit;
 
     constructor(value: number, unit: Unit) {
-        this.value = Math.floor(value * FLOOR_FACTOR) / FLOOR_FACTOR;
+        this.value = value;
         this.unit  = unit;
     }
 
