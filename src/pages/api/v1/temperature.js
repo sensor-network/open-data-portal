@@ -27,18 +27,13 @@ export default async function handler(req, res){
     try {
         const unit = parseUnit(req.query.unit || 'k');
 
-        //Connecting to the database
         const connection = await getConnectionPool();
-
-        //Specifying mySQL query
         const query = mysql.format(`
             SELECT
                 temperature, date
             FROM Data 
             WHERE temperature IS NOT NULL;
         `);
-
-        //Executing the query
         const [data] = await connection.query(query);
 
         for (const row of data) {
@@ -48,12 +43,12 @@ export default async function handler(req, res){
         res.status(STATUS_OK).json(data);
     }
     catch(e) {
-        if (e instanceof ZodError) {     // Errors from parsing unit and converting
+        if (e instanceof ZodError) {
             console.log("ERROR: Could not parse query parameters:\n", e.flatten())
             res.status(STATUS_BAD_REQUEST)
                 .json(e.flatten());
         }
-        else {      // Other unknown errors
+        else {
             console.error(e);
             res.status(STATUS_SERVER_ERROR).json({error: "Error fetching data from the database"});
         }

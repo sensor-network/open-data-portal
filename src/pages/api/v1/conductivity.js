@@ -24,15 +24,12 @@ export default async function(req, res) {
     try {
         const unit = parseUnit(req.query.unit || 'spm');
 
-        // Establish connection and connect to db
         const connection = await getConnectionPool();
-
-        // Prepare query, then execute
         const query = mysql.format(`
             SELECT date, conductivity
             FROM Data
             WHERE conductivity IS NOT NULL
-            ORDER BY id ASC;
+            ORDER BY id;
         `);
         const [data] = await connection.query(query);
 
@@ -40,19 +37,13 @@ export default async function(req, res) {
             row.conductivity = unit.fromKelvin(row.conductivity);
         }
 
-        // Return data with success code
-        res.status(STATUS_OK).json(data)
+        res.status(STATUS_OK).json(data);
     }
     catch(e) {
         if (e instanceof ZodError) {
             console.log("Error parsing query params:\n", e.flatten())
             res.status(STATUS_BAD_REQUEST)
                 .json(e.flatten());
-        }
-        else if (e instanceof ConversionError) {    // custom error-class to separate faulty input data
-            console.log("ERROR:", e.message)
-            res.status(STATUS_BAD_REQUEST)
-                .json({error: e.message});
         }
         else {
             console.error(e);
