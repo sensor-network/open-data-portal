@@ -1,12 +1,10 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import mysql from 'mysql2/promise';
+import { ZodError } from "zod";
 
 import { getConnectionPool } from "src/lib/database";
-
-import { temperatureFromKelvin } from "../../../lib/conversions/convertTemperature.js";
-import { conductivityFromSpm } from "../../../lib/conversions/convertConductivity.js";
-import { ConversionError } from "../../../lib/CustomErrors";
-
+import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
+import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
 import {
     STATUS_OK,
     STATUS_BAD_REQUEST,
@@ -25,10 +23,10 @@ export default async function handler(req, res) {
         return;
     }
     try {
-        // Connecting to database
-        const connection = await getConnectionPool();
+        const tempUnit = parseTempUnit(req.query.tempunit || 'k');
+        const condUnit = parseCondUnit(req.query.conductunit || 'spm');
 
-        // Creates and executes the query and then closes the connection
+        const connection = await getConnectionPool();
         const query = mysql.format(`
             SELECT
                 id,
@@ -40,35 +38,28 @@ export default async function handler(req, res) {
                 ST_X(position) as latitude
             FROM
                 Data
+            ORDER BY id;
         `);
         const [data] = await connection.query(query);
-    
-        let unit = req.query.tempunit || 'K';   // fallback to `Kelvin` if not specified
-        if(unit.toUpperCase() !== 'K'){
-            for(const obj of data){
-              if(!(obj.temperature === null)){
-                obj.temperature = temperatureFromKelvin(obj.temperature, unit);
-              }
-            }
-        }
 
-        let conductunit = req.query.conductunit || 'spm';   // fallback to `Siemens per metre` if not specified
-        if(!(conductunit === 'spm' || conductunit === 'Spm' || conductunit === 'mhopm' || conductunit === 'Mhopm' )){
-            for(const obj of data){
-                if(!(obj.conductivity === null)){
-                obj.conductivity = conductivityFromSpm(obj.conductivity, conductunit);
-              }
+        for (const row of data) {
+            if (row.temperature !== null) {
+                row.temperature = tempUnit.fromKelvin(row.temperature);
+            }
+             if (row.conductivity !== null) {
+                  row.conductivity = condUnit.fromSiemensPerMeter(row.conductivity);
             }
         }
 
         res.status(STATUS_OK).json(data);
     }
     catch(e) {
-        if (e instanceof ConversionError) {     // Errors from converting
-            console.error(e);
-            res.status(STATUS_BAD_REQUEST).json({ error: e.message });
+        if (e instanceof ZodError) {
+            console.log("ERROR: Could not parse query parameters:\n", e.flatten())
+            res.status(STATUS_BAD_REQUEST)
+                .json(e.flatten());
         }
-        else {      // Other unknown errors
+        else {
             console.error(e);
             res.status(STATUS_SERVER_ERROR).json({error: "Error fetching data from the database"});
         }
