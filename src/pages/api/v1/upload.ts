@@ -4,11 +4,8 @@ import moment from 'moment';
 import mysql from 'mysql2/promise';
 
 import { getConnectionPool } from "src/lib/database";
-
 import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
 import { sensorDataAsSI } from "src/lib/conversions/convertSensors";
-import { ConversionError } from "src/lib/CustomErrors";
-
 import {
     STATUS_CREATED,
     STATUS_BAD_REQUEST,
@@ -28,13 +25,10 @@ const Measurement = z.object({
     longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
     sensors: z.object({
         temperature: z.number().optional(),
-        temperature_unit: z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
+        temperature_unit: z.string().optional(),
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
-        conductivity_unit: z.enum([
-            "Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm",
-            "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"
-        ]).optional(),
+        conductivity_unit: z.string().optional(),
     }).strict()
 }).strict();
 
@@ -42,7 +36,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
     // Only allow POST-requests for this endpoint.
     if (req.method !== "POST") {
         console.log(`ERROR: Method ${req.method} not allowed.`)
-        res.status(STATUS_METHOD_NOT_ALLOWED)        // 405: method not allowed
+        res.status(STATUS_METHOD_NOT_ALLOWED)
             .json({ error:
                 `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
         });
@@ -70,7 +64,6 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-        // Establish connection to database
         const connection = await getConnectionPool();
 
         // Iterate all the measurements, parse them using Zod and insert the data into the database
@@ -82,16 +75,6 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
                 latitude: requestInput.latitude,
                 longitude: requestInput.longitude,
                 sensors: sensorDataAsSI(requestInput.sensors)
-            }
-            if (Object.keys(responseObject.sensors).length === 0) {
-                throw new ZodError([{
-                    code: 'too_small',
-                    minimum: 1,
-                    inclusive: true,
-                    type: "array",
-                    path: ["sensors"],
-                    message: "Must contain at least one data-value. Did you specify only a unit?"
-                }])
             }
 
             // Prepare SQL-query with correct parameters
@@ -118,14 +101,11 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
                     responseObject.sensors.conductivity ?? null
                 ]
             );
-            // Then execute the query asynchronously
             await connection.query(query);
             measurements.push(responseObject);
         }
 
-        // Respond with the inserted data
-        res.status(STATUS_CREATED)
-            .json(measurements);
+        res.status(STATUS_CREATED).json(measurements);
     }
     catch (e) {
         if (e instanceof ZodError) {
@@ -139,12 +119,6 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
             console.log("ERROR: Could not parse request json:\n", e.flatten())
             res.status(STATUS_BAD_REQUEST)
                 .json(e.flatten());
-        }
-        else if (e instanceof ConversionError) {
-            // should now be unreachable. all 'good' errors should now be ZodErrors.
-            console.log("ERROR:", e.message)
-            res.status(STATUS_BAD_REQUEST)
-                .json({error: e.message});
         }
         else {
             console.error(e);

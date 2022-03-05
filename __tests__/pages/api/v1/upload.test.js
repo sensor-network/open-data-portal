@@ -7,6 +7,8 @@ import {
     STATUS_FORBIDDEN, STATUS_BAD_REQUEST,
     STATUS_METHOD_NOT_ALLOWED
 } from "src/lib/httpStatusCodes";
+import { UNITS as TEMP_UNITS } from "src/lib/units/temperature";
+import { UNITS as COND_UNITS } from "src/lib/units/conductivity";
 
 describe('/upload API Endpoint', () => {
     console.log = jest.fn();    // silence the console logs during tests
@@ -218,43 +220,55 @@ describe('/upload API Endpoint', () => {
         });
 
         describe("the endpoint accepts only valid sensor data", () => {
+            it("should not accept an empty sensor-object", async () => {
+                const { req, res } = mockReqRes();
+                req.body = [{...acceptedMeasurement, sensors: {}}]
+                await handler(req, res);
+                expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
+                expect(res._getJSONData()).toEqual(
+                    expect.objectContaining({
+                        formErrors: [ "Must contain at least one data-value. Did you specify only a unit?" ]
+                    })
+                );
+            });
+
             describe("the endpoint accepts only valid temperature inputs", () => {
                 /* NOTE: Shall we test e.g. string inputs? This is done in the converters? */
-                it("should not accept temperature values below 263.15 Kelvin", async () => {
+                it(`should not accept temperature values below ${TEMP_UNITS.KELVIN.minValue} Kelvin`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: 263, temperature_unit: 'K'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: TEMP_UNITS.KELVIN.minValue-1, temperature_unit: 'K'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ "Value should be greater than or equal to 263.15 Kelvin" ]
+                                temperature: [ `Value should be greater than or equal to ${TEMP_UNITS.KELVIN.minValue} Kelvin.` ]
                             }
                         })
                     );
                 });
-                it("should not accept temperature values below -10 Celsius", async () => {
+                it(`should not accept temperature values below ${TEMP_UNITS.CELSIUS.minValue} Celsius`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: -10.1, temperature_unit: 'C'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: TEMP_UNITS.CELSIUS.minValue-1, temperature_unit: 'C'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ "Value should be greater than or equal to 263.15 Kelvin" ]
+                                temperature: [ `Value should be greater than or equal to ${TEMP_UNITS.CELSIUS.minValue} Celsius.` ]
                             }
                         })
                     );
                 });
-                it("should not accept temperature values below 14 Fahrenheit", async () => {
+                it(`should not accept temperature values below ${TEMP_UNITS.FAHRENHEIT.minValue} Fahrenheit`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { temperature: 13.9, temperature_unit: 'F'}}];
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: TEMP_UNITS.FAHRENHEIT.minValue-1, temperature_unit: 'F'}}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                temperature: [ "Value should be greater than or equal to 263.15 Kelvin" ]
+                                temperature: [ `Value should be greater than or equal to ${TEMP_UNITS.FAHRENHEIT.minValue} Fahrenheit.` ]
                             }
                         })
                     );
@@ -291,28 +305,28 @@ describe('/upload API Endpoint', () => {
             });
 
             describe("the endpoint accepts only valid conductivity inputs", () => {
-                it("should not accept conductivity values below 0", async () => {
+                it(`should not accept conductivity values below ${COND_UNITS.SIEMENS_PER_METER.minValue} ${COND_UNITS.SIEMENS_PER_METER.name}`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { conductivity: -0.1 }}];
+                    req.body = [{...acceptedMeasurement, sensors: { conductivity: COND_UNITS.SIEMENS_PER_METER.minValue-1 }}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                conductivity: [ "Value should be greater than or equal to 0 Siemens per metre" ]
+                                conductivity: [ `Value should be greater than or equal to ${COND_UNITS.SIEMENS_PER_METER.minValue} ${COND_UNITS.SIEMENS_PER_METER.name}.` ]
                             }
                         })
                     );
                 });
-                it("should not accept conductivity values greater than 10", async () => {
+                it(`should not accept conductivity values greater than ${COND_UNITS.PARTS_PER_MILLION.maxValue} ${COND_UNITS.PARTS_PER_MILLION.name}`, async () => {
                     const { req, res } = mockReqRes();
-                    req.body = [{...acceptedMeasurement, sensors: { conductivity: 10.1 }}];
+                    req.body = [{...acceptedMeasurement, sensors: { conductivity: COND_UNITS.PARTS_PER_MILLION.maxValue+1, conductivity_unit: COND_UNITS.PARTS_PER_MILLION.symbols[0] }}];
                     await handler(req, res);
                     expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                conductivity: [ "Value should be less than or equal to 10 Siemens per metre" ]
+                                conductivity: [ `Value should be less than or equal to ${COND_UNITS.PARTS_PER_MILLION.maxValue} ${COND_UNITS.PARTS_PER_MILLION.name}.` ]
                             }
                         })
                     );
@@ -358,6 +372,26 @@ describe('/upload API Endpoint', () => {
                         }
                     })
                 );
+            });
+            describe("should upload data even if not all sensors are measured",  () => {
+                it("should upload if temperature is missing", async () => {
+                    const {req, res} = mockReqRes();
+                    req.body = [{...acceptedMeasurement, sensors: { ph_level: 5, conductivity: 5 }}];
+                    await handler(req, res);
+                    expect(res._getStatusCode()).toEqual(STATUS_CREATED);
+                });
+                it("should upload if ph is missing", async () => {
+                    const {req, res} = mockReqRes();
+                    req.body = [{...acceptedMeasurement, sensors: { temperature: 300, conductivity: 5 }}];
+                    await handler(req, res);
+                    expect(res._getStatusCode()).toEqual(STATUS_CREATED);
+                });
+                it("should upload if conductivity is missing", async () => {
+                    const {req, res} = mockReqRes();
+                    req.body = [{...acceptedMeasurement, sensors: { ph_level: 5, temperature: 300 }}];
+                    await handler(req, res);
+                    expect(res._getStatusCode()).toEqual(STATUS_CREATED);
+                });
             });
         });
     });

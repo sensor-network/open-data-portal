@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
 
 import { getConnectionPool } from "src/lib/database";
-
 import {
     STATUS_OK,
     STATUS_METHOD_NOT_ALLOWED,
@@ -19,17 +18,18 @@ export default async function handler(req, res) {
         return;
     }
     try {
-        // Connecting to database
         const connection = await getConnectionPool();
-
-        // Creates and executes the query
-        const query = mysql.format('SELECT pH, date FROM Data WHERE pH IS NOT NULL;');
+        const query = mysql.format(`
+            SELECT
+                pH, date
+            FROM Data 
+            WHERE pH IS NOT NULL;
+        `);
         const [data] = await connection.query(query);
 
-        // Returning the data
         res.status(STATUS_OK).json({content: data});
-        
-    } catch (error) {
+    }
+    catch (error) {
         console.log(error);
         res.status(STATUS_SERVER_ERROR).json({ error: "Error fetching pH data from the database" })
     }
