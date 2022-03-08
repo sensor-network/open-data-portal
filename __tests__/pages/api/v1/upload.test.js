@@ -41,14 +41,14 @@ describe('/upload API Endpoint', () => {
             expect(res._getJSONData().length).toEqual(0);
         });
 
-        it("should return with status code 400[BAD_REQUEST] and an error message if the request body is not an array", async () => {
+        it("should return with status code 400[BAD_REQUEST] and an error message if the request body is not an array or object", async () => {
             const { req, res } = mockReqRes();
-            req.body = {};
+            req.body = "random request object";
             await handler(req, res);
             expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
             expect(res._getJSONData()).toEqual(
                 expect.objectContaining({
-                    error: expect.stringContaining('Expected Array but got object')
+                    error: expect.stringContaining('Expected Array or Object but got string')
                 })
             );
         });
@@ -60,7 +60,7 @@ describe('/upload API Endpoint', () => {
             expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
             expect(res._getJSONData()).toEqual(
                 expect.objectContaining({
-                    error: expect.stringContaining('Expected Array but got undefined')
+                    error: expect.stringContaining('Expected Array or Object but got undefined')
                 })
             );
         });
@@ -358,6 +358,27 @@ describe('/upload API Endpoint', () => {
         });
 
         describe("the endpoint can successfully push data to the database", () => {
+            it("should upload data if provided as single object", async () => {
+               const { req, res } = mockReqRes();
+               req.body = acceptedMeasurement;
+               await handler(req, res);
+               const data = res._getJSONData();
+               expect(res._getStatusCode()).toEqual(STATUS_CREATED);
+               expect(data).toBeInstanceOf(Object);
+               expect(Array.isArray(data)).toEqual(false);  // since Array <|-- Object, check that it isn't
+               expect(data).toEqual(
+                   expect.objectContaining({
+                       timestamp: "2022-01-01 00:00:00",
+                       latitude: 0,
+                       longitude: 0,
+                       sensors: expect.objectContaining({
+                           temperature: 300,
+                           ph_level: 0,
+                           conductivity: 0
+                       })
+                   })
+               );
+            });
             it("should upload unconverted data if no units are provided", async () => {
                 const {req, res} = mockReqRes();
                 req.body = [acceptedMeasurement];
