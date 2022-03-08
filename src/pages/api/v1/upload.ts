@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
 import moment from 'moment';
-import mysql from 'mysql2/promise';
+import mysql, { RowDataPacket } from 'mysql2/promise';
 
 import { getConnectionPool } from "src/lib/database";
 import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
@@ -31,6 +31,7 @@ const Measurement = z.object({
         conductivity_unit: z.string().optional(),
     }).strict()
 }).strict();
+type Measurement = z.infer<typeof Measurement>;
 
 export default async function (req: NextApiRequest, res: NextApiResponse) {
     // Only allow POST-requests for this endpoint.
@@ -43,10 +44,10 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
         return;
     }
 
-    if (!(req.body instanceof Array)) {
-        console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
+    if (!(req.body instanceof Array || req.body instanceof Object)) {
+        console.log(`ERROR: Invalid type of JSON-body. Expected Array or Object but got ${typeof req.body}`);
         res.status(STATUS_BAD_REQUEST)
-            .json({error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`});
+            .json({error: `Invalid type of JSON-body. Expected Array or Object but got ${typeof req.body}`});
         return;
     }
 
@@ -65,20 +66,18 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 
     try {
         const connection = await getConnectionPool();
+        const SRID = 4326; // For GeoLocation in DB
 
-        // Iterate all the measurements, parse them using Zod and insert the data into the database
-        let measurements = [];
-        for (const measurement of req.body) {
+        const parseAndConvertInput = (measurement: Measurement) => {
             const requestInput = Measurement.parse(measurement);
-            let responseObject = {
+            return {
                 timestamp: timestampToUTC(requestInput.timestamp, requestInput.UTC_offset),
                 latitude: requestInput.latitude,
                 longitude: requestInput.longitude,
                 sensors: sensorDataAsSI(requestInput.sensors)
             }
-
-            // Prepare SQL-query with correct parameters
-            const SRID = 4326; // For GeoLocation in DB
+        }
+        const queryDb = async (uploadObject: any) => {
             const query = mysql.format(`
                 INSERT INTO Data (
                     date,
@@ -92,20 +91,36 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
                     ?,
                     ?,
                     ?
-                )`, 
+                )`,
                 [
-                    responseObject.timestamp,
-                    responseObject.latitude, responseObject.longitude, SRID,
-                    responseObject.sensors.ph_level ?? null,
-                    responseObject.sensors.temperature ?? null,
-                    responseObject.sensors.conductivity ?? null
+                    uploadObject.timestamp,
+                    uploadObject.latitude, uploadObject.longitude, SRID,
+                    uploadObject.sensors.ph_level ?? null,
+                    uploadObject.sensors.temperature ?? null,
+                    uploadObject.sensors.conductivity ?? null
                 ]
             );
-            await connection.query(query);
-            measurements.push(responseObject);
+            const [ result ] = await connection.query(query);
+            return (<RowDataPacket> result).insertId;
         }
 
-        res.status(STATUS_CREATED).json(measurements);
+        if (Array.isArray(req.body)) {
+            let measurements = [];
+            for (const measurement of req.body) {
+                const uploadObject = parseAndConvertInput(measurement)
+                const insertId = await queryDb(uploadObject);
+                measurements.push({id: insertId, ...uploadObject});
+            }
+            res.status(STATUS_CREATED).json(measurements);
+            return;
+        }
+
+        const uploadObject = parseAndConvertInput(req.body);
+        const insertId = await queryDb(uploadObject);
+        res.status(STATUS_CREATED).json({
+            id: insertId,
+            ...uploadObject
+        });
     }
     catch (e) {
         if (e instanceof ZodError) {
