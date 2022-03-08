@@ -35,7 +35,7 @@
           }
         ],
         "requestBody": {
-          "description": "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can insert multiple measurements at once by providing an array of `Measurement`-objects. Note that all objects has to be a valid `Measurement` for the request to be successful. Temperature can be supplied as `K`- kelvin, `C`- celsius and `F` - fahrenheit. Conductivity can be supplied as variations of `Spm`- Siemens per metre, `mhopm`- mho per metre, `ppm`- parts per million.",
+          "description": "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can insert multiple measurements at once by providing an array of `Measurement`-objects. Note that all objects has to be a valid `Measurement` for the request to be successful. Temperature can be supplied as `K`- kelvin, `C`- celsius and `F` - fahrenheit. Conductivity can be supplied as variations of `Spm`- Siemens per metre, `mhopm`- mho per metre, `ppm`- parts per million. `timestamp` should be provided using ISO8601 format.",
           "content": {
             "application/json": {
               "schema": {
@@ -670,13 +670,7 @@
         "properties": {
           "timestamp": {
             "type": "string",
-            "format": "date-time",
-            "example": "2022-02-12 15:12:34"
-          },
-          "UTC_offset": {
-            "type": "number",
-            "format": "integer",
-            "example": 2
+            "format": "date-time"
           },
           "latitude": {
             "type": "number",
@@ -692,7 +686,7 @@
             "$ref": "#/components/schemas/Sensors"
           }
         },
-        "description": "The given contract to upload data to the database."
+        "description": "The given contract to upload data to the database. `timestamp` should be provided using ISO8601 format, e.g., YYYY-MM-DDTHH:mm:ssZ."
       },
       "Sensors": {
         "minProperties": 1,
@@ -735,8 +729,7 @@
         "properties": {
           "timestamp": {
             "type": "string",
-            "format": "date-time",
-            "example": "2022-02-22 13:12:34"
+            "format": "date-time"
           },
           "latitude": {
             "type": "number",
