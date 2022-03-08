@@ -1,10 +1,15 @@
 import {ConversionError} from "../CustomErrors";
+import {ZodError} from "zod";
+
+const MIN_KELVIN = 263.15;
+const MAX_KELVIN = 303.15;
 
 export function temperatureToKelvin(temperature, fromUnit) {
     // Converts the provided temperature measurement from the given unit to Kelvin
     // Returns the temperature value in Kelvin if successful, else -1
     const value = Number(temperature);
     if (isNaN(value))
+        // unreachable, Zod will only parse numbers from the /upload endpoint
         throw new ConversionError(`Provided temperature value '${temperature}' could not be parsed as a number.`);
 
     let ret;
@@ -22,17 +27,29 @@ export function temperatureToKelvin(temperature, fromUnit) {
             ret = (value + 459.67) * 5/9;
             break;
         default:
+            // unreachable, Zod only allows C, K, F for the unit
             throw new ConversionError(`Provided temperature unit '${fromUnit}' is not supported. Read the documentation for valid parameters.`);
     }
 
-    if (ret < 0)
-        throw new ConversionError(`Provided temperature value '${value}' is below absolute zero.`);
-
-    return ret;
+    let rounded = Math.round(ret * 1E3) / 1E3;  // round to 3 decimals
+    if (rounded < MIN_KELVIN)
+        // Using ZodError here to have them formatted the same way as the rest of the BAD_REQUEST-errors are
+        throw new ZodError([{
+            code: 'too_small',
+            path: [ 'temperature' ],
+            message: `Value should be greater than or equal to ${MIN_KELVIN} Kelvin`
+        }]);
+    else if (rounded > MAX_KELVIN)
+        throw new ZodError([{
+            code: 'too_large',
+            path: [ 'temperature' ],
+            message: `Value should be less than or equal to ${MAX_KELVIN} Kelvin`
+        }]);
+    return rounded;
 }
 
 export function temperatureFromKelvin(temperature, toUnit){
-    //Converts the provided tmperature measurement from Kelvin to the given unit
+    //Converts the provided temperature measurement from Kelvin to the given unit
     // Returns the temperature value in Kelvin if successful, else -1
     const value = Number(temperature);
     if(isNaN(value))
@@ -56,5 +73,5 @@ export function temperatureFromKelvin(temperature, toUnit){
             throw new ConversionError(`Provided temperature unit '${toUnit}' is not supported. Read the documentation for valid parameters.`);
     }
 
-    return ret;
+    return Math.round(ret * 1E3) / 1E3;  // round to 3 decimals
 }
