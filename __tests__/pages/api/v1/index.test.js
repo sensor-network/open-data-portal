@@ -11,7 +11,7 @@ import {
 import { UNITS as TEMP_UNITS } from 'src/lib/units/temperature';
 import { UNITS as COND_UNITS } from 'src/lib/units/conductivity';
 
-describe('/ API Endpoint', () => {
+describe.skip('/ API Endpoint', () => {
     console.log = jest.fn();    // silence the console logs during tests
     function mockReqRes (method = 'GET') {
         return createMocks({
