@@ -35,28 +35,22 @@
           }
         ],
         "requestBody": {
-          "description": "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can provide multiple measurements at once simply by providing multiple `Measurement`-objects in the array. Note that all objects has to be a valid input for the request to be successful. Temperature can be supplied as `K`- kelvin, `C`- celsius and `F` - fahrenheit. Conductivity can be supplied as variations of `Spm`- Siemens per metre, `mhopm`- mho per metre, `ppm`- parts per million.",
+          "description": "Posting data to the API in order to upload it to the database requires the JSON body to follow the following schema. You can insert multiple measurements at once by providing an array of `Measurement`-objects. Note that all objects has to be a valid `Measurement` for the request to be successful. Temperature can be supplied as `K`- kelvin, `C`- celsius and `F` - fahrenheit. Conductivity can be supplied as variations of `Spm`- Siemens per metre, `mhopm`- mho per metre, `ppm`- parts per million.",
           "content": {
             "application/json": {
               "schema": {
-                "type": "array",
-                "items": {
                   "$ref": "#/components/schemas/Measurement"
-                }
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response.",
+            "description": "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response. If the Measurements was provided in an array, then the response will also be an array.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
                     "$ref": "#/components/schemas/UploadResponse"
-                  }
                 }
               }
             }
@@ -72,7 +66,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "example": "Expected array, received object"
+                        "example": "Expected Array or Object, received Number"
                       }
                     },
                     "fieldErrors": {
