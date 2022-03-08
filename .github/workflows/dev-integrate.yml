@@ -25,7 +25,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
       - name: Start up the test database
-        run: docker compose -f test-db.yml up
+        run: docker compose -f test-db.yml up -d
 
       - uses: actions/setup-node@v1
         with:
