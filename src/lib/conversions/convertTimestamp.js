@@ -1,16 +1,19 @@
-export function timestampToUTC(timestamp, offset) {
-    // Converts the timestamp to UTC and returns it as a string formatted like "YYYY-MM-DD HH:MM:SS"
-    let dateInUTC;
-    if (offset < 0)
-        dateInUTC = new Date(`${timestamp}-${-offset}`);
-    else
-        dateInUTC = new Date(`${timestamp}+${offset}`);
+import {ZodError} from "zod";
 
-    // ISO string will be formatted like `YYYY:MM:DDTHH:MM:SS.XXXZ`. Extract ["YYYY:MM:DD" and "HH:MM:SS"]
-    let dateString = dateInUTC.toISOString().split('T')[0];
-    let timeString = dateInUTC.toISOString().split('T')[1].split(".")[0];
-
-    return dateString + " " + timeString;
+export function ISOStringToSQLTimestamp (ISOString) {
+    /* JS Date-object is weird, and does not always support the T-separator  */
+    const withoutT = ISOString.replace('T', ' ');
+    try {
+        const inUTC = new Date(withoutT).toISOString();
+        /* And SQL Timestamps does not accept the trailing Z */
+        const idx = inUTC.length - 1;
+        return inUTC.substring(0, idx);
+    }
+    catch (e) {
+        throw new ZodError([{
+            code: "invalid_date",
+            path: [ "timestamp" ],
+            message: "Invalid timestamp format. Timestamps should be provided using ISO8601 format, e.g. 2022-03-08T18:31:23+0100."
+        }]);
+    }
 }
-
-// TODO: Currently only supports input format "YYYY-MM-DD:HH:mm:ss"
