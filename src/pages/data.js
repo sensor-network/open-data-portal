@@ -13,12 +13,13 @@ export async function getServerSideProps(){
 }
 
 function App(props){
-    console.log(props)
     const initialData = props.initialData;
-    
 
     const endpointUrl = "http://localhost:3000/api/v1";
-    const { data, error } = useSWR(endpointUrl, fetcher);
+    const options = {fetcher: () => fetcher(endpointUrl),
+                    fallbackData: initialData,
+                    refreshInterval: 1000 * 60}
+    const { data, error } = useSWR(endpointUrl, options);
 
     if (error) return <div>failed to load</div>;
     if (!data) return <div>loading...</div>;
@@ -29,7 +30,6 @@ function App(props){
           {row.temperature}
         </div>
       ))}</div>;*/
-      return <p>idk</p>
 }
 
 export default App;
