@@ -39,3 +39,18 @@ body {
   background-color: #808080;
   transform: scale(150);
 }
+
+.preferences-modal {
+  position: absolute;
+  top: 50px;
+  right: 40px;
+  border: 2px solid black;
+  padding: 10px 20px;
+  width: 300px;
+  background-color: #fff;
+  border-radius: 15px;
+}
+
+.modal-option {
+  padding: 5px;
+}
