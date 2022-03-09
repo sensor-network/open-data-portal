@@ -1,26 +1,24 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { z, ZodError } from "zod";
-import moment from 'moment';
-import mysql, { RowDataPacket } from 'mysql2/promise';
+import type {NextApiRequest, NextApiResponse} from "next";
+import {z, ZodError} from "zod";
+import mysql, {RowDataPacket} from 'mysql2/promise';
 
-import { getConnectionPool } from "src/lib/database";
-import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
-import { sensorDataAsSI } from "src/lib/conversions/convertSensors";
+import {getConnectionPool} from "src/lib/database";
+import {ISOStringToSQLTimestamp} from "lib/conversions/convertTimestamp"
+import {sensorDataAsSI} from "src/lib/conversions/convertSensors";
 import {
-    STATUS_CREATED,
     STATUS_BAD_REQUEST,
+    STATUS_CREATED,
     STATUS_FORBIDDEN,
     STATUS_METHOD_NOT_ALLOWED,
     STATUS_SERVER_ERROR
-} from "lib/httpStatusCodes"
+} from "lib/httpStatusCodes";
 
 // Incoming requests must follow this schema
 const Measurement = z.object({
-    timestamp: z.string()
-        .refine((str) => (
-            moment(str, 'YYYY-MM-DD HH:mm:ss', true).isValid()  // Validates the timestamp is formatted correctly
-        ), { message: "Invalid format. Please provide timestamp formatted as YYYY-MM-DD HH:mm:ss" }),
-    UTC_offset: z.number().gte(-12).lte(14),    // UTC ranges from -12 to 14
+    timestamp: z.preprocess(
+        // maximize compatibility and validate the inputted date
+        inputStr => ISOStringToSQLTimestamp(inputStr), z.string()
+    ),
     latitude: z.number().gte(-90).lte(90),      // lat ranges from +-90 deg
     longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
     sensors: z.object({
@@ -71,9 +69,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
         const parseAndConvertInput = (measurement: Measurement) => {
             const requestInput = Measurement.parse(measurement);
             return {
-                timestamp: timestampToUTC(requestInput.timestamp, requestInput.UTC_offset),
-                latitude: requestInput.latitude,
-                longitude: requestInput.longitude,
+                ...requestInput,
                 sensors: sensorDataAsSI(requestInput.sensors)
             }
         }

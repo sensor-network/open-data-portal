@@ -107,8 +107,7 @@ describe('/upload API Endpoint', () => {
          * correctly without any crashes and give the user appropriate error messages.
          */
         const acceptedMeasurement = {
-            timestamp: "2022-01-01 00:00:00",
-            UTC_offset: 0,
+            timestamp: "2022-01-01T00:00:00Z",
             latitude: 0,
             longitude: 0,
             sensors: {
@@ -119,66 +118,38 @@ describe('/upload API Endpoint', () => {
         };
 
         describe("the endpoint accepts only valid timestamps", () => {
-            it("should not accept UTC_offsets less than -12", async () => {
-                const { req, res } = mockReqRes();
-                req.body = [{...acceptedMeasurement, UTC_offset: -13}];
-                await handler(req, res);
-                expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
-                expect(res._getJSONData()).toEqual(
-                    expect.objectContaining({
-                        fieldErrors: {
-                            UTC_offset: [ expect.stringContaining("Value should be greater than or equal to -12") ]
-                        }
-                    })
-                );
-            });
-            it("should not accept UTC_offsets greater than 14", async () => {
-                const { req, res } = mockReqRes();
-                req.body = [{...acceptedMeasurement, UTC_offset: 15}];
-                await handler(req, res);
-                expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
-                expect(res._getJSONData()).toEqual(
-                    expect.objectContaining({
-                        fieldErrors: {
-                            UTC_offset: [ expect.stringContaining("Value should be less than or equal to 14") ]
-                        }
-                    })
-                );
-            });
             it("should not accept random strings as timestamps", async () => {
                 const { req, res } = mockReqRes();
-                req.body = [{...acceptedMeasurement, timestamp: "something"}];
+                req.body = {...acceptedMeasurement, timestamp: "something"};
                 await handler(req, res);
                 expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            timestamp: [ expect.stringContaining('Invalid format') ]
+                            timestamp: [ expect.stringContaining('Invalid timestamp format') ]
                         }
                     })
                 );
             });
-            it("should accept timestamps formatted as YYYY-MM-DD hh:mm:ss", async () => {
+            it("should accept timestamps formatted as YYYY-MM-DD hh:mm:ssZ", async () => {
                 const { req, res } = mockReqRes();
-                req.body = [acceptedMeasurement];
+                req.body = acceptedMeasurement;
                 await handler(req, res);
                 expect(res._getStatusCode()).toEqual(STATUS_CREATED);
-                expect(res._getJSONData()[0]).toEqual(
+                expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
-                        timestamp: "2022-01-01 00:00:00"
+                        timestamp: expect.stringContaining("2022-01-01T00:00:00")
                     })
                 );
             });
-            it("should not accept timestamps formatted as YYYY-MM-DDThh:mm:ss.SSSZ", async () => {
+            it("should accept timestamps formatted as YYYY-MM-DDThh:mm:ss.SSSZ", async () => {
                 const { req, res } = mockReqRes();
-                req.body = [{...acceptedMeasurement, timestamp: "2022-01-01T00:00:00.000Z"}];
+                req.body = {...acceptedMeasurement, timestamp: "2022-01-01T00:00:00.000Z"};
                 await handler(req, res);
-                expect(res._getStatusCode()).toEqual(STATUS_BAD_REQUEST);
+                expect(res._getStatusCode()).toEqual(STATUS_CREATED);
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
-                        fieldErrors: {
-                            timestamp: [ expect.stringContaining("Invalid format") ]
-                        }
+                        timestamp: expect.stringContaining("2022-01-01T00:00:00")
                     })
                 );
             });
@@ -368,7 +339,7 @@ describe('/upload API Endpoint', () => {
                expect(Array.isArray(data)).toEqual(false);  // since Array <|-- Object, check that it isn't
                expect(data).toEqual(
                    expect.objectContaining({
-                       timestamp: "2022-01-01 00:00:00",
+                       timestamp: expect.stringContaining("2022-01-01T00:00:00"),
                        latitude: 0,
                        longitude: 0,
                        sensors: expect.objectContaining({
@@ -388,7 +359,7 @@ describe('/upload API Endpoint', () => {
                 expect(data.length).toEqual(1);
                 expect(data[0]).toEqual(
                     expect.objectContaining({
-                    timestamp: "2022-01-01 00:00:00",
+                    timestamp: expect.stringContaining("2022-01-01T00:00:00"),
                     latitude: 0,
                     longitude: 0,
                     sensors: expect.objectContaining({
@@ -400,14 +371,17 @@ describe('/upload API Endpoint', () => {
             });
             it("should upload converted data if units are provided", async () => {
                 const {req, res} = mockReqRes();
-                req.body = [{...acceptedMeasurement, UTC_offset: -1, sensors: { temperature: 0, ph_level: 0, temperature_unit: 'C', conductivity: 100, conductivity_unit: 'ppm' }}];
+                req.body = {
+                    ...acceptedMeasurement,
+                    timestamp: '2022-01-01 02:00:00+1',
+                    sensors: { temperature: 0, ph_level: 0, temperature_unit: 'C', conductivity: 100, conductivity_unit: 'ppm' }
+                };
                 await handler(req, res);
                 const data = res._getJSONData();
                 expect(res._getStatusCode()).toEqual(STATUS_CREATED);
-                expect(data.length).toEqual(1);
-                expect(data[0]).toEqual(
+                expect(data).toEqual(
                     expect.objectContaining({
-                        timestamp: "2022-01-01 01:00:00",
+                        timestamp: expect.stringContaining("2022-01-01T01:00:00"),
                         latitude: 0,
                         longitude: 0,
                         sensors: expect.objectContaining({
