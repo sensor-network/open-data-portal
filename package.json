@@ -25,6 +25,7 @@
     "react-modal": "^3.14.4",
     "sharp": "^0.30.1",
     "swagger-ui": "^4.6.1",
+    "swagger-ui-react": "^4.6.1",
     "zod": "^3.11.6"
   },
   "devDependencies": {
