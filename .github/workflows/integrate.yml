@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 12
       - name: Install Node dependencies
-        run: npm ci && npm install --save-dev typescript
+        run: npm install && npm install --save-dev typescript
       - name: Run test suite
         run: npm test
       - name: Build a production version
