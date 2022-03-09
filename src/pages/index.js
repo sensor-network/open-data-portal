@@ -6,6 +6,7 @@ import { UNITS as COND_UNITS } from 'src/lib/units/conductivity';
 import Navbar from 'src/components/Navbar'
 import Preferences from "../components/Preferences";
 
+
 const locations = [ /* fetch from api */
     { id: 1, name: 'Trossö',  lat: 43, long: 23, radius: 300 },
     { id: 2, name: 'Gräsvik', lat: 43, long: 23, radius: 300 },
@@ -54,13 +55,15 @@ export default function Home({ initialPreferences, locations }) {
 
             <main>
                 <Navbar openModal={() => setIsOpen(true)}/>
-                {isOpen && <Preferences
-                    preferences={preferences}
-                    setPreferences={setPreferences}
-                    locations={locations}
-                    closeModal={() => setIsOpen(false)}
-                    isOpen={isOpen}
-                />}
+                {isOpen &&
+                    <Preferences
+                        preferences={preferences}
+                        setPreferences={setPreferences}
+                        locations={locations}
+                        closeModal={() => setIsOpen(false)}
+                        isOpen={isOpen}
+                    />
+                }
                 <Welcome />
             </main>
         </div>

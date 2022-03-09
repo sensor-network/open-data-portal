@@ -40,15 +40,44 @@ body {
   transform: scale(150);
 }
 
+
 .preferences-modal {
   position: absolute;
-  top: 50px;
-  right: 40px;
+  top: 50%;
+  left: 50%;
   border: 2px solid black;
   padding: 10px 20px;
-  width: 300px;
+  width: 80%;
   background-color: #fff;
   border-radius: 15px;
+  animation: enter 200ms ease-in forwards;
+}
+
+@keyframes enter {
+  from {
+    transform: translate(-50%, -200%);
+  }
+  to {
+    transform: translate(-50%, -50%);
+  }
+}
+
+@media (min-width: 768px) {
+  .preferences-modal {
+    top: 40px;
+    left: auto;
+    right: 40px;
+    width: 300px;
+  }
+
+  @keyframes enter {
+    from {
+      transform: translate(50%, 0);
+    }
+    to {
+      transform: translate(0, 0);
+    }
+  }
 }
 
 .modal-option {

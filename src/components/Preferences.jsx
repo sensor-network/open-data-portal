@@ -59,5 +59,5 @@ export default function ({ preferences, setPreferences, locations, closeModal, i
                 <Button color='primary' variant='contained' onClick={() => savePreferences()}>Save Preferences</Button>
             </div>
         </Modal>
-);
+    );
 }
