@@ -164,7 +164,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            latitude: [ expect.stringContaining("Value should be greater than or equal to -90") ]
+                            latitude: [ expect.stringContaining("be greater than or equal to -90") ]
                         }
                     })
                 );
@@ -177,7 +177,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            latitude: [ expect.stringContaining("Value should be less than or equal to 90") ]
+                            latitude: [ expect.stringContaining("be less than or equal to 90") ]
                         }
                     })
                 );
@@ -190,7 +190,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            longitude: [ expect.stringContaining("Value should be greater than or equal to -180") ]
+                            longitude: [ expect.stringContaining("be greater than or equal to -180") ]
                         }
                     })
                 );
@@ -203,7 +203,7 @@ describe('/upload API Endpoint', () => {
                 expect(res._getJSONData()).toEqual(
                     expect.objectContaining({
                         fieldErrors: {
-                            longitude: [ expect.stringContaining("Value should be less than or equal to 180") ]
+                            longitude: [ expect.stringContaining("be less than or equal to 180") ]
                         }
                     })
                 );
@@ -274,7 +274,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                ph_level: [ expect.stringContaining("Value should be greater than or equal to 0") ]
+                                ph_level: [ expect.stringContaining("be greater than or equal to 0") ]
                             }
                         })
                     );
@@ -287,7 +287,7 @@ describe('/upload API Endpoint', () => {
                     expect(res._getJSONData()).toEqual(
                         expect.objectContaining({
                             fieldErrors: {
-                                ph_level: [ expect.stringContaining("Value should be less than or equal to 14") ]
+                                ph_level: [ expect.stringContaining("be less than or equal to 14") ]
                             }
                         })
                     );
