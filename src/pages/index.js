@@ -19,7 +19,7 @@ export const getServerSideProps = async (ctx) => {
 };
 
 export default function Home() {
-    // const preferences = useContext(PreferenceContext);
+    const preferences = useContext(PreferenceContext);
 
     return (
         <div>
@@ -30,6 +30,10 @@ export default function Home() {
             </Head>
 
             <main>
+                {/* preferences are updated using state, test by changing it in the preference modal */}
+                <p>Your preferred location is: <strong>{preferences.location.name}</strong></p>
+                <p>Temperature is displayed in: <strong>{preferences.temperature_unit.name}</strong> ({preferences.temperature_unit.symbol})</p>
+                <p>Conductivity is displayed in: <strong>{preferences.conductivity_unit.name}</strong> ({preferences.conductivity_unit.symbol})</p>
                 <Welcome />
             </main>
         </div>
