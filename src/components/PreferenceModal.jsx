@@ -10,6 +10,7 @@ import Cookies from "js-cookie";
 import { UNITS as TEMP_UNITS } from "src/lib/units/temperature";
 import { UNITS as COND_UNITS } from "src/lib/units/conductivity";
 import { PreferenceContext } from "src/pages/_app";
+import style from 'src/styles/PreferenceModal.module.css';
 
 export default function ({ setPreferences, closeModal, isOpen }) {
     const preferences = useContext(PreferenceContext);      /* <-- global preferences from _app-context-provider */
@@ -45,12 +46,12 @@ export default function ({ setPreferences, closeModal, isOpen }) {
         <Modal
             isOpen={isOpen}
             onRequestClose={closeModal}
-            className={'preferences-modal'}
+            className={style.preferenceModal}
         >
             <CloseIcon sx={{fontSize: 30, right: 5, top: 5, position: 'absolute', cursor: 'pointer'}} onClick={closeModal} />
 
             {preferenceOptions.map((p, idx) => (
-                <div className="modal-options" key={idx}>
+                <div className={style.modalOption} key={idx}>
                     <p>{p.name}</p>
                     <Autocomplete
                         options={p.options}
@@ -64,7 +65,7 @@ export default function ({ setPreferences, closeModal, isOpen }) {
                 </div>
             ))}
 
-            <div className={"modal-option"} style={{display: 'flex', justifyContent: 'center', marginTop: 20}}>
+            <div className={style.buttonContainer}>
                 <Button sx={{backgroundColor: '#185693'}} variant='contained' onClick={() => savePreferences()}>Save Preferences</Button>
             </div>
         </Modal>
