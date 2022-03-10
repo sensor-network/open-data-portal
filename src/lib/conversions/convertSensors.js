@@ -1,25 +1,22 @@
-import {temperatureToKelvin} from "./convertTemperature";
-import {conductivityToSpm} from "./convertConductivity";
+import { parseConductivity } from "lib/units/conductivity";
+import { parseTemperature } from "lib/units/temperature";
+import {ZodError} from "zod";
 
 export function sensorDataAsSI(sensors) {
     // Converts all the sensor data provided. If units are not specified they will default to SI units.
     let converted = {}
 
-    // Convert temperature
     if (!(sensors.temperature === undefined || sensors.temperature === null)) {
-        const unit = sensors.temperature_unit ?? "K";
         try {
-            converted.temperature = temperatureToKelvin(sensors.temperature, unit);
+            converted.temperature = parseTemperature(sensors.temperature, sensors.temperature_unit).asKelvin();
         } catch (e) {
             throw e;
         }
     }
 
-    // Convert conductivity 
     if (!(sensors.conductivity === undefined || sensors.conductivity === null)) {
-        const unit = sensors.conductivity_unit ?? "Spm";
         try {
-            converted.conductivity = conductivityToSpm(sensors.conductivity, unit);
+            converted.conductivity = parseConductivity(sensors.conductivity, sensors.conductivity_unit).asSiemensPerMeter();
         } catch (e) {
             throw e;
         }
@@ -28,6 +25,17 @@ export function sensorDataAsSI(sensors) {
     // Push back items that don't need to be converted.
     if (!(sensors.ph_level === undefined || sensors.ph_level === null))
         converted.ph_level = sensors.ph_level;
+
+    if (!Object.keys(converted).length) {
+        throw new ZodError([{
+            code: 'too_small',
+            minimum: 1,
+            inclusive: true,
+            type: "number",
+            path: ["sensors"],
+            message: "Must contain at least one data-value. Did you specify only a unit?"
+        }])
+    }
 
     return converted;
 }

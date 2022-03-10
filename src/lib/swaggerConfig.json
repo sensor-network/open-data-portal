@@ -498,7 +498,7 @@
             "explode": true,
             "schema": {
               "type": "number",
-              "example": "56.00694388528538" 
+              "example": "56.00694388528538"
             }
           },
           {
@@ -794,7 +794,7 @@
             "example": "2017-08-16T20:19:44.000Z"
           }
         },
-        
+
         "description": "The response from `GET: / pH`-endpoint."
       },
       "ConductivityResponse": {

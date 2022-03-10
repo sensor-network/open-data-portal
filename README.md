@@ -57,17 +57,12 @@ The application will then start at `localhost:3000`
 $ git clone https://github.com/sensor-network/open-data-portal.git
 $ cd open-data-portal
 ```
-2. Create a `.env` file and specify the following variables:
-- NEXT_PUBLIC_DB_HOST
-- NEXT_PUBLIC_DB_USER
-- NEXT_PUBLIC_DB_PASSWORD
-- NEXT_PUBLIC_DB_DATABASE
-- NEXT_PUBLIC_API_KEY
-
-3. Install the project's dependencies:
+2. Install the project's dependencies:
 ```bash
 $ npm install
 ```
+
+3. Verify the credentials in `.env`. By default, it contains the credentials used to connect to the dockerized database supplied in this repo.
 
 #### Build
 

@@ -1,57 +1,51 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { z, ZodError } from "zod";
-import mysql from 'mysql2/promise';
+import type {NextApiRequest, NextApiResponse} from "next";
+import {z, ZodError} from "zod";
+import mysql, {RowDataPacket} from 'mysql2/promise';
 
-import { getConnectionPool } from "src/lib/database";
-
-import { timestampToUTC } from "src/lib/conversions/convertTimestamp";
-import { sensorDataAsSI } from "src/lib/conversions/convertSensors";
-import { ConversionError } from "src/lib/CustomErrors";
-
+import {getConnectionPool} from "src/lib/database";
+import {ISOStringToSQLTimestamp} from "lib/conversions/convertTimestamp"
+import {sensorDataAsSI} from "src/lib/conversions/convertSensors";
 import {
-    STATUS_CREATED,
     STATUS_BAD_REQUEST,
+    STATUS_CREATED,
     STATUS_FORBIDDEN,
     STATUS_METHOD_NOT_ALLOWED,
     STATUS_SERVER_ERROR
-} from "src/lib/httpStatusCodes"
+} from "lib/httpStatusCodes";
 
 // Incoming requests must follow this schema
 const Measurement = z.object({
-    timestamp: z.string()
-        .refine((str) => (
-            new Date(str).getTime() / 1000 >= 0     // checks if string can be parsed as Date
-        ), { message: "String could not be parsed as Date" }),
-    UTC_offset: z.number().gte(-12).lte(14),    // UTC ranges from -12 to 14
+    timestamp: z.preprocess(
+        // maximize compatibility and validate the inputted date
+        inputStr => ISOStringToSQLTimestamp(inputStr), z.string()
+    ),
     latitude: z.number().gte(-90).lte(90),      // lat ranges from +-90 deg
     longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
     sensors: z.object({
         temperature: z.number().optional(),
-        temperature_unit: z.enum(["C", "K", "F"]).optional(),   // Celsius, Kelvin, Fahrenheit
+        temperature_unit: z.string().optional(),
         ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
         conductivity: z.number().optional(),
-        conductivity_unit: z.enum([
-            "Spm", "S/m", "mho/m", "mhopm", "mS/m", "mSpm", "uS/m", "uSpm", "S/cm", "Spcm",
-            "mho/cm", "mhopcm", "mS/cm", "mSpcm", "uS/cm", "uSpcm", "ppm", "PPM"
-        ]).optional(),
+        conductivity_unit: z.string().optional(),
     }).strict()
 }).strict();
+type Measurement = z.infer<typeof Measurement>;
 
 export default async function (req: NextApiRequest, res: NextApiResponse) {
     // Only allow POST-requests for this endpoint.
     if (req.method !== "POST") {
-        console.log(`Error: Method ${req.method} not allowed.`)
-        res.status(STATUS_METHOD_NOT_ALLOWED)        // 405: method not allowed
+        console.log(`ERROR: Method ${req.method} not allowed.`)
+        res.status(STATUS_METHOD_NOT_ALLOWED)
             .json({ error:
                 `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
         });
         return;
     }
 
-    if (!(req.body instanceof Array)) {
-        console.log(`ERROR: Invalid type of JSON-body. Expected Array but got ${typeof req.body}`);
+    if (!(req.body instanceof Array || req.body instanceof Object)) {
+        console.log(`ERROR: Invalid type of JSON-body. Expected Array or Object but got ${typeof req.body}`);
         res.status(STATUS_BAD_REQUEST)
-            .json({error: `Invalid type of JSON-body. Expected Array but got ${typeof req.body}`});
+            .json({error: `Invalid type of JSON-body. Expected Array or Object but got ${typeof req.body}`});
         return;
     }
 
@@ -69,32 +63,17 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
     }
 
     try {
-        // Establish connection to database
         const connection = await getConnectionPool();
+        const SRID = 4326; // For GeoLocation in DB
 
-        // Iterate all the measurements, parse them using Zod and insert the data into the database
-        let measurements = [];
-        for (const measurement of req.body) {
+        const parseAndConvertInput = (measurement: Measurement) => {
             const requestInput = Measurement.parse(measurement);
-            let responseObject = {
-                timestamp: timestampToUTC(requestInput.timestamp, requestInput.UTC_offset),
-                latitude: requestInput.latitude,
-                longitude: requestInput.longitude,
+            return {
+                ...requestInput,
                 sensors: sensorDataAsSI(requestInput.sensors)
             }
-            if (Object.keys(responseObject.sensors).length === 0) {
-                throw new ZodError([{
-                    code: 'too_small',
-                    minimum: 1,
-                    inclusive: true,
-                    type: "array",
-                    path: ["sensors"],
-                    message: "Must contain at least one data-value. Did you specify only a unit?"
-                }])
-            }
-
-            // Prepare SQL-query with correct parameters
-            const SRID = 4326; // For GeoLocation in DB
+        }
+        const queryDb = async (uploadObject: any) => {
             const query = mysql.format(`
                 INSERT INTO Data (
                     date,
@@ -108,34 +87,49 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
                     ?,
                     ?,
                     ?
-                )`, 
+                )`,
                 [
-                    responseObject.timestamp,
-                    responseObject.latitude, responseObject.longitude, SRID,
-                    responseObject.sensors.ph_level ?? null,
-                    responseObject.sensors.temperature ?? null,
-                    responseObject.sensors.conductivity ?? null
+                    uploadObject.timestamp,
+                    uploadObject.latitude, uploadObject.longitude, SRID,
+                    uploadObject.sensors.ph_level ?? null,
+                    uploadObject.sensors.temperature ?? null,
+                    uploadObject.sensors.conductivity ?? null
                 ]
             );
-            // Then execute the query asynchronously
-            await connection.query(query);
-            measurements.push(responseObject);
+            const [ result ] = await connection.query(query);
+            return (<RowDataPacket> result).insertId;
         }
 
-        // Respond with the inserted data
-        res.status(STATUS_CREATED)
-            .json(measurements);
+        if (Array.isArray(req.body)) {
+            let measurements = [];
+            for (const measurement of req.body) {
+                const uploadObject = parseAndConvertInput(measurement)
+                const insertId = await queryDb(uploadObject);
+                measurements.push({id: insertId, ...uploadObject});
+            }
+            res.status(STATUS_CREATED).json(measurements);
+            return;
+        }
+
+        const uploadObject = parseAndConvertInput(req.body);
+        const insertId = await queryDb(uploadObject);
+        res.status(STATUS_CREATED).json({
+            id: insertId,
+            ...uploadObject
+        });
     }
     catch (e) {
         if (e instanceof ZodError) {
-            console.log("Error parsing request json:\n", e.flatten())
+            /*
+             * e.issues can have path: ['sensors', '<ph_level>']. Want to remove the path
+             * 'sensors' so that the inner-path '<ph_level>' is shown, for better error messages
+             */
+            e.issues.forEach(issue => {
+                issue.path = issue.path.filter((path: string | number) => path !== 'sensors')
+            });
+            console.log("ERROR: Could not parse request json:\n", e.flatten())
             res.status(STATUS_BAD_REQUEST)
                 .json(e.flatten());
-        }
-        else if (e instanceof ConversionError) {    // custom error-class to separate faulty input data
-            console.log("ERROR:", e.message)
-            res.status(STATUS_BAD_REQUEST)
-                .json({error: e.message});
         }
         else {
             console.error(e);
