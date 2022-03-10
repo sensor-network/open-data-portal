@@ -65,7 +65,7 @@ export default function ({ setPreferences, closeModal, isOpen }) {
             ))}
 
             <div className={"modal-option"} style={{display: 'flex', justifyContent: 'center', marginTop: 20}}>
-                <Button color='primary' variant='contained' onClick={() => savePreferences()}>Save Preferences</Button>
+                <Button sx={{backgroundColor: '#185693'}} variant='contained' onClick={() => savePreferences()}>Save Preferences</Button>
             </div>
         </Modal>
     );

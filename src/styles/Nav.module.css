@@ -1,0 +1,38 @@
+.nav {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #185693;
+    width: 100%;
+}
+
+.navHalf {
+    display: flex;
+    justify-content: center;
+    padding: 0 15px;
+}
+
+.header {
+    margin: 0 0 0 5px;
+}
+
+.navItem {
+    cursor: pointer;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    color: #185693;
+    border-top: 2px solid transparent;
+    border-bottom: 2px solid transparent;
+}
+
+.icon {
+    color: #185693;
+    font-size: 24px;
+}
+
+.navItem:hover, .navItem:focus {
+    color: #1976d2;
+    border-bottom: 2px solid #1976d2;
+}

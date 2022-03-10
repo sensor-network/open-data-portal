@@ -1,37 +1,33 @@
 import SettingsIcon from '@mui/icons-material/Settings';
 import WavesIcon from '@mui/icons-material/Waves';
-import HomeIcon from '@mui/icons-material/Home';
+import EqualizerIcon from '@mui/icons-material/BarChart';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import GitHubIcon from '@mui/icons-material/GitHub';
 
 import Link from 'next/link';
 import { useState } from 'react';
 
+import style from 'src/styles/Nav.module.css'
 import PreferenceModal from 'src/components/PreferenceModal';
 
-const navStyle = {
-    display: 'flex',
-    justifyContent: 'space-between',
-    borderBottom: '1px solid black',
-    width: '100%',
+const NavLink = ({name, href, Icon}) => {
+    return (
+        <Link href={href} key={href}>
+            <div className={style.navItem}>
+                <Icon className={style.icon}/>
+                {name && <h4 className={style.header}>{name}</h4>}
+            </div>
+        </Link>
+    );
 }
-
-const headerStyle = {
-    display: 'flex',
-    justifyContent: 'center',
-    padding: '0 15px',
+const NavButton = ({name, onClick, Icon}) => {
+    return (
+        <div className={style.navItem} onClick={onClick}>
+            <Icon className={style.icon}/>
+            {name && <h4 className={style.header}>{name}</h4>}
+        </div>
+    );
 }
-
-const navItemStyle = {
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '15px',
-}
-
-const ICON_SIZE = 30;
-const ICON_COLOR = '#1976d2';
 
 export default function Navbar ({ setPreferences }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -39,37 +35,20 @@ export default function Navbar ({ setPreferences }) {
     const openPreferenceModal = () => setIsOpen(true);
 
     return (
-        <>
-            <div className="nav" style={navStyle}>
-                <div className="nav-left" style={headerStyle}>
-                    <div className={'nav-item'} style={navItemStyle}>
-                        <WavesIcon sx={{ fontSize: ICON_SIZE, color: ICON_COLOR }}/>
-                    </div>
-                    <h2>Sensor Network</h2>
+        <nav>
+            <div className={style.nav}>
+                <div className={style.navHalf}>
+                    <NavLink name="Sensor Network" href="/" Icon={WavesIcon}/>
                 </div>
 
-                <div className="nav-right" style={{ display: 'flex' }}>
-                    <Link href={'/'}>
-                        <div className="nav-item" style={navItemStyle}>
-                            <HomeIcon sx={{ fontSize: ICON_SIZE, color: ICON_COLOR }}/>
-                        </div>
-                    </Link>
-                    <Link href={'/docs'}>
-                        <div className="nav-item" style={navItemStyle}>
-                            <LibraryBooksIcon sx={{ fontSize: ICON_SIZE, color: ICON_COLOR }}/>
-                        </div>
-                    </Link>
-                    <Link href={'https://github.com/sensor-network/open-data-portal'} >
-                        <div className="nav-item" style={navItemStyle}>
-                            <GitHubIcon sx={{ fontSize: ICON_SIZE, color: ICON_COLOR }}/>
-                        </div>
-                    </Link>
-                    <div className={'nav-item'} style={navItemStyle} onClick={openPreferenceModal}>
-                        <SettingsIcon sx={{ fontSize: ICON_SIZE, color: ICON_COLOR }}/>
-                    </div>
+                <div className={style.navHalf}>
+                    <NavLink name="Visualize Data" href="/data" Icon={EqualizerIcon}/>
+                    <NavLink name="API Docs" href="/docs" Icon={LibraryBooksIcon}/>
+                    <NavLink href="https://github.com/sensor-network/open-data-portal" Icon={GitHubIcon}/>
+                    <NavButton onClick={openPreferenceModal} Icon={SettingsIcon}/>
                 </div>
             </div>
             {isOpen && <PreferenceModal isOpen={isOpen} closeModal={closePreferenceModal} setPreferences={setPreferences}/>}
-        </>
+        </nav>
     );
 }
