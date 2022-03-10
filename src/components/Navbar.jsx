@@ -10,21 +10,22 @@ import { useState } from 'react';
 import style from 'src/styles/Nav.module.css'
 import PreferenceModal from 'src/components/PreferenceModal';
 
-const NavLink = ({name, href, Icon}) => {
+const NavLink = ({title, text, href, Icon}) => {
     return (
         <Link href={href} key={href}>
             <div className={style.navItem}>
                 <Icon className={style.icon}/>
-                {name && <h4 className={style.header}>{name}</h4>}
+                {text && <h4 className={style.header}>{text}</h4>}
+                {title && <h2 className={style.header}>{title}</h2>}
             </div>
         </Link>
     );
 }
-const NavButton = ({name, onClick, Icon}) => {
+const NavButton = ({text, onClick, Icon}) => {
     return (
         <div className={style.navItem} onClick={onClick}>
             <Icon className={style.icon}/>
-            {name && <h4 className={style.header}>{name}</h4>}
+            {text && <h4 className={style.header}>{text}</h4>}
         </div>
     );
 }
@@ -38,12 +39,12 @@ export default function Navbar ({ setPreferences }) {
         <nav>
             <div className={style.nav}>
                 <div className={style.navHalf}>
-                    <NavLink name="Sensor Network" href="/" Icon={WavesIcon}/>
+                    <NavLink title="Sensor Network" href="/" Icon={WavesIcon}/>
                 </div>
 
                 <div className={style.navHalf}>
-                    <NavLink name="Visualize Data" href="/data" Icon={EqualizerIcon}/>
-                    <NavLink name="API Docs" href="/docs" Icon={LibraryBooksIcon}/>
+                    <NavLink text="Visualize Data" href="/data" Icon={EqualizerIcon}/>
+                    <NavLink text="API Docs" href="/docs" Icon={LibraryBooksIcon}/>
                     <NavLink href="https://github.com/sensor-network/open-data-portal" Icon={GitHubIcon}/>
                     <NavButton onClick={openPreferenceModal} Icon={SettingsIcon}/>
                 </div>

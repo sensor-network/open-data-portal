@@ -25,6 +25,7 @@
     color: #185693;
     border-top: 2px solid transparent;
     border-bottom: 2px solid transparent;
+    transition: color 200ms ease;
 }
 
 .icon {
@@ -33,6 +34,6 @@
 }
 
 .navItem:hover, .navItem:focus {
-    color: #1976d2;
-    border-bottom: 2px solid #1976d2;
+    color: #1565c0;
+    border-bottom: 2px solid #1565c0;
 }
