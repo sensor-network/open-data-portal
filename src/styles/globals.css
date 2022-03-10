@@ -48,6 +48,7 @@ body {
   border: 2px solid black;
   padding: 10px 20px;
   width: 80%;
+  outline: none;
   background-color: #fff;
   border-radius: 15px;
   animation: enter 200ms ease-in forwards;
