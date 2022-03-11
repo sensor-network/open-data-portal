@@ -1,10 +1,13 @@
 import useSWR from 'swr'
+import loadPreferences from '../lib/prefrences.js'
 
-const fetcher = (...args) => fetch(...args).then(res => res.json());
+const fetcher = (url) => fetch(url).then(res => res.json());
+const endpointUrl = "http://localhost:3000/api/v1?";
 
-export async function getServerSideProps(){
-    const endpointUrl = "http://localhost:3000/api/v1";
+export async function getServerSideProps(context){
     const data = await fetcher(endpointUrl);
+
+    pref = loadPrefrences(context.req.cookies.prefrences);
     return{
         props: {
             initialData: data
@@ -15,7 +18,6 @@ export async function getServerSideProps(){
 function App(props){
     const initialData = props.initialData;
 
-    const endpointUrl = "http://localhost:3000/api/v1";
     const options = {fetcher: () => fetcher(endpointUrl),
                     fallbackData: initialData,
                     refreshInterval: 1000 * 60}
