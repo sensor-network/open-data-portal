@@ -8,16 +8,6 @@
     outline: none;
     background-color: #fff;
     border-radius: 15px;
-    animation: enter 200ms ease-in forwards;
-}
-
-@keyframes enter {
-    from {
-        transform: translate(-50%, -200%);
-    }
-    to {
-        transform: translate(-50%, -50%);
-    }
 }
 
 @media (min-width: 768px) {
@@ -26,15 +16,6 @@
         left: auto;
         right: 40px;
         width: 300px;
-    }
-
-    @keyframes enter {
-        from {
-            transform: translate(50%, 0);
-        }
-        to {
-            transform: translate(0, 0);
-        }
     }
 }
 

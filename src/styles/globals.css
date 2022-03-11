@@ -39,3 +39,41 @@ body {
   background-color: #808080;
   transform: scale(150);
 }
+
+/*
+ * Animations for the preference-modal
+ */
+.ReactModal__Overlay {
+  opacity: 0;
+  transition: opacity 500ms ease-in-out;
+}
+.ReactModal__Overlay--after-open{
+  opacity: 1;
+}
+.ReactModal__Overlay--before-close{
+  opacity: 0;
+}
+/* Mobile View Animation */
+.ReactModal__Content {
+  transform: translate(-50%, -200%);
+  transition: transform 500ms ease-in-out;
+}
+.ReactModal__Content--after-open{
+  transform: translate(-50%, -90%);
+}
+.ReactModal__Content--before-close{
+  transform: translate(-50%, -200%);
+}
+/* Tablet / Desktop View Animation*/
+@media (min-width: 768px) {
+  .ReactModal__Content {
+    transform: translateX(50%);
+    transition: transform 500ms ease-in-out;
+  }
+  .ReactModal__Content--after-open{
+    transform: translateX(0%);
+  }
+  .ReactModal__Content--before-close{
+    transform: translateX(50%);
+  }
+}
