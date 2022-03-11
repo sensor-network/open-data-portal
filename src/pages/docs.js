@@ -1,7 +1,10 @@
-import "swagger-ui/dist/swagger-ui.css";
-import SwaggerUi from 'swagger-ui';
-import config from 'src/lib/swaggerConfig.json';
 import Head from 'next/head';
+import {useEffect} from 'react'
+
+import SwaggerUi from 'swagger-ui';
+import "swagger-ui/dist/swagger-ui.css";
+
+import config from 'src/lib/swaggerConfig.json';
 
 export default function Docs() {
     useEffect(() => {
@@ -20,5 +23,3 @@ export default function Docs() {
         </div>
     );
 }
-
-import {useEffect} from 'react'
