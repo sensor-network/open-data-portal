@@ -9,7 +9,6 @@ import {
 } from "src/lib/httpStatusCodes";
 
 export default async function handler(req, res) {
-
     // Only allow GET-requests
     if (req.method !== "GET") {
         console.log(`Error: Method ${req.method} not allowed.`)
@@ -24,7 +23,34 @@ export default async function handler(req, res) {
         const connection = await getConnectionPool();
 
         // Creates and executes the query
-        const query = mysql.format('SELECT name, radius, ST_Y(position) as longitude, ST_X(position) as latitude FROM Locations;');
+
+        const params = req.query
+
+        const query = (params.name==null) ? 
+        mysql.format(`
+        SELECT 
+            name, 
+            radius, ST_Y(position) as longitude, 
+            ST_X(position) as latitude 
+        FROM 
+            Locations
+        WHERE 
+            name = name;`)
+        : 
+        mysql.format(`
+        SELECT
+            radius, 
+            ST_Y(position) as longitude, 
+            ST_X(position) as latitude 
+        FROM 
+            Locations 
+        WHERE 
+            name = ?;`,
+        [params.name]);
+        
+        
+        console.log(query)
+
         const [data] = await connection.query(query);
 
         // Returning the data
