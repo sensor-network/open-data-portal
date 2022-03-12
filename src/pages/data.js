@@ -1,7 +1,8 @@
 import useSWR from 'swr';
 import {useContext} from 'react';
 import { PreferenceContext } from './_app';
-import {loadPreferences} from '../lib/loadPreferences.ts'
+import {loadPreferences} from '../lib/loadPreferences.ts';
+import { DataGrid } from '@mui/x-data-grid'; //Documentation can be found here: https://mui.com/api/data-grid/data-grid/
 
 const fetcher = (url) => fetch(url).then(res => res.json());
 const endpointUrl = "http://localhost:3000/api/v1?";
@@ -11,6 +12,54 @@ function urlWithParams(url, params){
     return url + new URLSearchParams(params);
 }
 
+function getColumns(){
+    const columns = [
+        {
+            field: 'id',
+            headerName: 'ID',
+            width: 70,
+            editable: false
+        },
+        {
+            field: 'pH',
+            headerName: 'pH',
+            width: 90,
+            editable: false
+        },
+        {
+            field: 'temperature',
+            headerName: 'Temperature()',
+            width: 110,
+            editable: false
+        },
+        {
+            field: 'conductivity',
+            headerName: 'Conductivity',
+            width: 110,
+            editable: false
+        },
+        {
+            field: 'date',
+            headerName: 'Date',
+            width: 200,
+            editable: false
+        },
+        {
+            field: 'longitude',
+            headerName: 'Longitude',
+            width: 170,
+            editable: false
+        },
+        {
+            field: 'latitude',
+            headerName: 'Latitude',
+            width: 170,
+            editable: false
+        }
+    ];
+
+    return columns;
+}
 export async function getServerSideProps(context){
     //Since useContext(PreferenceContext) cannot be used:
     const preferences = loadPreferences(context.req.cookies.preferences);
@@ -30,7 +79,7 @@ export async function getServerSideProps(context){
     }
 }
 
-function App(props){
+export default function App(props){
     const initialData = props.initialData;
     const preferences = useContext(PreferenceContext);
 
@@ -47,14 +96,15 @@ function App(props){
     const { data, error } = useSWR(url, options);
 
     if (error) return <div>failed to load</div>;
-    if (!data) return <div>loading...</div>;//Is this needed since there is already data?
+    //if (!data) return <div>loading...</div>;Is this needed since there is already data?
     
-    return <div>
-        {data.map( (row) => (
-            <div key= {row.id}>
-                {row.id} {row.pH} {row.temperature} {row.conductivity} {row.date} {row.longitude} {row.latitude}
-            </div>
-      ))}</div>;
+      return(
+          <div style={{ height: 750, width: '50%' }}>
+              <DataGrid
+                rows= {data}
+                columns= {getColumns()}
+              />
+          </div>
+      );
 }
 
-export default App;
