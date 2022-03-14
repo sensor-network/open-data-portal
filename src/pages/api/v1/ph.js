@@ -21,7 +21,7 @@ export default async function handler(req, res) {
         const connection = await getConnectionPool();
         const query = mysql.format(`
             SELECT
-                pH, date
+                pH, date, ST_Y(position) as longitude, ST_X(position) as latitude
             FROM Data 
             WHERE pH IS NOT NULL;
         `);

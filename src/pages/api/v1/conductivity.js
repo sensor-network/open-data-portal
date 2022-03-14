@@ -26,7 +26,7 @@ export default async function(req, res) {
 
         const connection = await getConnectionPool();
         const query = mysql.format(`
-            SELECT date, conductivity
+            SELECT date, conductivity, ST_Y(position) as longitude, ST_X(position) as latitude 
             FROM Data
             WHERE conductivity IS NOT NULL
             ORDER BY id;
