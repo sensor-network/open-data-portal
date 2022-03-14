@@ -2,7 +2,7 @@ import useSWR from 'swr';
 import {useContext, useMemo} from 'react';
 import { PreferenceContext } from './_app';
 import {loadPreferences} from '../lib/loadPreferences.ts';
-import { DataGrid } from '@mui/x-data-grid'; //Documentation can be found here: https://mui.com/api/data-grid/data-grid/
+import { DataGrid } from '@mui/x-data-grid'; //Documentation can be found here: https://mui.com/components/data-grid/
 
 const fetcher = (url) => fetch(url).then(res => res.json());
 const endpointUrl = "http://localhost:3000/api/v1?";
