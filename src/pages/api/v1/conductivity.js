@@ -34,7 +34,7 @@ export default async function(req, res) {
         const [data] = await connection.query(query);
 
         for (const row of data) {
-            row.conductivity = unit.fromKelvin(row.conductivity);
+            row.conductivity = unit.fromSiemensPerMeter(row.conductivity);
         }
 
         res.status(STATUS_OK).json(data);
