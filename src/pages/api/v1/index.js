@@ -34,8 +34,8 @@ export default async function handler(req, res) {
                 temperature,
                 conductivity,
                 date,
-                ST_Y(position) as longitude,
-                ST_X(position) as latitude
+                ROUND(ST_Y(position), 5) as longitude,
+                ROUND(ST_X(position), 5) as latitude
             FROM
                 Data
             ORDER BY id;
