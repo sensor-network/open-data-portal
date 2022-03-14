@@ -1,0 +1,26 @@
+.chartToolTip {
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0);
+}
+
+.dataLabel h4 {
+    padding-top: 5px;
+    text-align: center;
+    margin: 0;
+}
+
+.dataLabel p {
+    margin: 0;
+    padding: 3px 0;
+}
+
+.dataPayload {
+    margin-top: 5px;
+}
+
+.dataPayload p {
+    padding-top: 2px;
+    margin: 0;
+}

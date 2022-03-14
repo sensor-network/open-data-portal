@@ -1,8 +1,10 @@
 import useSWR from 'swr';
-import {useContext, useMemo} from 'react';
+import { useContext, useMemo } from 'react';
 import { PreferenceContext } from './_app';
-import {loadPreferences} from '../lib/loadPreferences.ts';
+import { loadPreferences } from '../lib/loadPreferences.ts';
 import { DataGrid } from '@mui/x-data-grid'; //Documentation can be found here: https://mui.com/api/data-grid/data-grid/
+
+import CustomAreaChart from 'src/components/CustomAreaChart';
 
 const fetcher = (url) => fetch(url).then(res => res.json());
 const endpointUrl = "http://localhost:3000/api/v1?";
@@ -65,7 +67,11 @@ export default function App(props){
     
       return(
           <>
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20 }}>
+                  <div style={{ width: '95%', maxWidth: 1000}}>
+                      <h2>Explore the data on your own</h2>
+                      <p>Change the units using the preference modal form the navbar. </p>
+                  </div>
                   <div style={{ height: 750, width: '95%', maxWidth: 1000 }}>
                       <DataGrid
                           rows= {data}
@@ -73,7 +79,16 @@ export default function App(props){
                       />
                   </div>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20 }}>
+
+                  <div style={{ width: '95%', maxWidth: 1000}}>
+                      <h2>See how the data has changed over time</h2>
+                      <p>Select what datapoints you want to display in the grid using the checkboxes</p>
+                  </div>
+
+                  <CustomAreaChart data={data}/>
+              </div>
           </>
       );
 }
-
