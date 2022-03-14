@@ -37,5 +37,5 @@ export function sensorDataAsSI(sensors) {
         }])
     }
 
-    return converted;
+    return Math.round(converted,2);
 }
