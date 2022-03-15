@@ -67,7 +67,8 @@ export default async function (req, res) {
       AND
         date(date) >= ? AND date(date) <= ?
       ORDER BY 
-        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) ASC;
+        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) ASC
+      Limit 100;
     `, 
       [
         params.long, params.lat, SRID,

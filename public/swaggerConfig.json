@@ -563,6 +563,123 @@
         }
       }
     },
+    "/bylocationanddate": {
+      "get": {
+        "tags": ["Fetch generic data"],
+        "summary": "Outputs measurements for a given location and date interval.",
+        "description": "Queries database and selects all given measurments avaiable at user-specified location and date interval. Location is specified with the query parameters 'long', 'lat', 'rad' in the SRID 4326 system and date is specified with 'start_date' and 'end_date' in the format 'YYYY-MM-DD'.",
+        "operationId": "getLocationAndDateData",
+        "parameters": [
+          {
+            "name": "long",
+            "in": "query",
+            "description": "stands for longitude, ranges from -180 to 180 degrees.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "15.845884248605415"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "stands for latitude, ranges from -90 to 90 degrees.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "56.00694388528538" 
+            }
+          },
+          {
+            "name": "rad",
+            "in": "query",
+            "description": "stands for radius, defaults to 200 meters.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "200"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "start date for the date interval given in the 'YYYY-MM-DD' format.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "2022-01-01"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "end date for the date interval given in the 'YYYY-MM-DD' format.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "2022-02-28"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationContent"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "client server error prevented the data from being parsed successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error parsing query params"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/date": {
       "get": {
         "tags": [
