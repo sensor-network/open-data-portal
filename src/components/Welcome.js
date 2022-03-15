@@ -6,7 +6,14 @@ function Welcome() {
                 <h1>Welcome</h1>
             </div>
             <div>
-                <p>For now, this project has no front end. Explore the API at <span><a href={"/api/v1"}>/api/v1</a></span>.</p>
+                This application is a work in progress, including:
+
+                    <p>A basic API</p>
+                    <p>API Documentation</p>
+                    <p>Data Grid for exploring data</p>
+                    <p>Basic overview diagram of the data</p>
+
+                Explore using the tabs in the navbar, and change the unit which the data is presented in using the preference modal.
             </div>
             <div>
                 <Image src={"/bth.png"} width={400} height={400}/>
