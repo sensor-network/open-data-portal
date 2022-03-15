@@ -1,6 +1,7 @@
 .chartToolTip {
-    background-color: #fff;
+    background-color: rgba(255 255 255 / 70%);
     padding: 10px;
+    margin: 0 50px;
     border-radius: 5px;
     box-shadow: 0 0 5px rgba(0, 0, 0);
 }

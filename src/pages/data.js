@@ -1,5 +1,6 @@
+import * as date_fns from "date-fns";
 import useSWR from 'swr';
-import {useContext, useMemo} from 'react';
+import {useContext, useMemo, useState} from 'react';
 import { PreferenceContext } from './_app';
 import {loadPreferences} from '../lib/loadPreferences.ts';
 import { DataGrid } from '@mui/x-data-grid'; //Documentation can be found here: https://mui.com/components/data-grid/
@@ -14,7 +15,7 @@ function urlWithParams(url, params){
     return url + new URLSearchParams(params);
 }
 
-export async function getServerSideProps(context){
+/*export async function getServerSideProps(context){
     //Since useContext(PreferenceContext) cannot be used:
     const preferences = loadPreferences(context.req.cookies.preferences);
     
@@ -31,11 +32,31 @@ export async function getServerSideProps(context){
             initialData: data
         }
     }
-}
+}*/
+
+const dateRanges = [
+    { label: 'today',     active: false, startDate: date_fns.startOfDay(new Date()),                density: 1 },
+    { label: '1 week',    active: false, startDate: date_fns.sub(new Date(), {weeks: 1}),   density: 10 },
+    { label: '1 month',   active: false,  startDate: date_fns.sub(new Date(), {months: 1}), density: 30 },
+    { label: '3 months',  active: false, startDate: date_fns.sub(new Date(), {months: 3}),  density: 60 },
+    { label: 'this year', active: false, startDate: date_fns.startOfYear(new Date()),               density: 60 * 3 },
+    { label: '1 year',    active: false, startDate: date_fns.sub(new Date(), {years: 1}),   density: 60 * 3 },
+    { label: '3 years',   active: false, startDate: date_fns.sub(new Date(), {years: 3}),   density: 60 * 12 },
+    { label: 'Max',       active: false, startDate: new Date(0),                              density: 60 * 12 },
+];
 
 export default function App(props){
-    const initialData = props.initialData;
+    //const initialData = props.initialData;
     const preferences = useContext(PreferenceContext);
+
+    /* define how long period should show */
+    const [dateRange, setDateRange] = useState(() => {
+        const range = dateRanges[1]; // 1 week
+        range.active = true;
+        return range;
+    });
+    /* define time in seconds between measurements */
+    const [dataDensity, setDataDensity] = useState(10 * 60);
 
     const gridColumns = useMemo(() => [
         { field: 'id', headerName: 'ID', width: 70, editable: false },
@@ -51,14 +72,14 @@ export default function App(props){
         { field: 'latitude', headerName: 'Latitude', width: 150, editable: false }
     ], [preferences]);
 
-
     let url = urlWithParams(endpointUrl, {
         tempunit: preferences.temperature_unit.symbol,
-        conductunit: preferences.conductivity_unit.symbol
+        conductunit: preferences.conductivity_unit.symbol,
+        start_date: dateRange.startDate.toISOString(),
     });
 
     const options = {fetcher: () => fetcher(url),
-                    fallbackData: initialData,
+                    fallbackData: [],
                     refreshInterval: 1000 * 60};
     const { data, error } = useSWR(url, options);
 
@@ -70,7 +91,7 @@ export default function App(props){
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20 }}>
                 <div style={{ width: '95%', maxWidth: 1000}}>
                     <h2>Explore the data on your own</h2>
-                    <p>Change the units using the preference modal form the navbar. </p>
+                    <p>Change the units using the preference modal from the navbar. </p>
                 </div>
                 <div style={{ height: 750, width: '95%', maxWidth: 1000 }}>
                     <DataGrid
@@ -84,7 +105,26 @@ export default function App(props){
 
                 <div style={{ width: '95%', maxWidth: 1000}}>
                     <h2>See how the data has changed over time</h2>
-                    <p>Select what datapoints you want to display in the grid using the checkboxes</p>
+                    <h3 style={{marginTop: 3, marginBottom: 3}}>Show data for:</h3>
+
+                    <div style={{display: 'flex'}}>
+                        {dateRanges.map((r) => (
+                            <div
+                                style={{padding: '5px 0', marginRight: 15, borderBottom: r.active ? '3px solid #1565c0' : ''}}
+                                onClick={() => {
+                                    setDateRange(prevRange => {
+                                        prevRange.active = false;
+                                        r.active = true;
+                                        return r;
+                                    });
+                                }}
+                            >
+                                <p style={{color: '#1565c0', padding: 0, margin: 0, cursor: 'pointer'}}>{r.label}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <h3 style={{marginBottom: 0}}>Select data to show:</h3>
                 </div>
 
                 <CustomAreaChart data={data}/>

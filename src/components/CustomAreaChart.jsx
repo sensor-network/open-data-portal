@@ -11,7 +11,7 @@ const CustomAreaChart = ({ data }) => {
     const [showTemperature, setShowTemperature] = useState(true);
     const [showConductivity, setShowConductivity] = useState(false);
     const [showPH, setShowPH] = useState(false);
-
+    const xTickInterval = Math.floor(data.length / 15);
 
     const getMonthYear = (tick) => {
         const date = new Date(tick);
@@ -70,9 +70,10 @@ const CustomAreaChart = ({ data }) => {
             </div>
 
             <div style={{ height: 750, width: '95%', maxWidth: 1000, paddingTop: 30 }}>
-                <ResponsiveContainer width='100%' height="80%" >
+                <ResponsiveContainer width='100%' height="80%" margin={{top: 0, right: 0, left: 0, bottom: 0}}>
                     <AreaChart data={data}
-                               margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
+                               margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+                    >
                         <defs>
                             <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="5%" stopColor="#1565c0" stopOpacity={0.8} />
@@ -89,10 +90,9 @@ const CustomAreaChart = ({ data }) => {
                         </defs>
                         <XAxis
                             dataKey="date" tickFormatter={getMonthYear}
-                            interval={12} angle={-15} height={60}
-                            label={{value: `Measured At`, position: 'insideBottom' }}
+                            interval={() => xTickInterval()} angle={-15} height={30}
                         />
-                        <YAxis />
+                        <YAxis margin={{top: 0, right: 0, left: 0, bottom: 0}}/>
                         <Legend verticalAlign="top" height={36}/>
                         <Tooltip content={CustomTooltip} />
                         {showTemperature &&
