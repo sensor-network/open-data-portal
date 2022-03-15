@@ -55,14 +55,14 @@ body {
 }
 /* Mobile View Animation */
 .ReactModal__Content {
-  transform: translate(-50%, -200%);
+  transform: translate(-50%, -100%);
   transition: transform 500ms ease-in-out;
 }
 .ReactModal__Content--after-open{
-  transform: translate(-50%, -90%);
+  transform: translate(-50%, -50%);
 }
 .ReactModal__Content--before-close{
-  transform: translate(-50%, -200%);
+  transform: translate(-50%, -100%);
 }
 /* Tablet / Desktop View Animation*/
 @media (min-width: 768px) {
