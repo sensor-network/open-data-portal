@@ -629,6 +629,30 @@
               "type": "string",
               "example": "2022-02-28"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "specifies what page one is on, defaults to 1.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "2"
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "description": "specifies what page size(rows of data) one wants, defaults to 100.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": "200"
+            }
           }
         ],
         "responses": {

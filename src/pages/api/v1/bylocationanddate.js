@@ -10,7 +10,7 @@ import {
   STATUS_SERVER_ERROR
 } from "src/lib/httpStatusCodes";
 
-const QuerySchema = z.object({
+const LocationParams = z.object({
     lat: z.preprocess(   // preprocess converts the string-query to a number
         lat => Number(z.string().parse(lat)),   // validates the string could be parsed as number
         z.number().gte(-90).lte(90)  // then validate the number is in valid range
@@ -36,6 +36,18 @@ const TimeParams = z.object({
       .refine(str => new Date(str) <= new Date(), "can't be in the future")
       .transform(str => new Date(str).toISOString()),
 }).refine(({start_date, end_date}) => end_date >= start_date, 'end_date must be before start_date');
+
+const PageParams = z.object({
+  page: z.preprocess(
+      page => Number(z.string().default("1").parse(page)),
+      z.number().positive()
+  ),
+  page_size: z.preprocess(
+      page_size => Number(z.string().default("100").parse(page_size)),
+      z.number().positive()
+  ),
+})
+
  
 export default async function (req, res) {
   try {
@@ -46,9 +58,16 @@ export default async function (req, res) {
     const SRID = 4326 //default spatial reference system
 
     // Try parsing params using Zod schema
-    const params = QuerySchema.parse(req.query);
-    const {start_date, end_date} = TimeParams.parse(req.query);
+    const {long, lat, rad} = LocationParams.parse(req.query); //location specifics
+    const {start_date, end_date} = TimeParams.parse(req.query); //date interval
 
+    let { page, page_size } = PageParams.parse(req.query); //page number and page size
+    const [rows] = await connection.query('SELECT count(*) FROM Data');
+    const last_page = Math.ceil(rows / page_size);
+    if (page > last_page) page = last_page;
+    const offset = (page - 1) * page_size;
+
+    
     // Prepare the query
     const query = mysql.format(`
       SELECT 
@@ -67,14 +86,15 @@ export default async function (req, res) {
       AND
         date(date) >= ? AND date(date) <= ?
       ORDER BY 
-        ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) ASC
-      Limit 100;
+        Date
+      Limit 
+        ?, ?
     `, 
       [
-        params.long, params.lat, SRID,
-        params.long, params.lat, SRID, params.rad,
+        long, lat, SRID,
+        long, lat, SRID, rad,
         start_date, end_date,
-        params.long, params.lat, SRID
+        offset, page_size
       ]
     ); 
 
