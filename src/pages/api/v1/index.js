@@ -38,11 +38,8 @@ export default async function handler(req, res) {
                 ST_X(position) as latitude
             FROM
                 Data
-            WHERE MINUTE(date) % 10 = 0
-                AND date > ? AND date < ?
             ORDER BY date
-            LIMIT 2000
-        `, [req.query.start_date, new Date().toISOString()]);
+        `);
         const [data] = await connection.query(query);
 
         for (const row of data) {
