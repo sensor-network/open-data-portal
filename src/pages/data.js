@@ -21,7 +21,7 @@ export async function getServerSideProps(context){
     let url = urlWithParams(endpointUrl, {
         temperature_unit: preferences.temperature_unit.symbol,
         conductivity_unit: preferences.conductivity_unit.symbol,
-        name: preferences.location.symbol,
+        location_name: preferences.location.symbol,
     });
     const data = await fetcher(url);
     
@@ -40,7 +40,7 @@ const dateRanges = [
     { label: 'this year', active: false, startDate: date_fns.startOfYear(new Date()),               density: 60 * 3 },
     { label: '1 year',    active: false, startDate: date_fns.sub(new Date(), {years: 1}),   density: 60 * 3 },
     { label: '3 years',   active: false, startDate: date_fns.sub(new Date(), {years: 3}),   density: 60 * 12 },
-    { label: 'Max',       active: false, startDate: new Date(0),                              density: 60 * 12 },
+    { label: 'Max',       active: false, startDate: new Date(1),                              density: 60 * 12 },
 ];
 
 export default function App({ initialData }){
@@ -48,7 +48,7 @@ export default function App({ initialData }){
 
     /* define how long period should show */
     const [dateRange, setDateRange] = useState(() => {
-        const range = dateRanges[1]; // 1 week
+        const range = dateRanges[7]; // max
         range.active = true;
         return range;
     });
