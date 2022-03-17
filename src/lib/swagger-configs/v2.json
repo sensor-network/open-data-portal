@@ -131,6 +131,30 @@
               "type": "string",
               "example": "temperature"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Select pagination options.",
+            "schema": {
+              "type": "number",
+              "format": "integer",
+              "example": 5,
+              "default": 1
+            }
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "description": "Select pagination options.",
+            "schema": {
+              "type": "number",
+              "format": "integer",
+              "example": 50,
+              "default": 100
+            }
           }
         ],
         "responses": {
