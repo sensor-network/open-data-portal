@@ -18,7 +18,7 @@ export default async function (req, res) {
             const temperatureUnit = parseTempUnit(req.query.temperature_unit || 'k');
             const conductivityUnit = parseCondUnit(req.query.conductivity_unit || 'spm');
 
-            const { long, lat, rad, name } = zLocation.parse(req.query);
+            const { long, lat, rad, location_name } = zLocation.parse(req.query);
             const { start_date, end_date } = zTime.parse(req.query);
             let { page, page_size } = zPage.parse(req.query);
 
@@ -29,9 +29,9 @@ export default async function (req, res) {
             const offset = (page - 1) * page_size;  // last row of previous page
 
             let data;
-            if ( name ) {   // prioritize selecting by name
+            if ( location_name ) {   // prioritize selecting by name
                 data = await findMany('by-location-name', {
-                    name, start_date, end_date, offset, page_size
+                    location_name, start_date, end_date, offset, page_size
                 });
             }
             else if ( lat && long && rad ) {   // require both lat, long and rad to select by geolocation
@@ -59,6 +59,11 @@ export default async function (req, res) {
                     page_size,
                     has_previous_page: page > 1,
                     has_next_page: page < last_page,
+                },
+                units: {
+                    date: 'UTC',
+                    temperature_unit: temperatureUnit.symbol,
+                    conductivity_unit: conductivityUnit.symbols[0]
                 },
                 data,
             });

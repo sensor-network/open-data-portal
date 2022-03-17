@@ -20,7 +20,7 @@ export const zLocation = z.object({
         .transform(str => Number(str))
         .refine((num) => num > 0, 'should be positive')
     ),
-    name: z.string().optional(),
+    location_name: z.string().optional(),
 });
 
 /**

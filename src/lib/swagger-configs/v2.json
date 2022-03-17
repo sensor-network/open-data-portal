@@ -18,8 +18,8 @@
           "Data"
         ],
         "summary": "Gets a list of all data",
-        "description": "Retrieves measurement-data, including the selected `pagination`-options. The `data`-property is an array of datapoints. All timestamps are fetched in UTC timezone. Data can be filtered in multiple ways, e.g. by location. A location can be selected either by its name or its geoinformation (lat, long, rad). If no location filter is provided, data is selected from all over the archipelago.",
-        "operationId": "getAll",
+        "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `data`-property is an array of datapoints. Data can be filtered in multiple ways, e.g. by location. A location can be selected either by its name or its geoinformation (lat, long, rad). If no location filter is provided, data is selected from all over the archipelago.",
+        "operationId": "getData",
         "parameters": [
           {
             "name": "temperature_unit",
@@ -37,7 +37,7 @@
           {
             "name": "conductivity_unit",
             "in": "query",
-            "description": "Select the temperature in a selected unit. Available units are `spm`, `mhopm`, `mspm` (milli), `uspm` (micro), `spcm`, `mhopcm`, `mspcm`, `uspcm`, and `ppm` (case insensitive).",
+            "description": "Select the temperature in a selected unit. Available units are `spm`, `mhopm`, `mspm` (milli), `uspm` (micro), `spcm`, `mhopcm`, `mspcm`, `uspcm`, and `ppm` (case insensitive). The `p` (per) in e.g. s`p`m can also be `/`.",
             "required": false,
             "style": "form",
             "explode": true,
@@ -123,6 +123,9 @@
                   "properties": {
                     "pagination": {
                       "$ref": "#/components/schemas/Pagination"
+                    },
+                    "units": {
+                      "$ref": "#/components/schemas/Units"
                     },
                     "data": {
                       "type": "array",
@@ -449,6 +452,24 @@
           "has_next_page": {
             "type": "boolean",
             "example": true
+          }
+        }
+      },
+      "Units": {
+        "type": "object",
+        "description": "Displays information about the units used for the query.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "example": "UTC"
+          },
+          "temperature_unit": {
+            "type": "string",
+            "example": "c"
+          },
+          "conductivity_unit": {
+            "type": "string",
+            "example": "ppm"
           }
         }
       },

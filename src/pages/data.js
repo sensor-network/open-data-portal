@@ -56,7 +56,7 @@ export default function App({ initialData }){
     let url = urlWithParams(endpointUrl, {
         temperature_unit: preferences.temperature_unit.symbol,
         conductivity_unit: preferences.conductivity_unit.symbol,
-        name: preferences.location.symbol,
+        location_name: preferences.location.symbol,
         start_date: dateRange.startDate.toISOString(),
         page_size: 2000,
     });
