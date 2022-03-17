@@ -47,9 +47,6 @@ export default async function handler(req, res) {
         WHERE 
             name = ?;`,
         [params.name]);
-        
-        
-        console.log(query)
 
         const [data] = await connection.query(query);
 

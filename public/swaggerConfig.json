@@ -660,6 +660,76 @@
           }
         }
       }
+    },
+    "/locations": {
+      "get": {
+        "tags": [
+          "Fetch generic data"
+        ],
+        "summary": "Gets all data between two time intervals",
+        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "operationId": "getLocation",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+          "description": "Optional. Name of location.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "Gräsvik"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationName"
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -913,6 +983,26 @@
           }
         },
         "description": "The response from \"GET: / bylocation\"-endpoint."
+      },
+      "LocationName": {
+        "type": "object",
+        "properties": {
+          "radius": {
+            "type": "number",
+            "format": "float",
+            "example": 300
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": "15.845884248605417"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": "56.00694388528538"
+          }
+        }
       }
     }
   }
