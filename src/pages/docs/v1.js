@@ -4,7 +4,7 @@ import {useEffect} from 'react'
 import SwaggerUi from 'swagger-ui';
 import "swagger-ui/dist/swagger-ui.css";
 
-import config from 'src/lib/swaggerConfig.json';
+import config from 'src/lib/swagger-configs/v1.json';
 
 export default function Docs() {
     useEffect(() => {
@@ -17,7 +17,7 @@ export default function Docs() {
     return (
         <div>
             <Head>
-                <title>API Documentation</title>
+                <title>API Documentation v1</title>
             </Head>
             <div id={'swaggerContainer'} />
         </div>

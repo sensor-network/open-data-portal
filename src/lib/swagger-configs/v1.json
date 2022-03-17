@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Sensor Network - Open Data Portal API",
-    "description": "The API for fetching data about the Karlskrona Archipelago's water quality",
+    "description": "WARNING: This version is deprecated. You only got here if you explicitly entered the version in the url. To get to the latest version, go to `/docs` and you will be redirected to the latest version.",
     "version": "1.0"
   },
   "servers": [

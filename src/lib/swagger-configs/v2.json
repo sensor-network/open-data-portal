@@ -1,0 +1,596 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sensor Network - Open Data Portal API",
+    "description": "The API for fetching data about the Karlskrona Archipelago's water quality",
+    "version": "2.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v2",
+      "description": "Developer Server"
+    }
+  ],
+  "paths": {
+    "/data":{
+      "get": {
+        "tags": [
+          "Data"
+        ],
+        "summary": "Gets a list of all data",
+        "description": "Retrieves measurement-data, including the selected `pagination`-options. The `data`-property is an array of datapoints. All timestamps are fetched in UTC timezone. Data can be filtered in multiple ways, e.g. by location. A location can be selected either by its name or its geoinformation (lat, long, rad). If no location filter is provided, data is selected from all over the archipelago.",
+        "operationId": "getAll",
+        "parameters": [
+          {
+            "name": "temperature_unit",
+            "in": "query",
+            "description": "Select the temperature in a selected unit. Available units are `k`, `c` and `f` (case insensitive).",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "c",
+              "default": "k"
+            }
+          },
+          {
+            "name": "conductivity_unit",
+            "in": "query",
+            "description": "Select the temperature in a selected unit. Available units are `spm`, `mhopm`, `mspm` (milli), `uspm` (micro), `spcm`, `mhopcm`, `mspcm`, `uspcm`, and `ppm` (case insensitive).",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "ppm",
+              "default": "spm"
+            }
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "description": "Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be prior to 2022-01-01.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-01-25",
+              "default": "2022-01-01Z"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "description": "Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be a future timestamp.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-03-06",
+              "default": "'current time'"
+            }
+          },
+          {
+            "name": "location_name",
+            "in": "query",
+            "description": "Select data from a selected location by the locations name. Each location has a corresponding radius which is used to select nearby measurements. A list of available locations can be retrieved by fetching `GET: /locations`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Trossö"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Select data by a selected location's geoinformation. Has to be provided in combination with `long`.",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 56.12354
+            }
+          },
+          {
+            "name": "long",
+            "in": "query",
+            "description": "Select data by a selected location's geoinformation. Has to be provided in combination with `lat`.",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 15.76543
+            }
+          },
+          {
+            "name": "rad",
+            "in": "query",
+            "description": "Select data by a selected location's geoinformation. Has to be provided in combination with `lat` and `long`. NOTE: This radius does not modify the radius used when selecting a location by `location_name`.",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1000,
+              "default": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned. The data is provided in the selected units, and the time in UTC time.",
+            "content": {
+              "application/json":{
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DataContent"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If any of the request parameters are invalid, e.g. `temperature_unit` is not supported, or `end_date` is set as a date in the future.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "One of the provided units is not supported. Read the documentation for valid parameters."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405":{
+            "description": "Method not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method PUT is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Data"
+        ],
+        "summary": "Uploads a new set of measurements to the database",
+        "description": "Uploads a new set of measurements to the database",
+        "operationId": "uploadMeasurements",
+        "parameters": [
+          {
+            "name": "api_key",
+            "in": "query",
+            "description": "An API key is required in order to post data. These are not available to the public. If you feel like you are entitled one, please contact us and we'll look into it.",
+            "required": true,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "default"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Request body has to follow this schema. The body can be an array of objects following the schema, or just a single object. Not supplying units will make them fallback to the respective SI-unit - Kelvin (`k`) for temperature and Siemens per meter (`spm`) for conductivity. See `GET: /data` for a list of the supported units.",
+          "content": {
+            "application/json": {
+              "schema": {
+                  "$ref": "#/components/schemas/UploadRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UploadResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The provided JSON-body could not be parsed correctly. Response JSON contains information what could not be parsed, either the entire form - eg. a required field is missing or an unknown field is specified (specified in field `formErrors`) or a specific field - eg. supplied unit is not supported (specified in `fieldErrors`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'position'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "longitude": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Number must be less than or equal to 180"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Your request could not be verified. You either didn't supply an API key or it was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "The provided API key could not be verified."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method PUT is not allowed for this endpoint."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error uploading data"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "/locations": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Gets all data between two time intervals",
+        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "operationId": "getLocation",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+          "description": "Optional. Name of location.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "Gräsvik"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Location"
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "External users are currently not allowed to push locations."
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+  },
+
+  "components": {
+    "schemas": {
+      "DataContent": {
+        "type": "object",
+        "description": "Content returned from `GET: /data`",
+        "properties": {
+          "id": {
+            "type": "number",
+            "format": "integer",
+            "example": 1
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-01-01T01:10:00.000Z"
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58676
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16192
+          },
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": 26.162
+          },
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": 5.643
+          },
+          "ph": {
+            "type": "number",
+            "format": "float",
+            "example": 6.86
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "description": "Displays information about the pagination options used for the query.",
+        "properties": {
+          "page": {
+            "type": "number",
+            "example": 1
+          },
+          "page_size": {
+            "type": "number",
+            "example": 100
+          },
+          "has_previous_page": {
+            "type": "boolean",
+            "example": false
+          },
+          "has_next_page": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "UploadRequest": {
+        "required": [
+          "latitude",
+          "longitude",
+          "sensors",
+          "timestamp"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-02-12T15:12:34Z"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16082
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58671
+          },
+          "sensors": {
+            "$ref": "#/components/schemas/UploadRequest.Sensors"
+          }
+        },
+        "description": "The given contract to upload data to the database."
+      },
+      "UploadRequest.Sensors": {
+        "minProperties": 1,
+        "type": "object",
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": 20.6
+          },
+          "temperature_unit": {
+            "type": "string",
+            "example": "C"
+          },
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": 4.8
+          },
+          "conductivity_unit": {
+            "type": "string",
+            "example": "Spm"
+          },
+          "ph_level": {
+            "type": "number",
+            "format": "float",
+            "example": 7.1
+          }
+        },
+        "description": "At least one of the value-properties should be supplied. Supplying only a unit will throw an error. Units defaults to their SI-representative if not specified."
+      },
+      "UploadResponse": {
+        "required": [
+          "latitude",
+          "longitude",
+          "sensors",
+          "timestamp"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number",
+            "format": "integer",
+            "example": 1
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2022-02-22 13:12:34"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16082
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58671
+          },
+          "sensors": {
+            "$ref": "#/components/schemas/UploadResponse.Sensors"
+          }
+        },
+        "description": "The response objects from the `upload` endpoint. All data is converted to SI units (timestamp is in UTC+0), which is how they are stored in the database."
+      },
+      "UploadResponse.Sensors": {
+        "type": "object",
+        "properties": {
+          "temperature": {
+            "type": "number",
+            "format": "float",
+            "example": 293.75
+          },
+          "conductivity": {
+            "type": "number",
+            "format": "float",
+            "example": 4.8
+          },
+          "ph_level": {
+            "type": "number",
+            "format": "float",
+            "example": 7.1
+          }
+        }
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Trossö"
+          },
+          "radius": {
+            "type": "number",
+            "format": "float",
+            "example": 300
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": "15.845884248605417"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": "56.00694388528538"
+          }
+        }
+      }
+    }
+  }
+}
