@@ -44,6 +44,7 @@ export default function ({ setPreferences, closeModal, isOpen }) {
 
     return (
         <Modal
+            closeTimeoutMS={500}
             isOpen={isOpen}
             onRequestClose={closeModal}
             className={style.preferenceModal}
