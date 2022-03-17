@@ -5,15 +5,21 @@ import {
     STATUS_BAD_REQUEST,
     STATUS_SERVER_ERROR
 } from "src/lib/httpStatusCodes";
+import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
+import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
 import { getRowCount, findMany } from "src/lib/database/findData";
 import { zLocation, zTime, zPage } from 'src/lib/schemas/ZodSchemas';
 
 export default async function (req, res) {
     if (req.method === 'GET') {
         try {
+            const temperatureUnit = parseTempUnit(req.query.temperature_unit || 'k');
+            const conductivityUnit = parseCondUnit(req.query.conductivity_unit || 'spm');
+
             const { long, lat, rad, name } = zLocation.parse(req.query);
             const { start_date, end_date } = zTime.parse(req.query);
             let { page, page_size } = zPage.parse(req.query);
+
             const rowCount = await getRowCount();
             const last_page = Math.ceil(rowCount / page_size) || 1; /* if rows=0, still want last_page=1 */
             if (page > last_page)
@@ -36,6 +42,13 @@ export default async function (req, res) {
                     start_date, end_date, offset, page_size
                 });
             }
+
+            data.forEach(d => {
+                if (d.temperature !== null)
+                    d.temperature = temperatureUnit.fromKelvin(d.temperature);
+                if (d.conductivity !== null)
+                    d.conductivity = conductivityUnit.fromSiemensPerMeter(d.conductivity);
+            })
 
             res.status(STATUS_OK).json({
                 options: {
