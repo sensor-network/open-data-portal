@@ -45,6 +45,7 @@ $ docker compose up
 
 The application will then start at `localhost:3000`
 
+
 ### From source
 #### Prerequisites
 
@@ -110,6 +111,41 @@ The default credentials for this database can be found in [docker-compose.yml](.
 
 Then open the app in the browser at the link shown in your terminal.
 
+#### Load database
+When you first launch the application, the database will be empty. We have included a load-script which loads in random, although somewhat realistic data which can be executed using
+```bash
+$ npm run fill-db
+```
+You can modify the inputted data by changing the configuration object in [fill-db.ts](./scripts/fill-db.ts):
+```js
+const c = {
+    /* define time range of when to insert measurements */
+    START_TIME: new Date('2022Z'),
+    END_TIME: new Date('2024Z'),
+
+    /* select time interval between measurements (seconds) */
+    DATA_DENSITY: 10 * 60,
+
+    /* define location to insert */
+    LAT: 56.16192,
+    LNG: 15.58676,
+
+    /* define ranges for measurements (in SI-units) */
+    MIN_TEMP: 283,
+    MAX_TEMP: 298,
+    MIN_COND: 3,
+    MAX_COND: 8,
+    MIN_PH: 4,
+    MAX_PH: 9,
+
+    /* define how much each datapoint is allowed to change between each point,
+    *  the rate is a randomized value between -<change_rate> < 0 < <change_rate> */
+    TEMP_CHANGE_RATE: 0.1,
+    COND_CHANGE_RATE: 0.1,
+    PH_CHANGE_RATE: 0.1,
+};
+```
+Let the script run for however long you like, or until it has filled the time-range.
 
 ## License
 
