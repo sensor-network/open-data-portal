@@ -13,17 +13,11 @@ import { PreferenceContext } from "src/pages/_app";
 import style from 'src/styles/PreferenceModal.module.css';
 
 export default function ({ setPreferences, closeModal, isOpen }) {
-    const preferences = useContext(PreferenceContext);      /* <-- global preferences from _app-context-provider */
+    const { preferences, locations } = useContext(PreferenceContext);      /* <-- global preferences from _app-context-provider */
     const [tempPref, setTempPref] = useState(preferences);  /* <-- local preferences while modal is open */
-    const preferenceOptions = useMemo(() => {
-        const locations = [ /* should be fetched from api when that is implemented */
-            { id: 1, name: 'Trossö',  lat: 43, long: 23, radius: 300 },
-            { id: 2, name: 'Gräsvik', lat: 43, long: 23, radius: 300 },
-            { id: 3, name: 'Saltö',   lat: 43, long: 23, radius: 300 },
-            { id: 4, name: 'Hästö',   lat: 43, long: 23, radius: 300 },
-        ];
+    const preferenceOptions = useMemo( () => {
         return [
-            { name: 'Location',     key: 'location',          options:                 locations.map(l => ({name: l.name, symbol: l.name})),       default: preferences.location },
+            { name: 'Location',     key: 'location',          options: [{name: 'All', symbol: 'All'}, ...locations.map(l => ({name: l.name, symbol: l.name}))], default: preferences.location },
             { name: 'Temperature',  key: 'temperature_unit',  options: Object.values(TEMP_UNITS).map(u => ({name: u.name, symbol: u.symbol})),     default: preferences.temperature_unit },
             { name: 'Conductivity', key: 'conductivity_unit', options: Object.values(COND_UNITS).map(u => ({name: u.name, symbol: u.symbols[0]})), default: preferences.conductivity_unit }
         ]

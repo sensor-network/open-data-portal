@@ -51,7 +51,7 @@ export default async function handler(req, res) {
         const [data] = await connection.query(query);
 
         // Returning the data
-        res.status(STATUS_OK).json({content: data});
+        res.status(STATUS_OK).json(data);
         
     } catch (error) {
         console.log(error);
