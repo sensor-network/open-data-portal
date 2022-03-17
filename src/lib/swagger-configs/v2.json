@@ -111,6 +111,26 @@
               "example": 1000,
               "default": 200
             }
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "description": "Select what columns you would like to include in the response. If not selected, all columns will be included. Separate column names with `,`. Can be used in conjunction with `exclude`.",
+            "schema": {
+              "type": "string",
+              "example": "temperature,conductivity"
+            }
+          },
+          {
+            "name": "exclude",
+            "in": "query",
+            "required": false,
+            "description": "Select what columns you would like to exclude in the response. If not selected, no columns will be excluded. Separate column names with `,`. Can be used in conjunction with `include`.",
+            "schema": {
+              "type": "string",
+              "example": "temperature"
+            }
           }
         ],
         "responses": {

@@ -9,17 +9,17 @@ export const getRowCount = async () => {
     return rowCount[0].row_count;
 }
 
-export const findMany = async (location, params) => {
+export const findMany = async (location, params, columns) => {
     let data;
     switch (location) {
         case 'all':
-            data = await findAll(params);
+            data = await findAll(params, columns);
             break;
         case 'by-geolocation':
-            data = await findAllByGeolocation(params);
+            data = await findAllByGeolocation(params, columns);
             break;
         case 'by-location-name':
-            data = await findAllByLocationName(params);
+            data = await findAllByLocationName(params, columns);
             break;
         default:
             throw Error('unknown location-filter')
@@ -28,14 +28,14 @@ export const findMany = async (location, params) => {
 }
 
 const findAll = async (
-    { offset, page_size, start_date, end_date }
+    { offset, page_size, start_date, end_date }, columns
 ) => {
     const connection = await getConnectionPool();
     const [ data ] = await connection.query(`
         SELECT
             id, date,
             ST_Y(position) as longitude, ST_X(position) as latitude,
-            temperature, ph, conductivity
+            ${columns.join(', ')}
         FROM
             Data
         WHERE
@@ -52,18 +52,14 @@ const findAll = async (
 }
 
 const findAllByLocationName = async (
-    { name, offset, page_size, start_date, end_date }
+    { name, offset, page_size, start_date, end_date }, columns
 ) => {
     const connection = await getConnectionPool();
     const [ data ] = await connection.query(`
         SELECT 
-            id,
-            ph,
-            temperature,
-            conductivity,
-            date,
-            ST_Y(position) as longitude,
-            ST_X(position) as latitude
+            id, date,
+            ST_Y(position) as longitude, ST_X(position) as latitude,
+            ${columns.join(', ')}
         FROM 
             Data AS d
         WHERE 
@@ -83,19 +79,15 @@ const findAllByLocationName = async (
 }
 
 const findAllByGeolocation = async (
-    { long, lat, rad, offset, page_size, start_date, end_date }
+    { long, lat, rad, offset, page_size, start_date, end_date }, columns
 ) => {
     const connection = await getConnectionPool();
     const [ data ] = await connection.query(`
         SELECT 
-            id,
-            ph,
-            temperature,
-            conductivity,
-            date,
-            ST_Y(position) as longitude,
-            ST_X(position) as latitude,
-            ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) as 'distance in meters'
+            id, date,
+            ST_Y(position) as longitude, ST_X(position) as latitude,
+            ${columns.join(', ')},
+            ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) as 'distance_in_meters'
         FROM 
             Data 
         WHERE 

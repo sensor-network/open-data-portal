@@ -16,10 +16,10 @@ export const zLocation = z.object({
         .refine((num) => num >= -180, 'should be greater than or equal to -180')
         .refine((num) => num <= 180, 'should be less than or equal to 180')
     ),
-    rad: z.optional(z.string().default('200')
+    rad: z.string().optional().default('200')
         .transform(str => Number(str))
         .refine((num) => num > 0, 'should be positive')
-    ),
+    ,
     location_name: z.string().optional(),
 });
 
@@ -53,6 +53,8 @@ export const zPage = z.object({
         z.number().int().positive()
     ),
 });
+
+export const zDataColumns = z.enum([ "temperature", "conductivity", "ph" ]);
 
 /**
  * schema for incoming post-request's body
