@@ -56,7 +56,6 @@ export default async function (req, res) {
                 }, include_columns);
             }
 
-            console.log(data[0])
             data.forEach(d => {
                 if (Object.hasOwn(d, 'temperature'))
                     d.temperature = temperatureUnit.fromKelvin(d.temperature);

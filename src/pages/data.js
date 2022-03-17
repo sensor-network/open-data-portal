@@ -93,8 +93,6 @@ export default function App({ initialData }){
                                     setDateRange(prevRange => {
                                         prevRange.active = false;
                                         r.active = true;
-                                        console.log(r.startDate)
-
                                         return r;
                                     });
                                 }}
