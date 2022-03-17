@@ -58,7 +58,7 @@ const findAllByLocationName = async (
     const [ data ] = await connection.query(`
         SELECT 
             id,
-            pH,
+            ph,
             temperature,
             conductivity,
             date,
@@ -89,7 +89,7 @@ const findAllByGeolocation = async (
     const [ data ] = await connection.query(`
         SELECT 
             id,
-            pH,
+            ph,
             temperature,
             conductivity,
             date,
