@@ -24,6 +24,7 @@ const parseIncludeExclude = (include, exclude) => {
 
 export default async function (req, res) {
     if (req.method === 'GET') {
+        console.log(req.query)
         try {
             const temperatureUnit = parseTempUnit(req.query.temperature_unit || 'k');
             const conductivityUnit = parseCondUnit(req.query.conductivity_unit || 'spm');
@@ -40,7 +41,7 @@ export default async function (req, res) {
             const offset = (page - 1) * page_size;  // last row of previous page
 
             let data;
-            if ( location_name ) {   // prioritize selecting by name
+            if ( location_name && location_name !== 'all' ) {   // prioritize selecting by name
                 data = await findMany('by-location-name', {
                     location_name, start_date, end_date, offset, page_size
                 }, include_columns);
