@@ -8,7 +8,7 @@ CREATE TABLE `Data` (
   PRIMARY KEY (`id`),
   SPATIAL KEY `position` (`position`),
   CONSTRAINT `Data_chk_1` CHECK ((`pH` between 0 and 14))
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 CREATE TABLE `Locations` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -18,3 +18,5 @@ CREATE TABLE `Locations` (
   PRIMARY KEY (`id`),
   SPATIAL KEY `position` (`position`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+SET time_zone='+00:00';
