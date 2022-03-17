@@ -34,7 +34,7 @@ const CustomAreaChart = ({ data }) => {
                              * also, take care for values not in the preferences
                             **/
                             let unit = preferences[`${row.dataKey}_unit`] && preferences[`${row.dataKey}_unit`].symbol;
-                            if (row.dataKey === 'temperature') unit = unit.toUpperCase();
+                            if (unit && row.dataKey === 'temperature') unit = unit.toUpperCase();
                             return (
                                 <p key={row.name}>
 
