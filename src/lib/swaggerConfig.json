@@ -167,7 +167,7 @@
                     "$ref": "#/components/schemas/TemperatureResponse"
                   }
                 }
-              }
+              }          
             }
           },
           "400": {
@@ -221,6 +221,7 @@
         }
       }
     },
+
     "/ph":{
       "get": {
         "tags": [
@@ -766,12 +767,22 @@
           "temperature": {
             "type": "number",
             "format": "float",
-            "example": "289.0350036621094"
+            "example": "289.03"
           },
           "date": {
             "type": "string",
             "format": "date-time",
             "example": "2007-12-11T18:05:11.000Z"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16082
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58671
           }
         },
         "description": "The response from \"GET: / temperature\"-endpoint."
@@ -786,12 +797,22 @@
           "pH": {
             "type": "number",
             "format": "float",
-            "example": "5.09119985487793"
+            "example": "5.09"
           },
           "date": {
             "type": "string",
             "format": "date-time",
             "example": "2017-08-16T20:19:44.000Z"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16082
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58671
           }
         },
 
@@ -803,12 +824,22 @@
           "conductivity": {
             "type": "number",
             "format": "float",
-            "example": "0.04345324521234"
+            "example": "0.043"
           },
           "date": {
             "type": "string",
             "format": "date-time",
             "example": "2022-02-15T10:44:00.000Z"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": 56.16082
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": 15.58671
           }
         },
         "description": "The response from `GET: /conductivity`-endpoint."
@@ -824,12 +855,12 @@
           "pH": {
             "type": "number",
             "format": "float",
-            "example": "7.149479866027832"
+            "example": "7.14"
           },
           "temperature": {
             "type": "number",
             "format": "float",
-            "example": "289.0350036621094"
+            "example": "289.03"
           },
           "date": {
             "type": "string",
@@ -879,17 +910,17 @@
           "pH": {
             "type": "number",
             "format": "float",
-            "example": "7.568819899694824"
+            "example": "7.56"
           },
           "temperature": {
             "type": "number",
             "format": "float",
-            "example": "14.315364365373466"
+            "example": "14.3"
           },
           "conductivity": {
             "type": "number",
             "format": "float",
-            "example": "4.8896979698989978"
+            "example": "4.88"
           },
           "date": {
             "type": "string",
