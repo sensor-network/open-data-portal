@@ -7,6 +7,9 @@ import {PreferenceContext} from "src/pages/_app";
 import style from 'src/styles/AreaChart.module.css'
 
 const CustomAreaChart = ({ data }) => {
+    console.log(data)
+    if (!data.length) return <div>No data to visualize. Select a different location</div>;
+
     const preferences = useContext(PreferenceContext)
     const [showTemperature, setShowTemperature] = useState(true);
     const [showConductivity, setShowConductivity] = useState(false);
