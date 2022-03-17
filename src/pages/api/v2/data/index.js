@@ -24,7 +24,6 @@ const parseIncludeExclude = (include, exclude) => {
 
 export default async function (req, res) {
     if (req.method === 'GET') {
-        console.log(req.query)
         try {
             const temperatureUnit = parseTempUnit(req.query.temperature_unit || 'k');
             const conductivityUnit = parseCondUnit(req.query.conductivity_unit || 'spm');
