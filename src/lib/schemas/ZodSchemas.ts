@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ISOStringToSQLTimestamp } from 'lib/conversions/convertTimestamp';
 
 /**
  * schema for parsing location information,
@@ -51,4 +52,23 @@ export const zPage = z.object({
         page_size => Number(z.string().default("100").parse(page_size)),
         z.number().int().positive()
     ),
-})
+});
+
+/**
+ * schema for incoming post-request's body
+ **/
+export const zCreateInstance = z.object({
+    timestamp: z.preprocess(
+        // maximize compatibility and validate the inputted date
+        inputStr => ISOStringToSQLTimestamp(inputStr), z.string()
+    ),
+    latitude: z.number().gte(-90).lte(90),      // lat ranges from +-90 deg
+    longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
+    sensors: z.object({
+        temperature: z.number().optional(),
+        temperature_unit: z.string().optional(),
+        ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
+        conductivity: z.number().optional(),
+        conductivity_unit: z.string().optional(),
+    }).strict()
+}).strict();

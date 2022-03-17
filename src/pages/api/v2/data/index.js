@@ -3,12 +3,14 @@ import { ZodError } from "zod";
 import {
     STATUS_OK,
     STATUS_BAD_REQUEST,
-    STATUS_SERVER_ERROR
+    STATUS_SERVER_ERROR, STATUS_CREATED, STATUS_FORBIDDEN, STATUS_METHOD_NOT_ALLOWED
 } from "src/lib/httpStatusCodes";
 import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
 import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
 import { getRowCount, findMany } from "src/lib/database/findData";
-import { zLocation, zTime, zPage } from 'src/lib/schemas/ZodSchemas';
+import { createOne } from 'src/lib/database/createOne';
+import { zLocation, zTime, zPage, zCreateInstance } from 'src/lib/schemas/ZodSchemas';
+import {sensorDataAsSI} from "../../../../lib/conversions/convertSensors";
 
 export default async function (req, res) {
     if (req.method === 'GET') {
@@ -48,18 +50,17 @@ export default async function (req, res) {
                     d.temperature = temperatureUnit.fromKelvin(d.temperature);
                 if (d.conductivity !== null)
                     d.conductivity = conductivityUnit.fromSiemensPerMeter(d.conductivity);
+                d.ph = Math.round(d.ph * 1E2) / 1E2;
             })
 
             res.status(STATUS_OK).json({
-                options: {
+                pagination: {
                     page,
-                    rows: rowCount,
-                    last_page,
                     page_size,
                     has_previous_page: page > 1,
                     has_next_page: page < last_page,
                 },
-                data: data,
+                data,
             });
         }
 
@@ -76,5 +77,70 @@ export default async function (req, res) {
         }
     }
 
+    else if (req.method === 'POST') {
+        const api_key = req.query.api_key;
+        if (!api_key) {
+            console.log("ERROR: You have to provide an api_key as query parameter.");
+            res.status(STATUS_FORBIDDEN).json({ error: "No API key provided." });
+            return;
+        }
+        if (api_key !== process.env.NEXT_PUBLIC_API_KEY) {
+            console.log("ERROR: The provided api_key could not be verified.");
+            res.status(STATUS_FORBIDDEN).json({ error: "The provided API key could not be verified." });
+            return;
+        }
+
+        const parseAndConvertInput = (input) => {
+            const parsed = zCreateInstance.parse(input);
+            return {
+                ...parsed,
+                sensors: sensorDataAsSI(parsed.sensors)
+            }
+        }
+        try {
+            if (Array.isArray(req.body)) {
+                let measurements = [];
+                for (const row of req.body) {
+                    const instance = parseAndConvertInput(row);
+                    const id = await createOne(instance);
+                    measurements.push({id, ...instance});
+                }
+                res.status(STATUS_CREATED).json(measurements);
+                return;
+            }
+
+            const instance = parseAndConvertInput(req.body);
+            const id = await createOne(instance);
+            res.status(STATUS_CREATED).json({ id, ...instance });
+        }
+
+        catch (e) {
+            if (e instanceof ZodError) {
+                /*
+                 * e.issues can have path: ['sensors', '<ph_level>']. Want to remove the path
+                 * 'sensors' so that the inner-path '<ph_level>' is shown, for better error messages
+                 */
+                e.issues.forEach(issue => {
+                    issue.path = issue.path.filter((path) => path !== 'sensors')
+                });
+                console.log("ERROR: Could not parse request json:\n", e.flatten())
+                res.status(STATUS_BAD_REQUEST)
+                    .json(e.flatten());
+            }
+            else {
+                console.error(e);
+                res.status(STATUS_SERVER_ERROR)
+                    .json({error: "Error uploading data"});
+            }
+        }
+    }
+
+    else {
+        console.log(`ERROR: Method ${req.method} not allowed.`)
+        res.status(STATUS_METHOD_NOT_ALLOWED)
+            .json({ error:
+                    `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
+            });
+    }
 }
 
