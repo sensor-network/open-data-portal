@@ -60,7 +60,8 @@ export default async function handler(req, res){
             [
                 startDate.format("YYYY-MM-DD"),
                 endDate.format("YYYY-MM-DD")
-            ]);
+            ]
+            );
 
         //console.log(query);
 
