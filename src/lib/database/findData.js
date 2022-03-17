@@ -34,8 +34,8 @@ const findAll = async (
     const [ data ] = await connection.query(`
         SELECT
             id, date,
-            ST_Y(position) as longitude, ST_X(position) as latitude,
-            ${columns.join(', ')}
+            ST_Y(position) as longitude, ST_X(position) as latitude
+            ${ columns.length ? ',' + columns.join(', ') : ''}
         FROM
             Data
         WHERE
@@ -52,14 +52,14 @@ const findAll = async (
 }
 
 const findAllByLocationName = async (
-    { name, offset, page_size, start_date, end_date }, columns
+    { location_name, offset, page_size, start_date, end_date }, columns
 ) => {
     const connection = await getConnectionPool();
     const [ data ] = await connection.query(`
         SELECT 
             id, date,
-            ST_Y(position) as longitude, ST_X(position) as latitude,
-            ${columns.join(', ')}
+            ST_Y(position) as longitude, ST_X(position) as latitude
+            ${ columns.length ? ',' + columns.join(', ') : ''}
         FROM 
             Data AS d
         WHERE 
@@ -71,7 +71,7 @@ const findAllByLocationName = async (
         LIMIT 
             ?, ?
     `, [
-        name, name,
+        location_name, location_name,
         start_date, end_date,
         offset, page_size
     ]);
@@ -85,8 +85,8 @@ const findAllByGeolocation = async (
     const [ data ] = await connection.query(`
         SELECT 
             id, date,
-            ST_Y(position) as longitude, ST_X(position) as latitude,
-            ${columns.join(', ')},
+            ST_Y(position) as longitude, ST_X(position) as latitude
+            ${ columns.length ? ',' + columns.join(', ') : ''}
             ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) as 'distance_in_meters'
         FROM 
             Data 
