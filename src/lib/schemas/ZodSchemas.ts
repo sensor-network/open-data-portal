@@ -27,9 +27,10 @@ export const zLocation = z.object({
  * must be a valid ISO date and defaults to 2022-01-01 -> now
  **/
 export const zTime = z.object({
+    /* FIXME: Sort out proper ranges later */
     start_date: z.string().default('2022Z' /* new year 2022 */)
         .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
-        .refine(str => new Date(str) >= new Date('2022Z'), 'must be after 2022')
+        //.refine(str => new Date(str) >= new Date('2022Z'), 'must be after 2022')
         .transform(str => new Date(str).toISOString()),
     end_date: z.string().default(new Date().toISOString() /* current time */)
         .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
