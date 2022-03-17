@@ -167,7 +167,7 @@
                     "$ref": "#/components/schemas/TemperatureResponse"
                   }
                 }
-              }          
+              }
             }
           },
           "400": {
@@ -221,7 +221,6 @@
         }
       }
     },
-
     "/ph":{
       "get": {
         "tags": [
@@ -499,7 +498,7 @@
             "explode": true,
             "schema": {
               "type": "number",
-              "example": "56.00694388528538"
+              "example": "56.00694388528538" 
             }
           },
           {
@@ -661,6 +660,76 @@
           }
         }
       }
+    },
+    "/locations": {
+      "get": {
+        "tags": [
+          "Fetch generic data"
+        ],
+        "summary": "Gets all data between two time intervals",
+        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "operationId": "getLocation",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+          "description": "Optional. Name of location.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "Gräsvik"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocationName"
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method POST is not allowed for this endpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -767,22 +836,12 @@
           "temperature": {
             "type": "number",
             "format": "float",
-            "example": "289.03"
+            "example": "289.0350036621094"
           },
           "date": {
             "type": "string",
             "format": "date-time",
             "example": "2007-12-11T18:05:11.000Z"
-          },
-          "latitude": {
-            "type": "number",
-            "format": "float",
-            "example": 56.16082
-          },
-          "longitude": {
-            "type": "number",
-            "format": "float",
-            "example": 15.58671
           }
         },
         "description": "The response from \"GET: / temperature\"-endpoint."
@@ -797,25 +856,15 @@
           "pH": {
             "type": "number",
             "format": "float",
-            "example": "5.09"
+            "example": "5.09119985487793"
           },
           "date": {
             "type": "string",
             "format": "date-time",
             "example": "2017-08-16T20:19:44.000Z"
-          },
-          "latitude": {
-            "type": "number",
-            "format": "float",
-            "example": 56.16082
-          },
-          "longitude": {
-            "type": "number",
-            "format": "float",
-            "example": 15.58671
           }
         },
-
+        
         "description": "The response from `GET: / pH`-endpoint."
       },
       "ConductivityResponse": {
@@ -824,22 +873,12 @@
           "conductivity": {
             "type": "number",
             "format": "float",
-            "example": "0.043"
+            "example": "0.04345324521234"
           },
           "date": {
             "type": "string",
             "format": "date-time",
             "example": "2022-02-15T10:44:00.000Z"
-          },
-          "latitude": {
-            "type": "number",
-            "format": "float",
-            "example": 56.16082
-          },
-          "longitude": {
-            "type": "number",
-            "format": "float",
-            "example": 15.58671
           }
         },
         "description": "The response from `GET: /conductivity`-endpoint."
@@ -855,12 +894,12 @@
           "pH": {
             "type": "number",
             "format": "float",
-            "example": "7.14"
+            "example": "7.149479866027832"
           },
           "temperature": {
             "type": "number",
             "format": "float",
-            "example": "289.03"
+            "example": "289.0350036621094"
           },
           "date": {
             "type": "string",
@@ -910,17 +949,17 @@
           "pH": {
             "type": "number",
             "format": "float",
-            "example": "7.56"
+            "example": "7.568819899694824"
           },
           "temperature": {
             "type": "number",
             "format": "float",
-            "example": "14.3"
+            "example": "14.315364365373466"
           },
           "conductivity": {
             "type": "number",
             "format": "float",
-            "example": "4.88"
+            "example": "4.8896979698989978"
           },
           "date": {
             "type": "string",
@@ -944,6 +983,26 @@
           }
         },
         "description": "The response from \"GET: / bylocation\"-endpoint."
+      },
+      "LocationName": {
+        "type": "object",
+        "properties": {
+          "radius": {
+            "type": "number",
+            "format": "float",
+            "example": 300
+          },
+          "longitude": {
+            "type": "number",
+            "format": "float",
+            "example": "15.845884248605417"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "float",
+            "example": "56.00694388528538"
+          }
+        }
       }
     }
   }
