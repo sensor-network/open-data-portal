@@ -57,8 +57,30 @@ const findAllByLocationName = async (
 ) => {
     const connection = await getConnectionPool();
     const [ data ] = await connection.query(`
-    `, [
-
+    SELECT 
+        id,
+        pH,
+        temperature,
+        conductivity,
+        date,
+        ST_Y(position) as longitude,
+        ST_X(position) as latitude
+    FROM 
+        Data 
+    AS 
+        d
+    WHERE 
+        ST_Distance_Sphere(d.position, (SELECT position from Locations where name = ?)) < (SELECT radius from Locations where name = ?)
+    AND
+        date(date) >= ? AND date(date) <= ?;
+    ORDER BY 
+        Date
+    LIMIT 
+        ?, ?
+  `, [
+    name, name,
+    start_date, end_date,
+    offset, page_size
     ]);
     return data;
 }
