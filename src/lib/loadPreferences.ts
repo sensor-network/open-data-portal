@@ -8,7 +8,7 @@ export const loadPreferences = (prefCookieString: string) => {
         json = JSON.parse(prefCookieString);
     } catch (e) {}
     return {
-        location: json?.location || { name: 'All', symbol: 'All' },
+        location: json?.location || { name: 'Everywhere', symbol: '' },
         temperature_unit:  json?.temperature_unit ||  { name: TEMP_UNITS.CELSIUS.name,           symbol: TEMP_UNITS.CELSIUS.symbol },
         conductivity_unit: json?.conductivity_unit || { name: COND_UNITS.PARTS_PER_MILLION.name, symbol: COND_UNITS.PARTS_PER_MILLION.symbols[0] }
     }

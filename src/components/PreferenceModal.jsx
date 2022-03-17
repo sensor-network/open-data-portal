@@ -17,7 +17,7 @@ export default function ({ setPreferences, closeModal, isOpen }) {
     const [tempPref, setTempPref] = useState(preferences);  /* <-- local preferences while modal is open */
     const preferenceOptions = useMemo( () => {
         return [
-            { name: 'Location',     key: 'location',          options: [{name: 'All', symbol: 'All'}, ...locations.map(l => ({name: l.name, symbol: l.name}))], default: preferences.location },
+            { name: 'Location',     key: 'location',          options: [{name: 'Everywhere', symbol: ''}, ...locations.map(l => ({name: l.name, symbol: l.name}))], default: preferences.location },
             { name: 'Temperature',  key: 'temperature_unit',  options: Object.values(TEMP_UNITS).map(u => ({name: u.name, symbol: u.symbol})),     default: preferences.temperature_unit },
             { name: 'Conductivity', key: 'conductivity_unit', options: Object.values(COND_UNITS).map(u => ({name: u.name, symbol: u.symbols[0]})), default: preferences.conductivity_unit }
         ]
