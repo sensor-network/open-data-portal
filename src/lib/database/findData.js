@@ -41,7 +41,7 @@ const findAll = async (
         WHERE
             date >= ? AND date <= ?
         ORDER BY
-            id
+            date
         LIMIT
             ?, ?
     `, [
@@ -103,7 +103,7 @@ const findAllByGeolocation = async (
         AND
             date >= ? AND date <= ?
         ORDER BY 
-            Date
+            date
         LIMIT 
             ?, ?
     `, [
