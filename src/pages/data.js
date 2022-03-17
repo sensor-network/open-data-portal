@@ -8,23 +8,21 @@ import { DataGrid } from '@mui/x-data-grid'; //Documentation can be found here: 
 import CustomAreaChart from "src/components/CustomAreaChart";
 
 const fetcher = (url) => fetch(url).then(res => res.json());
-const endpointUrl = "http://localhost:3000/api/v1?";
+const endpointUrl = "http://localhost:3000/api/v2/data?";
 
 function urlWithParams(url, params){
     //A function that adds the given parameters to the given URL, params can be a string or an object for example.
     return url + new URLSearchParams(params);
 }
 
-/*export async function getServerSideProps(context){
+export async function getServerSideProps(context){
     //Since useContext(PreferenceContext) cannot be used:
     const preferences = loadPreferences(context.req.cookies.preferences);
-    
-    const params = {
-        tempunit: preferences.temperature_unit.symbol,
-        conductunit: preferences.conductivity_unit.symbol
-    };
 
-    let url = urlWithParams(endpointUrl, params);
+    let url = urlWithParams(endpointUrl, {
+        temperature_unit: preferences.temperature_unit.symbol,
+        conductivity_unit: preferences.conductivity_unit.symbol,
+    });
     const data = await fetcher(url);
     
     return{
@@ -32,7 +30,7 @@ function urlWithParams(url, params){
             initialData: data
         }
     }
-}*/
+}
 
 const dateRanges = [
     { label: 'today',     active: false, startDate: date_fns.startOfDay(new Date()),                density: 1 },
@@ -46,7 +44,7 @@ const dateRanges = [
 ];
 
 export default function App(props){
-    //const initialData = props.initialData;
+    const initialData = props.initialData;
     const preferences = useContext(PreferenceContext);
 
     /* define how long period should show */
@@ -55,12 +53,10 @@ export default function App(props){
         range.active = true;
         return range;
     });
-    /* define time in seconds between measurements */
-    const [dataDensity, setDataDensity] = useState(10 * 60);
 
     const gridColumns = useMemo(() => [
         { field: 'id', headerName: 'ID', width: 70, editable: false },
-        { field: 'pH', headerName: 'pH', width: 90, editable: false },
+        { field: 'ph', headerName: 'pH', width: 90, editable: false },
         { field: 'temperature', headerName: `Temperature (${preferences.temperature_unit.symbol})`, width: 150, editable: false },
         { field: 'conductivity', headerName: `Conductivity (${preferences.conductivity_unit.symbol})`, width: 150, editable: false },
         {
@@ -73,19 +69,20 @@ export default function App(props){
     ], [preferences]);
 
     let url = urlWithParams(endpointUrl, {
-        tempunit: preferences.temperature_unit.symbol,
-        conductunit: preferences.conductivity_unit.symbol,
-        start_date: dateRange.startDate.toISOString(),
+        temperature_unit: preferences.temperature_unit.symbol,
+        conductivity_unit: preferences.conductivity_unit.symbol,
+        page_size: 2000,
+        //start_date: dateRange.startDate.toISOString(),
     });
 
-    const options = {fetcher: () => fetcher(url),
-                    fallbackData: [],
-                    refreshInterval: 1000 * 60};
-    const { data, error } = useSWR(url, options);
+    const swrOptions = {
+        fetcher: () => fetcher(url),
+        fallbackData: initialData,
+        refreshInterval: 1000 * 60
+    };
+    const { data, error } = useSWR(url, swrOptions);
 
     if (error) return <div>failed to load</div>;
-    if (!data) return <div>loading...</div>; /* Is this needed since there is already data? */
-
     return(
         <>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20 }}>
@@ -95,7 +92,7 @@ export default function App(props){
                 </div>
                 <div style={{ height: 750, width: '95%', maxWidth: 1000 }}>
                     <DataGrid
-                        rows= {data}
+                        rows= {data.data}
                         columns= {gridColumns}
                     />
                 </div>
@@ -127,7 +124,7 @@ export default function App(props){
                     <h3 style={{marginBottom: 0}}>Select data to show:</h3>
                 </div>
 
-                <CustomAreaChart data={data}/>
+                <CustomAreaChart data={data.data}/>
             </div>
         </>
     );

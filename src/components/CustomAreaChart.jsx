@@ -99,7 +99,7 @@ const CustomAreaChart = ({ data }) => {
                             <Area connectNulls type="monotone" dataKey="temperature" name="Temperature" stroke="#1565c0" fillOpacity={1} fill="url(#colorTemp)" />
                         }
                         {showPH &&
-                            <Area connectNulls type="monotone" dataKey="pH" stroke="#A83636FF" fillOpacity={1} fill="url(#colorPH)" />
+                            <Area connectNulls type="monotone" dataKey="ph" stroke="#A83636FF" fillOpacity={1} fill="url(#colorPH)" />
                         }
                         {showConductivity &&
                             <Area connectNulls type="monotone" dataKey="conductivity" name="Conductivity" stroke="#A4C42FFF" fillOpacity={1} fill="url(#colorCond)" />
