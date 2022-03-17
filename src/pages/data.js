@@ -1,11 +1,10 @@
 import * as date_fns from "date-fns";
 import useSWR from 'swr';
-import {useContext, useMemo, useState} from 'react';
+import {useContext, useState} from 'react';
 import { PreferenceContext } from './_app';
 import {loadPreferences} from '../lib/loadPreferences.ts';
-import { DataGrid } from '@mui/x-data-grid'; //Documentation can be found here: https://mui.com/components/data-grid/
-
 import CustomAreaChart from "src/components/CustomAreaChart";
+import CustomDataGrid from "src/components/CustomDataGrid";
 
 const fetcher = (url) => fetch(url).then(res => res.json());
 const endpointUrl = "http://localhost:3000/api/v2/data?";
@@ -22,6 +21,7 @@ export async function getServerSideProps(context){
     let url = urlWithParams(endpointUrl, {
         temperature_unit: preferences.temperature_unit.symbol,
         conductivity_unit: preferences.conductivity_unit.symbol,
+        name: preferences.location.symbol,
     });
     const data = await fetcher(url);
     
@@ -43,9 +43,8 @@ const dateRanges = [
     { label: 'Max',       active: false, startDate: new Date(0),                              density: 60 * 12 },
 ];
 
-export default function App(props){
-    const initialData = props.initialData;
-    const preferences = useContext(PreferenceContext);
+export default function App({ initialData }){
+    const { preferences } = useContext(PreferenceContext);
 
     /* define how long period should show */
     const [dateRange, setDateRange] = useState(() => {
@@ -54,34 +53,21 @@ export default function App(props){
         return range;
     });
 
-    const gridColumns = useMemo(() => [
-        { field: 'id', headerName: 'ID', width: 70, editable: false },
-        { field: 'ph', headerName: 'pH', width: 90, editable: false },
-        { field: 'temperature', headerName: `Temperature (${preferences.temperature_unit.symbol})`, width: 150, editable: false },
-        { field: 'conductivity', headerName: `Conductivity (${preferences.conductivity_unit.symbol})`, width: 150, editable: false },
-        {
-            field: 'date', width: 200, editable: false,
-            headerName: `Date (${Intl.DateTimeFormat().resolvedOptions().locale})`,
-            valueGetter: date => new Date(date.value).toLocaleString()
-        },
-        { field: 'longitude', headerName: 'Longitude', width: 150, editable: false },
-        { field: 'latitude', headerName: 'Latitude', width: 150, editable: false }
-    ], [preferences]);
-
     let url = urlWithParams(endpointUrl, {
         temperature_unit: preferences.temperature_unit.symbol,
         conductivity_unit: preferences.conductivity_unit.symbol,
+        name: preferences.location.symbol,
+        start_date: dateRange.startDate.toISOString(),
         page_size: 2000,
-        //start_date: dateRange.startDate.toISOString(),
     });
 
     const swrOptions = {
         fetcher: () => fetcher(url),
         fallbackData: initialData,
         refreshInterval: 1000 * 60
-    };
-    const { data, error } = useSWR(url, swrOptions);
-
+    }
+    /* incoming response { pagination: {}, data: [] } */
+    let { data: { data }, error } = useSWR(url, swrOptions);
     if (error) return <div>failed to load</div>;
     return(
         <>
@@ -90,12 +76,7 @@ export default function App(props){
                     <h2>Explore the data on your own</h2>
                     <p>Change the units using the preference modal from the navbar. </p>
                 </div>
-                <div style={{ height: 750, width: '95%', maxWidth: 1000 }}>
-                    <DataGrid
-                        rows= {data.data}
-                        columns= {gridColumns}
-                    />
-                </div>
+                <CustomDataGrid data={data} preferences={preferences}/>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 20 }}>
@@ -105,13 +86,15 @@ export default function App(props){
                     <h3 style={{marginTop: 3, marginBottom: 3}}>Show data for:</h3>
 
                     <div style={{display: 'flex'}}>
-                        {dateRanges.map((r) => (
-                            <div
+                        {dateRanges.map((r, idx) => (
+                            <div key={idx}
                                 style={{padding: '5px 0', marginRight: 15, borderBottom: r.active ? '3px solid #1565c0' : ''}}
                                 onClick={() => {
                                     setDateRange(prevRange => {
                                         prevRange.active = false;
                                         r.active = true;
+                                        console.log(r.startDate)
+
                                         return r;
                                     });
                                 }}
@@ -124,7 +107,7 @@ export default function App(props){
                     <h3 style={{marginBottom: 0}}>Select data to show:</h3>
                 </div>
 
-                <CustomAreaChart data={data.data}/>
+                <CustomAreaChart data={data}/>
             </div>
         </>
     );
