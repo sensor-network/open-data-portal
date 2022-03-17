@@ -18,8 +18,8 @@ export const UNITS : { [name: string]: Unit } = {
         symbols: ["spm", "s/m"],
         minValue: 0,
         maxValue: 10,
-        toSiemensPerMeter: v => v,
-        fromSiemensPerMeter: v => v
+        toSiemensPerMeter: v => Math.round(v * ROUND_FACTOR) / ROUND_FACTOR,
+        fromSiemensPerMeter: v => Math.round(v * ROUND_FACTOR) / ROUND_FACTOR
     },
     MHO_PER_METER: {
         name: "Mho per meter",
