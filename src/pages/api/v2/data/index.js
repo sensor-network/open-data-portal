@@ -7,8 +7,7 @@ import {
 } from "src/lib/httpStatusCodes";
 import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
 import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
-import { getRowCount, findMany } from "src/lib/database/findData";
-import { createOne } from 'src/lib/database/createOne';
+import { getRowCount, findMany, createOne } from "src/lib/database/data";
 import { zLocation, zTime, zPage, zDataColumns, zCreateInstance } from 'src/lib/schemas/ZodSchemas';
 import {sensorDataAsSI} from "../../../../lib/conversions/convertSensors";
 
@@ -32,30 +31,38 @@ export default async function (req, res) {
             const { start_date, end_date } = zTime.parse(req.query);
             let { page, page_size } = zPage.parse(req.query);
             const include_columns = parseIncludeExclude(req.query.include, req.query.exclude);
-
+            console.time('row-count')
             const rowCount = await getRowCount();
             const last_page = Math.ceil(rowCount / page_size) || 1; /* if rows=0, still want last_page=1 */
             if (page > last_page)
                 page = last_page;
             const offset = (page - 1) * page_size;  // last row of previous page
-
+            console.timeEnd('row-count')
             let data;
             if ( location_name && location_name !== 'all' ) {   // prioritize selecting by name
+                console.time('db-call-by-name')
                 data = await findMany('by-location-name', {
                     location_name, start_date, end_date, offset, page_size
                 }, include_columns);
+                console.timeEnd('db-call-by-name')
             }
             else if ( lat && long && rad ) {   // require both lat, long and rad to select by geolocation
+                console.time('db-call-by-geo')
                 data = await findMany('by-geolocation', {
                     lat, long, rad, start_date, end_date, offset, page_size
                 }, include_columns);
+                console.timeEnd('db-call-by-geo')
             }
             else {  // find all data if no location is specified
+                console.time('db-call-all-locations')
                 data = await findMany('all', {
                     start_date, end_date, offset, page_size
                 }, include_columns);
+                console.timeEnd('db-call-all-locations')
+
             }
 
+            console.time('conversions')
             data.forEach(d => {
                 if (Object.hasOwn(d, 'temperature'))
                     d.temperature = temperatureUnit.fromKelvin(d.temperature);
@@ -64,6 +71,8 @@ export default async function (req, res) {
                 if (Object.hasOwn(d, 'ph'))
                     d.ph = Math.round(d.ph * 1E2) / 1E2;
             })
+            console.timeEnd('conversions')
+
 
             res.status(STATUS_OK).json({
                 pagination: {

@@ -9,6 +9,31 @@ export const getRowCount = async () => {
     return rowCount[0].row_count;
 }
 
+export const createOne = async (instance) => {
+    const connection = await getConnectionPool();
+    const [ result ] = await connection.query(`
+        INSERT INTO Data (
+            date,
+            position,
+            pH,
+            temperature,
+            conductivity
+        ) VALUES (
+            ?,
+            ST_GeomFromText('POINT(? ?)', ?),
+            ?,
+            ?,
+            ?
+        )`, [
+        instance.timestamp,
+        instance.latitude, instance.longitude, SRID,
+        instance.sensors.ph_level ?? null,
+        instance.sensors.temperature ?? null,
+        instance.sensors.conductivity ?? null
+    ]);
+    return result.insertId;
+}
+
 export const findMany = async (location, params, columns) => {
     let data;
     switch (location) {
@@ -87,7 +112,7 @@ const findAllByGeolocation = async (
             id, date,
             ST_Y(position) as longitude, ST_X(position) as latitude
             ${ columns.length ? ',' + columns.join(', ') : ''}
-            ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) as 'distance_in_meters'
+            ,ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?, 'axis-order=long-lat')) as 'distance_in_meters'
         FROM 
             Data 
         WHERE 
