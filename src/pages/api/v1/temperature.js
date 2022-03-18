@@ -3,7 +3,7 @@
 import mysql from "mysql2/promise"
 import { ZodError } from "zod";
 
-import { getConnectionPool } from "src/lib/database";
+import { getConnectionPool } from "src/lib/database/connection";
 
 import {
     STATUS_OK,

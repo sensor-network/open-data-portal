@@ -1,4 +1,4 @@
-import { Temperature, UNITS, parseTemperature } from "../../../src/lib/units/temperature";
+import { Temperature, UNITS, parseTemperature } from "src/lib/units/temperature";
 
 it("constructs Temperature-instances correctly", () => {
     const tempInstance = new Temperature(20, UNITS.CELSIUS);

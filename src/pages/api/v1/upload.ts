@@ -2,9 +2,9 @@ import type {NextApiRequest, NextApiResponse} from "next";
 import {z, ZodError} from "zod";
 import mysql, {RowDataPacket} from 'mysql2/promise';
 
-import {getConnectionPool} from "src/lib/database";
-import {ISOStringToSQLTimestamp} from "lib/conversions/convertTimestamp"
-import {sensorDataAsSI} from "src/lib/conversions/convertSensors";
+import {getConnectionPool} from "lib/database/connection";
+import {ISOStringToSQLTimestamp} from "lib/units/convertTimestamp"
+import {sensorDataAsSI} from "lib/units/convertSensors";
 import {
     STATUS_BAD_REQUEST,
     STATUS_CREATED,

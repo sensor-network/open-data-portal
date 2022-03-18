@@ -1,5 +1,9 @@
-import { ISOStringToSQLTimestamp as toSQL } from "../../../src/lib/conversions/convertTimestamp";
+import { ISOStringToSQLTimestamp as toSQL } from "src/lib/units/convertTimestamp";
 
+/**
+ * Note: Trailing Z is missing from the timestamps because Node's MySQL package doesn't support
+ * inserting timestamps with it. However, the timestamps are still all converted to UTC timezone.
+ **/
 it("should accept full ISO8601 format", () => {
     expect(toSQL('2022-01-01T12:00:00.000Z')).toEqual('2022-01-01T12:00:00.000');
     expect(toSQL('2022-01-01T12:00:00.000+5')).toEqual('2022-01-01T07:00:00.000');

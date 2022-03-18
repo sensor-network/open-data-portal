@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ISOStringToSQLTimestamp } from 'lib/conversions/convertTimestamp';
+import { ISOStringToSQLTimestamp } from 'lib/units/convertTimestamp';
 
 /**
  * schema for parsing location information,

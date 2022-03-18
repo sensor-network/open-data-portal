@@ -1,4 +1,4 @@
-import { getConnectionPool } from "../database";
+import { getConnectionPool } from "./connection";
 const SRID = 4326;
 
 export const getRowCount = async () => {

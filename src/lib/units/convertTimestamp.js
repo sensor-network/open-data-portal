@@ -1,11 +1,11 @@
-import {ZodError} from "zod";
+import { ZodError } from "zod";
 
 export function ISOStringToSQLTimestamp (ISOString) {
     /* JS Date-object is weird, and does not always support the T-separator  */
     const withoutT = ISOString.replace('T', ' ');
     try {
         const inUTC = new Date(withoutT).toISOString();
-        /* And SQL Timestamps does not accept the trailing Z */
+        /* And Node MySQL does not accept the trailing Z when inserting timestamps */
         const idx = inUTC.length - 1;
         return inUTC.substring(0, idx);
     }

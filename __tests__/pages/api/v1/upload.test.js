@@ -1,7 +1,7 @@
 import { createMocks } from 'node-mocks-http';
 
 import handler from 'src/pages/api/v1/upload';
-import { endConnection } from 'src/lib/database';
+import { endConnection } from 'src/lib/database/connection';
 import {
     STATUS_CREATED,
     STATUS_FORBIDDEN, STATUS_BAD_REQUEST,

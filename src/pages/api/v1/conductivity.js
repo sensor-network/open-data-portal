@@ -1,7 +1,7 @@
 import mysql from 'mysql2/promise'
 import { ZodError } from "zod";
 
-import { getConnectionPool } from "src/lib/database";
+import { getConnectionPool } from "src/lib/database/connection";
 import { parseUnit } from "src/lib/units/conductivity";
 
 import {

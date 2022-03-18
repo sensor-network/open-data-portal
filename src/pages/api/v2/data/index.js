@@ -1,15 +1,11 @@
 import { ZodError } from "zod";
 
-import {
-    STATUS_OK,
-    STATUS_BAD_REQUEST,
-    STATUS_SERVER_ERROR, STATUS_CREATED, STATUS_FORBIDDEN, STATUS_METHOD_NOT_ALLOWED
-} from "src/lib/httpStatusCodes";
+import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
 import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
 import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
 import { getRowCount, findMany, createOne } from "src/lib/database/data";
-import { zLocation, zTime, zPage, zDataColumns, zCreateInstance } from 'src/lib/schemas/ZodSchemas';
-import {sensorDataAsSI} from "../../../../lib/conversions/convertSensors";
+import { zLocation, zTime, zPage, zDataColumns, zCreateInstance } from 'src/lib/types/ZodSchemas';
+import { sensorDataAsSI } from "src/lib/units/convertSensors";
 
 
 const parseIncludeExclude = (include, exclude) => {
@@ -74,7 +70,7 @@ export default async function (req, res) {
             console.timeEnd('conversions')
 
 
-            res.status(STATUS_OK).json({
+            res.status(STATUS.OK).json({
                 pagination: {
                     page,
                     page_size,
@@ -93,12 +89,12 @@ export default async function (req, res) {
         catch (e) {
             if (e instanceof ZodError) {
                 console.log("Error parsing query params:\n", e.flatten())
-                res.status(STATUS_BAD_REQUEST)
+                res.status(STATUS.BAD_REQUEST)
                     .json(e.flatten());
             }
             else {
                 console.error(e)
-                res.status(STATUS_SERVER_ERROR).json({error: "Internal server error"})
+                res.status(STATUS.SERVER_ERROR).json({error: "Internal server error"})
             }
         }
     }
@@ -107,12 +103,12 @@ export default async function (req, res) {
         const api_key = req.query.api_key;
         if (!api_key) {
             console.log("ERROR: You have to provide an api_key as query parameter.");
-            res.status(STATUS_FORBIDDEN).json({ error: "No API key provided." });
+            res.status(STATUS.FORBIDDEN).json({ error: "No API key provided." });
             return;
         }
         if (api_key !== process.env.NEXT_PUBLIC_API_KEY) {
             console.log("ERROR: The provided api_key could not be verified.");
-            res.status(STATUS_FORBIDDEN).json({ error: "The provided API key could not be verified." });
+            res.status(STATUS.FORBIDDEN).json({ error: "The provided API key could not be verified." });
             return;
         }
 
@@ -131,13 +127,13 @@ export default async function (req, res) {
                     const id = await createOne(instance);
                     measurements.push({id, ...instance});
                 }
-                res.status(STATUS_CREATED).json(measurements);
+                res.status(STATUS.CREATED).json(measurements);
                 return;
             }
 
             const instance = parseAndConvertInput(req.body);
             const id = await createOne(instance);
-            res.status(STATUS_CREATED).json({ id, ...instance });
+            res.status(STATUS.CREATED).json({ id, ...instance });
         }
 
         catch (e) {
@@ -150,12 +146,12 @@ export default async function (req, res) {
                     issue.path = issue.path.filter((path) => path !== 'sensors')
                 });
                 console.log("ERROR: Could not parse request json:\n", e.flatten())
-                res.status(STATUS_BAD_REQUEST)
+                res.status(STATUS.BAD_REQUEST)
                     .json(e.flatten());
             }
             else {
                 console.error(e);
-                res.status(STATUS_SERVER_ERROR)
+                res.status(STATUS.SERVER_ERROR)
                     .json({error: "Error uploading data"});
             }
         }
@@ -163,7 +159,7 @@ export default async function (req, res) {
 
     else {
         console.log(`ERROR: Method ${req.method} not allowed.`)
-        res.status(STATUS_METHOD_NOT_ALLOWED)
+        res.status(STATUS.NOT_ALLOWED)
             .json({ error:
                     `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`
             });

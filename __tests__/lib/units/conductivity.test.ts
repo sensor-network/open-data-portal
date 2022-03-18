@@ -1,4 +1,4 @@
-import { Conductivity, UNITS, parseConductivity } from "../../../src/lib/units/conductivity";
+import { Conductivity, UNITS, parseConductivity } from "src/lib/units/conductivity";
 
 it("constructs Conductivity-instances correctly", () => {
         const condInstance = new Conductivity(40000, UNITS.PARTS_PER_MILLION);
