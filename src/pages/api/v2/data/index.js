@@ -64,11 +64,11 @@ export default async function (req, res) {
 
             console.time('conversions')
             data.forEach(d => {
-                if (Object.hasOwn(d, 'temperature'))
+                if (d.hasOwnProperty( 'temperature'))
                     d.temperature = temperatureUnit.fromKelvin(d.temperature);
-                if (Object.hasOwn(d, 'conductivity'))
+                if (d.hasOwnProperty('conductivity'))
                     d.conductivity = conductivityUnit.fromSiemensPerMeter(d.conductivity);
-                if (Object.hasOwn(d, 'ph'))
+                if (d.hasOwnProperty( 'ph'))
                     d.ph = Math.round(d.ph * 1E2) / 1E2;
             })
             console.timeEnd('conversions')
