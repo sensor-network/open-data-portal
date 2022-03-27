@@ -52,9 +52,9 @@ CREATE TABLE history_daily (
     date DATE NOT NULL,
     sensor_type VARCHAR(31) NOT NULL,
     location_id INT NOT NULL,
-    daily_min FLOAT NOT NULL,
-    daily_avg FLOAT NOT NULL,
-    daily_max FLOAT NOT NULL,
+    daily_min FLOAT,
+    daily_avg FLOAT,
+    daily_max FLOAT,
     PRIMARY KEY (id),
     FOREIGN KEY (location_id) REFERENCES Locations(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

@@ -20,6 +20,7 @@ export const HTTP_STATUS = {
 
     /* 4xx Client Error */
     BAD_REQUEST: 400,
+    UNAUTHORIZED: 401,
     FORBIDDEN: 403,
     NOT_ALLOWED: 405,
 
