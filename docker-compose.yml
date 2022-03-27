@@ -16,6 +16,7 @@ services:
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d   # Link init scripts to the container
       - ./db/mysql:/var/lib/mysql  # Link a volume from host to persist the data
+    user: mysql   # fixes symlink issues with mysql.sock on macOS
 
   # Open Data Portal Web Application with API, built using `./Dockerfile`
   app:
@@ -30,3 +31,11 @@ services:
       NEXT_PUBLIC_DB_PASSWORD: admin
       NEXT_PUBLIC_DB_DATABASE: sensor_network
       NEXT_PUBLIC_API_KEY: default
+      NEXT_PUBLIC_PRIVATE_API_KEY: default
+
+  # Separate container for cronjobs
+  cronjobs:
+    build:
+      context: cronjobs
+    volumes:
+      - ./cronjobs/logs:/var/log
