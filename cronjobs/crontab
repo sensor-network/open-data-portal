@@ -1,0 +1,18 @@
+# This is the crontab configuration file which specifies jobs that runs at given times (in UTC).
+# Usually this will be curl-commands to certain API endpoints where the logic is written.
+
+# Example
+# .--------------- minute (0-59)
+# |  .------------ hour (0-23)
+# |  |  .--------- day of month (1-31)
+# |  |  |  .------ month (1-12) OR (jan,feb,mar...)
+# |  |  |  |  .--- day of week (0-6) [sunday=0] OR (sun,mon,tue...)
+# |  |  |  |  |
+# *  *  *  *  *  command
+
+# Aggregate today's collected data everyday at midnight
+0  0  *  *  *  sh /jobs/aggregate-daily.sh
+
+# Aggregate today's collected data every minute (DEBUG)
+# *  *  *  *  *  sh /jobs/aggregate-daily.sh
+# Mandatory blank line
