@@ -17,16 +17,12 @@ const ServerPaginationGrid = () => {
   });
 
   const { preferences } = useContext(PreferenceContext);
-  console.log(preferences);
-  const url = useMemo(() => {
-    console.log("Preferences", preferences);
-    return urlWithParams(endpoint, {
-      temperature_unit: preferences.temperature_unit.symbol,
-      conductivity_unit: preferences.conductivity_unit.symbol,
-      page: rowsState.page + 1,
-      page_size: rowsState.pageSize,
-    });
-  }, [preferences, rowsState]);
+  const url = useMemo(() => urlWithParams(endpoint, {
+    temperature_unit: preferences.temperature_unit.symbol,
+    conductivity_unit: preferences.conductivity_unit.symbol,
+    page: rowsState.page + 1,
+    page_size: rowsState.pageSize,
+  }), [preferences, rowsState]);
 
   const { data, isLoading } = useSWR(url, {
     fetcher: () => fetcher(url),
