@@ -21,7 +21,7 @@ services:
   app:
     build:
       context: .
-    image: ghcr.io/sensor-network/open-data-portal-app:main
+    image: ghcr.io/sensor-network/open-data-portal-app:latest
     ports:
       - "3000:3000"
     environment:
