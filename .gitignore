@@ -36,3 +36,5 @@ yarn-error.log*
 
 # mysql internal
 /db/mysql
+
+/cronjobs/logs
