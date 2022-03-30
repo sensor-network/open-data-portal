@@ -21,8 +21,7 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
       return (
         <div className={style.chartToolTip}>
           <div className={style.dataLabel}>
-            <h4>Measured at</h4>
-            <p>{formattedDate}</p>
+            <p><strong>Measured at:</strong> {formattedDate}</p>
           </div>
           <div className={style.dataPayload}>
             {payload.map(row => {
