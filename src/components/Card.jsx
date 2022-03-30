@@ -21,12 +21,14 @@ const style = {
 };
 
 /* Wrapper for MUI-Card with a title */
-const Card = ({ title, children }) => {
+const Card = ({ title, margin, children }) => {
   return (
-    <RawCard style={style.card}>
-      <div style={style.header}>
-        <h2 style={{ marginTop: 0, marginBottom: 20 }}>{title}</h2>
-      </div>
+    <RawCard style={{ ...style.card, margin }}>
+      {title && (
+        <div style={style.header}>
+          <h2 style={{ marginTop: 0, marginBottom: 20 }}>{title}</h2>
+        </div>
+      )}
       <div style={style.body}>
         {children}
       </div>
