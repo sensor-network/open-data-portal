@@ -1,17 +1,12 @@
 import { useContext, useMemo, useState } from "react";
-import useSWR from "swr";
 import { DataGrid } from "@mui/x-data-grid";
 import LinearProgress from "@mui/material/LinearProgress";
 
 import { useMeasurements } from "../lib/hooks/swr-extensions";
 import { PreferenceContext } from "../pages/_app";
+import {fetcher, urlWithParams} from "../lib/utilityFunctions";
 
 const endpoint = "http://localhost:3000/api/v2/data?";
-const urlWithParams = (baseUrl, params) => baseUrl + new URLSearchParams(params);
-const fetcher = async (url) => {
-  const response = await fetch(url);
-  return await response.json();
-};
 
 const ServerPaginationGrid = () => {
   /* Define pagination options, which can be modified in the grid */
