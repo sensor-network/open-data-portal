@@ -11,9 +11,16 @@ import CircleIcon from "@mui/icons-material/Circle";
 
 import { PreferenceContext } from "src/pages/_app";
 import style from "src/styles/AreaChart.module.css";
+import { useWidth } from "../lib/hooks/useWidth";
 
 const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, dateFormatter }) => {
   const { preferences } = useContext(PreferenceContext);
+
+  const windowWidth = useWidth();
+  const xAxisInterval = windowWidth < 768
+    ? Math.floor(data.length / 5) : windowWidth < 1400
+      ? Math.floor(data.length / 10) :
+      Math.floor(data.length / 15);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -74,7 +81,8 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
     const formatted = dateFormatter(date);
     return (
       <g transform={`translate(${x},${y})`}>
-        <text fontSize=".7em" x={0} y={0} dy={16} textAnchor={payload.index > 0 ? "middle" : "start"} fill="#666">
+        <text fontSize=".6em" x={0} y={0} dy={16} textAnchor={payload.index > 0 ? "middle" : "start"} fill="#666"
+              transform="rotate(-20)">
           {formatted}
         </text>
       </g>
@@ -95,10 +103,10 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
         </defs>
         <XAxis
           dataKey="date" height={60}
-          tick={CustomXAxisTick} tickSize={12} interval={Math.round(data.length / 10)}
+          tick={CustomXAxisTick} tickSize={12} interval={xAxisInterval}
         />
         <Brush
-          dataKey={"date"} stroke={mainValue.color} height={30} y={450}
+          dataKey={"date"} stroke={mainValue.color} height={30} y={460}
           tickFormatter={date => dateFormatter(date)}
         />
         <YAxis
