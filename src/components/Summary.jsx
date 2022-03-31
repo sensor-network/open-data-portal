@@ -1,52 +1,144 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 
-import { Grid } from "@mui/material";
+import { Grid, styled } from "@mui/material";
+import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import Card from "src/components/Card";
-import CustomRadialBar from "src/components/CustomRadialBar";
+
 import DateRangeSelector from "src/components/DateRangeSelector";
 
-const styles = {
-  gridItem: {
-    height: 400,
-    overflow: "hidden",
+
+import { PreferenceContext } from "src/pages/_app";
+import styles from "src/styles/Summary.module.css";
+/* From https://mui.com/components/tooltips/#customization */
+const LightTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} classes={{ popper: className }}/>
+))(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: theme.palette.common.white,
+    color: "#000",
+    boxShadow: `0 0 10px #8a8a8a`,
+    borderRadius: "10px",
+    maxWidth: 200,
+    fontSize: 16,
+    padding: "20px 10px",
   },
-  textCenter: {
-    textAlign: "center",
-  },
-};
+}));
 
 /* FIXME: fetch from history table*/
 const data = [
-  { sensor: "Temperature", min: 15, max: 22, avg: 21.3 },
-  { sensor: "Conductivity", min: 4, max: 5.6, avg: 5 },
-  { sensor: "PH", min: 6.8, max: 7.5, avg: 7.1 },
+  { sensor: "Temperature", start: 17.1, end: 19.6, min: 15.3, max: 22.7, avg: 21.3, maxAvg: 19.9, lastYearsAvg: 22 },
+  { sensor: "Conductivity", start: 5.2, end: 5.1, min: 4, max: 5.6, avg: 5, maxAvg: 5.4, lastYearsAvg: 22 },
+  { sensor: "PH", start: 7, end: 7, min: 6.8, max: 7.5, avg: 7.1, maxAvg: 25, lastYearsAvg: 22 },
 ];
 
+const round = (value, decimals) => (
+  Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals)
+);
+const capitalize = (string) => string?.replace(/^\w/, ch => ch.toUpperCase());
+
 const Summary = ({}) => {
+  const { preferences } = useContext(PreferenceContext);
   const [startDate, setStartDate] = useState(new Date(1));
   const [endDate, setEndDate] = useState(new Date());
 
+  /* define how much wider the columns should be than the left pane */
+  const columnCount = 3 + 3 * data.length;
+
   return (
-    <Card title="Summary">
-      <Grid container spacing={1}>
-        {data.map((item, idx) => (
-          <Grid item xs={12} md={6} lg={4} style={styles.gridItem} key={idx}>
-            <h3 style={styles.textCenter}>{item.sensor}</h3>
-            <CustomRadialBar
-              min={item.min}
-              max={item.max}
-              avg={item.avg}
-            />
-          </Grid>
-        ))}
+    <Card title="Summarize data over a period">
+      <Grid container columns={columnCount} spacing={0} className={styles.gridContainer}>
+        <Grid item xs={6} sm={4} md={3} sx={{ fontWeight: 600 }}>
+
+          {/* empty div but force height with 0-width unicode symbol */}
+          <div className={styles.header}>{"\u200b"}</div>
+
+          <div className={styles.section}>
+            <div className={styles.row}>Start</div>
+            <div className={styles.row}>End</div>
+            <div className={styles.row}>Delta</div>
+          </div>
+
+          <div className={styles.section}>
+            <div className={styles.row}>Min</div>
+            <div className={styles.row}>Max</div>
+            <div className={styles.row}>Average</div>
+          </div>
+
+          <div className={styles.section}>
+            <div className={`${styles.row}  ${styles.comparedToHeader}`}>Compared to:
+              <LightTooltip
+                title="Comparisons are made between the period's average to other periods' averages"
+                arrow placement="right-end">
+                <span className={styles.tooltipIcon}>{"\u24D8"}</span>
+              </LightTooltip>
+            </div>
+            <div className={`${styles.row}  ${styles.comparedTo}`}>
+              <span className={styles.icon}>{"\u27A4"}</span>all time
+            </div>
+            <div className={`${styles.row}  ${styles.comparedTo}`}>
+              <span className={styles.icon}>{"\u27A4"}</span>same period last year
+            </div>
+          </div>
+
+        </Grid>
+
+        <Grid item xs={6} sm={8} md={9} className={styles.gridValues}>
+          {data.map((item, index) => {
+            const delta = round(item.end - item.start, 1);
+            const inPercent = round(delta / item.start * 100, 1);
+            const sign = delta < 0 ? "" : "+";
+            const color = delta < 0 ? "red" : "green";
+            const unit = preferences[`${item.sensor.toLowerCase()}_unit`]?.symbol;
+            const capitalizedUnit = capitalize(unit);
+            return (
+              <Grid item key={index} xs={6} md={4} lg={3} className={styles.gridValue}>
+                <div className={styles.header}>{item.sensor} {capitalizedUnit && `(${capitalizedUnit})`}</div>
+
+                <div className={styles.section}>
+                  <div className={styles.row}>{item.start} </div>
+                  <div className={styles.row}>{item.end}</div>
+                  <div className={styles.row}>
+                    <span style={{ color, width: "max-content" }}>
+                      {sign}{delta} {capitalizedUnit} ({sign}{inPercent} %)
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.section}>
+                  <div className={styles.row}>{item.min}</div>
+                  <div className={styles.row}>{item.max}</div>
+                  <div className={styles.row}>{item.avg}</div>
+                </div>
+
+                <div className={styles.section}>
+                  <div className={`${styles.row} ${styles.comparedToHeader}`}>{"\u200b"}</div>
+                  <div className={styles.row}>{item.maxAvg}</div>
+                  <div className={styles.row}>{item.lastYearsAvg}</div>
+                </div>
+
+              </Grid>
+            );
+          })}
+        </Grid>
       </Grid>
+
       <div>
         <DateRangeSelector
           startDate={startDate} setStartDate={setStartDate}
           endDate={endDate} setEndDate={setEndDate}
         />
       </div>
+
     </Card>
   );
 };
 export default Summary;
+
+/**
+ * Period minimum
+ * Period average
+ * Period maximum
+ * Period change
+ * Compared to same period last year
+ * Compared to other locations
+ **/
