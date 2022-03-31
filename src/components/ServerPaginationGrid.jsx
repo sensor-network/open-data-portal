@@ -26,27 +26,25 @@ const ServerPaginationGrid = () => {
   const { measurements, rowCount, isLoading } = useMeasurements(url, fetcher);
 
   const gridColumns = useMemo(() => [
-    { field: "id", headerName: "ID", width: 70, editable: false },
-    { field: "ph", headerName: "pH", width: 90, editable: false },
+    { field: "id", headerName: "ID", width: 70},
+    { field: "ph", headerName: "pH", width: 90},
     {
       field: "temperature",
       headerName: `Temperature (${preferences.temperature_unit.symbol})`,
       width: 150,
-      editable: false,
     },
     {
       field: "conductivity",
       headerName: `Conductivity (${preferences.conductivity_unit.symbol})`,
-      width: 150,
-      editable: false,
+      width: 150
     },
     {
-      field: "date", width: 200, editable: false,
+      field: "date", width: 200,
       headerName: `Date (${Intl.DateTimeFormat().resolvedOptions().locale})`,
       valueGetter: date => new Date(date.value).toLocaleString(),
     },
-    { field: "longitude", headerName: "Longitude", width: 150, editable: false },
-    { field: "latitude", headerName: "Latitude", width: 150, editable: false },
+    { field: "longitude", headerName: "Longitude", width: 150},
+    { field: "latitude", headerName: "Latitude", width: 150},
   ], [preferences]);
 
   return (
