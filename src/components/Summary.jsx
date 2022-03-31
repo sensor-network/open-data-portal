@@ -27,8 +27,8 @@ const LightTooltip = styled(({ className, ...props }) => (
 /* FIXME: fetch from history table*/
 const data = [
   { sensor: "Temperature", start: 17.1, end: 19.6, min: 15.3, max: 22.7, avg: 21.3, maxAvg: 19.9, lastYearsAvg: 22 },
-  { sensor: "Conductivity", start: 5.2, end: 5.1, min: 4, max: 5.6, avg: 5, maxAvg: 5.4, lastYearsAvg: 22 },
-  { sensor: "PH", start: 7, end: 7, min: 6.8, max: 7.5, avg: 7.1, maxAvg: 25, lastYearsAvg: 22 },
+  { sensor: "Conductivity", start: 5.2, end: 5.1, min: 4, max: 5.6, avg: 5, maxAvg: 5.4, lastYearsAvg: 6 },
+  { sensor: "PH", start: 7, end: 7, min: 6.8, max: 7.5, avg: 7.1, maxAvg: 7.0, lastYearsAvg: 6.8 },
 ];
 
 const round = (value, decimals) => (
@@ -84,36 +84,69 @@ const Summary = ({}) => {
 
         <Grid item xs={6} sm={8} md={9} className={styles.gridValues}>
           {data.map((item, index) => {
-            const delta = round(item.end - item.start, 1);
-            const inPercent = round(delta / item.start * 100, 1);
-            const sign = delta < 0 ? "" : "+";
-            const color = delta < 0 ? "red" : "green";
             const unit = preferences[`${item.sensor.toLowerCase()}_unit`]?.symbol;
             const capitalizedUnit = capitalize(unit);
+
+            const periodDelta = round(item.end - item.start, 1);
+            const deltaOptions = {
+              inPercent: round(periodDelta / item.start * 100, 1),
+              sign: periodDelta < 0 ? "" : "+",
+              color: periodDelta < 0 ? "red" : "green",
+            };
+
+            const comparedToAllTime = round(item.maxAvg - item.avg, 1);
+            const allTimeOptions = {
+              inPercent: round(comparedToAllTime / item.avg * 100, 1),
+              sign: comparedToAllTime < 0 ? "" : "+",
+              color: comparedToAllTime < 0 ? "red" : "green",
+            };
+
+            const comparedToLastYear = round(item.lastYearsAvg - item.avg, 1);
+            const lastYearsOptions = {
+              inPercent: round(comparedToLastYear / item.avg * 100, 1),
+              sign: comparedToLastYear < 0 ? "" : "+",
+              color: comparedToLastYear < 0 ? "red" : "green",
+            };
+
             return (
               <Grid item key={index} xs={6} md={4} lg={3} className={styles.gridValue}>
                 <div className={styles.header}>{item.sensor} {capitalizedUnit && `(${capitalizedUnit})`}</div>
 
+                {/* period's delta */}
                 <div className={styles.section}>
                   <div className={styles.row}>{item.start} </div>
                   <div className={styles.row}>{item.end}</div>
                   <div className={styles.row}>
-                    <span style={{ color, width: "max-content" }}>
-                      {sign}{delta} {capitalizedUnit} ({sign}{inPercent} %)
+                    <span style={{ color: deltaOptions.color, width: "max-content" }}>
+                      {deltaOptions.sign}{periodDelta} {capitalizedUnit} ({deltaOptions.sign}{deltaOptions.inPercent} %)
                     </span>
                   </div>
                 </div>
 
+                {/* current period */}
                 <div className={styles.section}>
                   <div className={styles.row}>{item.min}</div>
                   <div className={styles.row}>{item.max}</div>
                   <div className={styles.row}>{item.avg}</div>
                 </div>
 
+                {/* compared to section */}
                 <div className={styles.section}>
                   <div className={`${styles.row} ${styles.comparedToHeader}`}>{"\u200b"}</div>
-                  <div className={styles.row}>{item.maxAvg}</div>
-                  <div className={styles.row}>{item.lastYearsAvg}</div>
+
+                  {/* compared to all-time */}
+                  <div className={styles.row}>
+                    <span style={{ color: allTimeOptions.color, minWidth: "max-content" }}>
+                      {allTimeOptions.sign}{comparedToAllTime} {capitalizedUnit} ({allTimeOptions.sign}{allTimeOptions.inPercent} %)
+                    </span>
+                  </div>
+
+                  {/* compared to last year */}
+                  <div className={styles.row}>
+                    <span style={{ color: lastYearsOptions.color, minWidth: "max-content" }}>
+                      {lastYearsOptions.sign}{comparedToLastYear} {capitalizedUnit} ({lastYearsOptions.sign}{lastYearsOptions.inPercent} %)
+                    </span>
+                  </div>
                 </div>
 
               </Grid>

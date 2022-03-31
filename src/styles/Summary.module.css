@@ -8,7 +8,7 @@
     }
 }
 
-@media (min-width: 992px ) {
+@media (min-width: 1024px ) {
     .gridContainer {
         font-size: 1rem;
     }
@@ -55,14 +55,14 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
 }
 
 .comparedTo {
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
     margin-left: .5em;
 }
 
@@ -80,5 +80,5 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    justify-content: start;
+    justify-content: flex-start;
 }
