@@ -17,7 +17,7 @@ const parseIncludeExclude = (include, exclude) => {
   return includes.filter(col => !excludes.includes(col));
 };
 
-export default async function (req, res) {
+const handler = async (req, res) => {
   if (req.method === "GET") {
     try {
       const temperatureUnit = parseTempUnit(req.query.temperature_unit || "k");
@@ -35,25 +35,28 @@ export default async function (req, res) {
       const offset = (page - 1) * page_size;  // last row of previous page
       console.timeEnd("row-count");
       let data;
+      
       if (location_name && location_name !== "all") {   // prioritize selecting by name
         console.time("db-call-by-name");
         data = await findMany("by-location-name", {
           location_name, start_date, end_date, offset, page_size,
         }, include_columns);
         console.timeEnd("db-call-by-name");
-      } else if (lat && long && rad) {   // require both lat, long and rad to select by geolocation
+        
+      }
+      else if (lat && long && rad) {   // require both lat, long and rad to select by geolocation
         console.time("db-call-by-geo");
         data = await findMany("by-geolocation", {
           lat, long, rad, start_date, end_date, offset, page_size,
         }, include_columns);
         console.timeEnd("db-call-by-geo");
-      } else {  // find all data if no location is specified
+      }
+      else {  // find all data if no location is specified
         console.time("db-call-all-locations");
         data = await findMany("all", {
           start_date, end_date, offset, page_size,
         }, include_columns);
         console.timeEnd("db-call-all-locations");
-
       }
 
       console.time("conversions");
@@ -66,7 +69,7 @@ export default async function (req, res) {
           d.ph = Math.round(d.ph * 1E2) / 1E2;
       });
       console.timeEnd("conversions");
-
+      
       res.status(STATUS.OK).json({
         pagination: {
           page,
@@ -87,12 +90,15 @@ export default async function (req, res) {
         console.log("Error parsing query params:\n", e.flatten());
         res.status(STATUS.BAD_REQUEST)
           .json(e.flatten());
-      } else {
+      }
+      else {
         console.error(e);
         res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
       }
     }
-  } else if (req.method === "POST") {
+  }
+  
+  else if (req.method === "POST") {
     const api_key = req.query.api_key;
     if (!api_key) {
       console.log("ERROR: You have to provide an api_key as query parameter.");
@@ -127,7 +133,8 @@ export default async function (req, res) {
       const instance = parseAndConvertInput(req.body);
       const id = await createOne(instance);
       res.status(STATUS.CREATED).json({ id, ...instance });
-    } catch (e) {
+    } 
+    catch (e) {
       if (e instanceof ZodError) {
         /*
          * e.issues can have path: ['sensors', '<ph_level>']. Want to remove the path
@@ -153,5 +160,6 @@ export default async function (req, res) {
           `Method ${req.method} is not allowed for this endpoint. Please read the documentation on how to query the endpoint.`,
       });
   }
-}
+};
 
+export default handler;

@@ -1,10 +1,16 @@
-import * as date_fns from "date-fns";
 import useSWR from "swr";
 import { useContext, useState } from "react";
+
+import Container from "@mui/material/Container";
+
 import { PreferenceContext } from "./_app";
+import { loadPreferences } from "src/lib/loadPreferences.ts";
+
 import CustomAreaChart from "src/components/CustomAreaChart";
 import ServerPaginationGrid from "src/components/ServerPaginationGrid";
-
+import Visualization from "src/components/Visualization";
+import CustomDataGrid from "src/components/CustomDataGrid";
+import Summary from "src/components/Summary";
 
 const fetcher = (url) => fetch(url).then(res => res.json());
 const endpointUrl = "http://localhost:3000/api/v2/data?";
@@ -14,41 +20,13 @@ function urlWithParams(url, params) {
   return url + new URLSearchParams(params);
 }
 
-/*export async function getServerSideProps(context) {
-
-  return {
-    props: {
-      
-    },
-  };
-}*/
-
-const dateRanges = [
-  { label: "today", active: false, startDate: date_fns.startOfDay(new Date()), density: 1 },
-  { label: "1 week", active: false, startDate: date_fns.sub(new Date(), { weeks: 1 }), density: 10 },
-  { label: "1 month", active: false, startDate: date_fns.sub(new Date(), { months: 1 }), density: 30 },
-  { label: "3 months", active: false, startDate: date_fns.sub(new Date(), { months: 3 }), density: 60 },
-  { label: "this year", active: false, startDate: date_fns.startOfYear(new Date()), density: 60 * 3 },
-  { label: "1 year", active: false, startDate: date_fns.sub(new Date(), { years: 1 }), density: 60 * 3 },
-  { label: "3 years", active: false, startDate: date_fns.sub(new Date(), { years: 3 }), density: 60 * 12 },
-  { label: "Max", active: false, startDate: new Date(1), density: 60 * 12 },
-];
-
 export default function App() {
   const { preferences } = useContext(PreferenceContext);
-
-  /* define how long period should show */
-  const [dateRange, setDateRange] = useState(() => {
-    const range = dateRanges[7]; // max
-    range.active = true;
-    return range;
-  });
 
   let url = urlWithParams(endpointUrl, {
     temperature_unit: preferences.temperature_unit.symbol,
     conductivity_unit: preferences.conductivity_unit.symbol,
     location_name: preferences.location.symbol,
-    start_date: dateRange.startDate.toISOString(),
     page_size: 2000,
   });
 
@@ -57,49 +35,23 @@ export default function App() {
     fallbackData: { pagination: {}, data: [] },
     refreshInterval: 1000 * 60,
   };
+  
   /* incoming response { pagination: {}, data: [] } */
-  let { data: { data }, error } = useSWR(url, swrOptions);//data for CustomAreaChart, but maybe let comp get data?
+  let { data: { data }, error } = useSWR(url, swrOptions);
   if (error) return <div>failed to load</div>;
   return (
-    <>
-
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20 }}>
-        <div style={{ width: "95%", maxWidth: 1000 }}>
-          <h2>Explore the data on your own</h2>
-          <p>Change the units using the preference modal from the navbar. </p>
-        </div>
+    <Container style={{ display: "flex", flexDirection: "column", gap: 50, marginBottom: 50 }} maxWidth={"xl"}>
+      {/* TODO: Bring out data-grid to separate component */}
+      <div style={{ width: "95%", maxWidth: 1000 }}>
+        <h2>Explore the data on your own</h2>
+        <p>Change the units using the preference modal from the navbar. </p>
         <ServerPaginationGrid /> 
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20 }}>
+      <Summary/>
 
-        <div style={{ width: "95%", maxWidth: 1000 }}>
-          <h2>See how the data has changed over time</h2>
-          <h3 style={{ marginTop: 3, marginBottom: 3 }}>Show data for:</h3>
-
-          <div style={{ display: "flex" }}>
-            {dateRanges.map((r, idx) => (
-              <div key={idx}
-                   style={{ padding: "5px 0", marginRight: 15, borderBottom: r.active ? "3px solid #1565c0" : "" }}
-                   onClick={() => {
-                     setDateRange(prevRange => {
-                       prevRange.active = false;
-                       r.active = true;
-                       return r;
-                     });
-                   }}
-              >
-                <p style={{ color: "#1565c0", padding: 0, margin: 0, cursor: "pointer" }}>{r.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <h3 style={{ marginBottom: 0 }}>Select data to show:</h3>
-        </div>
-
-        <CustomAreaChart data={data}/>
-      </div>
-    </>
+      <Visualization data={data}/>
+    </Container>
   );
 }
 
