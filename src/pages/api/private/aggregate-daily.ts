@@ -7,7 +7,7 @@ import { zDataColumns } from 'lib/types/ZodSchemas';
 import * as Locations from 'lib/database/locations';
 import * as HistoryDaily from 'lib/database/history_daily';
 
-export default async function (req: NextApiRequest, res: NextApiResponse) {
+const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== 'POST') {
     console.log(`${req.method}: /api/private/aggregate-daily:: Method not allowed`);
     res.setHeader('Allow', 'POST')
@@ -76,4 +76,6 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
         });
     }
   }
-}
+};
+
+export default handler;
