@@ -16,23 +16,14 @@ function urlWithParams(url, params) {
   return url + new URLSearchParams(params);
 }
 
-export async function getServerSideProps(context) {
-  //Since useContext(PreferenceContext) cannot be used:
-  const preferences = loadPreferences(context.req.cookies.preferences);
-
-  let url = urlWithParams(endpointUrl, {
-    temperature_unit: preferences.temperature_unit.symbol,
-    conductivity_unit: preferences.conductivity_unit.symbol,
-    location_name: preferences.location.symbol,
-  });
-  const data = await fetcher(url);
+/*export async function getServerSideProps(context) {
 
   return {
     props: {
-      initialData: data,
+      
     },
   };
-}
+}*/
 
 const dateRanges = [
   { label: "today", active: false, startDate: date_fns.startOfDay(new Date()), density: 1 },
@@ -65,22 +56,21 @@ export default function App({ initialData }) {
 
   const swrOptions = {
     fetcher: () => fetcher(url),
-    fallbackData: initialData,
+    fallbackData: { pagination: {}, data: [] },
     refreshInterval: 1000 * 60,
   };
   /* incoming response { pagination: {}, data: [] } */
-  let { data: { data }, error } = useSWR(url, swrOptions);
+  let { data: { data }, error } = useSWR(url, swrOptions);//data for CustomAreaChart, but maybe let comp get data?
   if (error) return <div>failed to load</div>;
   return (
     <>
-      <ServerPaginationGrid/>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20 }}>
         <div style={{ width: "95%", maxWidth: 1000 }}>
           <h2>Explore the data on your own</h2>
           <p>Change the units using the preference modal from the navbar. </p>
         </div>
-        <CustomDataGrid data={data} preferences={preferences}/>
+        <ServerPaginationGrid /> 
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 20 }}>
