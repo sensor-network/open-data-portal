@@ -17,7 +17,7 @@ function Welcome() {
             is presented in using the preference modal.</p>
         </div>
         <div style={{ display: "flex", justifyContent: "center" }}>
-          <Image src={"/bth.png"} width={400} height={400}/>
+          <Image alt="bth-logo" src={"/bth.png"} width={400} height={400}/>
         </div>
       </Card>
     </div>

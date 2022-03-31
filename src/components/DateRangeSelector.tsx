@@ -1,5 +1,5 @@
 import { sub, startOfDay, startOfYear, endOfDay } from "date-fns";
-import { useEffect, useMemo, useState, Dispatch, SetStateAction } from "react";
+import { useEffect, useState, Dispatch, SetStateAction } from "react";
 
 import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 import TextField from "@mui/material/TextField";
@@ -10,6 +10,22 @@ import styles from "src/styles/DateRangeSelector.module.css";
 
 const BLUE = "#185693";
 const NOW = new Date();
+/**
+ * available predefined ranges to select from, NOTE: 'Custom' starts as 'today'
+ * endDate is redundant here since it's always set to 'today', but may be useful in the future
+ **/
+const DATE_RANGES = [
+  { label: "today", startDate: startOfDay(new Date()), endDate: endOfDay(NOW) },
+  { label: "1 week", startDate: sub(new Date(), { weeks: 1 }), endDate: endOfDay(NOW) },
+  { label: "1 month", startDate: sub(new Date(), { months: 1 }), endDate: endOfDay(NOW) },
+  { label: "3 months", startDate: sub(new Date(), { months: 3 }), endDate: endOfDay(NOW) },
+  { label: "this year", startDate: startOfYear(new Date()), endDate: endOfDay(NOW) },
+  { label: "1 year", startDate: sub(new Date(), { years: 1 }), endDate: endOfDay(NOW) },
+  { label: "3 years", startDate: sub(new Date(), { years: 3 }), endDate: endOfDay(NOW) },
+  { label: "Max", startDate: new Date(1), endDate: endOfDay(NOW) },
+  { label: "Custom", startDate: startOfDay(new Date()), endDate: endOfDay(NOW) },
+];
+
 
 type DateSelectorProps = {
   label: string, minDate: Date, maxDate: Date,
@@ -44,27 +60,11 @@ type ComponentProps = {
 const DateRangeSelector = ({ startDate, setStartDate, endDate, setEndDate }: ComponentProps) => {
   const [activeRangeIndex, setActiveRangeIndex] = useState<number>(0);
 
-  /**
-   * available predefined ranges to select from, NOTE: 'Custom' starts as 'today'
-   * endDate is redundant here since it's always set to 'today', but may be useful in the future
-   **/
-  const DATE_RANGES = useMemo(() => [
-    { label: "today", startDate: startOfDay(new Date()), endDate: endOfDay(NOW) },
-    { label: "1 week", startDate: sub(new Date(), { weeks: 1 }), endDate: endOfDay(NOW) },
-    { label: "1 month", startDate: sub(new Date(), { months: 1 }), endDate: endOfDay(NOW) },
-    { label: "3 months", startDate: sub(new Date(), { months: 3 }), endDate: endOfDay(NOW) },
-    { label: "this year", startDate: startOfYear(new Date()), endDate: endOfDay(NOW) },
-    { label: "1 year", startDate: sub(new Date(), { years: 1 }), endDate: endOfDay(NOW) },
-    { label: "3 years", startDate: sub(new Date(), { years: 3 }), endDate: endOfDay(NOW) },
-    { label: "Max", startDate: new Date(1), endDate: endOfDay(NOW) },
-    { label: "Custom", startDate: startOfDay(new Date()), endDate: endOfDay(NOW) },
-  ], [activeRangeIndex]);
-
   /* update parent on mount to be in sync */
   useEffect(() => {
     setStartDate(DATE_RANGES[activeRangeIndex].startDate);
     setEndDate(DATE_RANGES[activeRangeIndex].endDate);
-  }, []);
+  }, [activeRangeIndex, setEndDate, setStartDate]);
 
   /* state for toggling the custom date-range-selector */
   const [customIsOpen, setCustomIsOpen] = useState<boolean>(false);
