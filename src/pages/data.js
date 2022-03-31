@@ -2,9 +2,7 @@ import * as date_fns from "date-fns";
 import useSWR from "swr";
 import { useContext, useState } from "react";
 import { PreferenceContext } from "./_app";
-import { loadPreferences } from "../lib/loadPreferences.ts";
 import CustomAreaChart from "src/components/CustomAreaChart";
-import CustomDataGrid from "src/components/CustomDataGrid";
 import ServerPaginationGrid from "src/components/ServerPaginationGrid";
 
 
@@ -36,7 +34,7 @@ const dateRanges = [
   { label: "Max", active: false, startDate: new Date(1), density: 60 * 12 },
 ];
 
-export default function App({ initialData }) {
+export default function App() {
   const { preferences } = useContext(PreferenceContext);
 
   /* define how long period should show */
