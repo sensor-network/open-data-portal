@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback } from "react";
+import useSWR from "swr";
 
 /**
  * Taken from the official docs at:
@@ -39,3 +40,17 @@ export function laggy(useSWRNext) {
     });
   };
 }
+
+
+/* Wrapper for SWR using 'laggy' data */
+export function useMeasurements(url, fetcher){
+  const { data, isLagging } = useSWR(url, {
+    fetcher: () => fetcher(url),
+    use: [laggy],
+  });
+  return {
+    measurements: data?.data,
+    rowCount: data?.pagination.total_rows,
+    isLoading: isLagging,
+  };
+};
