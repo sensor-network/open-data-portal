@@ -1,5 +1,6 @@
 .gridContainer {
     font-size: .7rem;
+    margin: .25em 0 .75em 0
 }
 
 @media (min-width: 768px ) {

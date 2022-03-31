@@ -1,34 +1,38 @@
 import { useContext, useState } from "react";
+import { PreferenceContext } from "src/pages/_app";
 
-import { Grid, styled } from "@mui/material";
-import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
+import { Grid } from "@mui/material";
+
 import Card from "src/components/Card";
-
 import DateRangeSelector from "src/components/DateRangeSelector";
 
-
-import { PreferenceContext } from "src/pages/_app";
 import styles from "src/styles/Summary.module.css";
-/* From https://mui.com/components/tooltips/#customization */
-const LightTooltip = styled(({ className, ...props }) => (
-  <Tooltip {...props} classes={{ popper: className }}/>
-))(({ theme }) => ({
-  [`& .${tooltipClasses.tooltip}`]: {
-    backgroundColor: theme.palette.common.white,
-    color: "#000",
-    boxShadow: `0 0 10px #8a8a8a`,
-    borderRadius: "10px",
-    maxWidth: 200,
-    fontSize: 16,
-    padding: "20px 10px",
-  },
-}));
 
-/* FIXME: fetch from history table*/
+/* FIXME: fetch from history table */
 const data = [
-  { sensor: "Temperature", start: 17.1, end: 19.6, min: 15.3, max: 22.7, avg: 21.3, maxAvg: 19.9, lastYearsAvg: 22 },
-  { sensor: "Conductivity", start: 5.2, end: 5.1, min: 4, max: 5.6, avg: 5, maxAvg: 5.4, lastYearsAvg: 6 },
-  { sensor: "PH", start: 7, end: 7, min: 6.8, max: 7.5, avg: 7.1, maxAvg: 7.0, lastYearsAvg: 6.8 },
+  {
+    sensor: "Temperature",
+    start: 17.1,
+    end: 19.6,
+    min: 15.3,
+    max: 22.7,
+    avg: 21.3,
+    maxAvg: 19.9,
+    lastYearsAvg: 22,
+    everywhereAvg: 19.9,
+  },
+  {
+    sensor: "Conductivity",
+    start: 5.2,
+    end: 5.1,
+    min: 4,
+    max: 5.6,
+    avg: 5,
+    maxAvg: 5.4,
+    lastYearsAvg: 6,
+    everywhereAvg: 6.2,
+  },
+  { sensor: "PH", start: 7, end: 7, min: 6.8, max: 7.5, avg: 7.1, maxAvg: 7.0, lastYearsAvg: 6.8, everywhereAvg: 7.0 },
 ];
 
 const round = (value, decimals) => (
@@ -65,18 +69,17 @@ const Summary = ({}) => {
           </div>
 
           <div className={styles.section}>
-            <div className={`${styles.row}  ${styles.comparedToHeader}`}>Compared to:
-              <LightTooltip
-                title="Comparisons are made between the period's average to other periods' averages"
-                arrow placement="right-end">
-                <span className={styles.tooltipIcon}>{"\u24D8"}</span>
-              </LightTooltip>
+            <div className={`${styles.row}  ${styles.comparedToHeader}`}>
+              Compared to:
             </div>
             <div className={`${styles.row}  ${styles.comparedTo}`}>
-              <span className={styles.icon}>{"\u27A4"}</span>all time
+              <span className={styles.icon}>{"\u27A4"}</span>{"all time's average"}
             </div>
             <div className={`${styles.row}  ${styles.comparedTo}`}>
               <span className={styles.icon}>{"\u27A4"}</span>same period last year
+            </div>
+            <div className={`${styles.row}  ${styles.comparedTo}`}>
+              <span className={styles.icon}>{"\u27A4"}</span>the entire archipelago
             </div>
           </div>
 
@@ -106,6 +109,13 @@ const Summary = ({}) => {
               inPercent: round(comparedToLastYear / item.avg * 100, 1),
               sign: comparedToLastYear < 0 ? "" : "+",
               color: comparedToLastYear < 0 ? "red" : "green",
+            };
+
+            const archipelagoAverage = round(item.everywhereAvg - item.avg, 1);
+            const archipelagoOptions = {
+              inPercent: round(archipelagoAverage / item.avg * 100, 1),
+              sign: archipelagoAverage < 0 ? "" : "+",
+              color: archipelagoAverage < 0 ? "red" : "green",
             };
 
             return (
@@ -147,6 +157,14 @@ const Summary = ({}) => {
                       {lastYearsOptions.sign}{comparedToLastYear} {capitalizedUnit} ({lastYearsOptions.sign}{lastYearsOptions.inPercent} %)
                     </span>
                   </div>
+
+                  {/* compared to the archipelago */}
+                  <div className={styles.row}>
+                    <span style={{ color: archipelagoOptions.color, minWidth: "max-content" }}>
+                      {archipelagoOptions.sign}{archipelagoAverage} {capitalizedUnit} ({archipelagoOptions.sign}{archipelagoOptions.inPercent} %)
+                    </span>
+                  </div>
+
                 </div>
 
               </Grid>
@@ -166,12 +184,3 @@ const Summary = ({}) => {
   );
 };
 export default Summary;
-
-/**
- * Period minimum
- * Period average
- * Period maximum
- * Period change
- * Compared to same period last year
- * Compared to other locations
- **/
