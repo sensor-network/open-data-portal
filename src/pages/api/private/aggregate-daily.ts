@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z, ZodError } from 'zod';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 import { HTTP_STATUS as STATUS } from 'src/lib/httpStatusCodes';
 import { zDataColumns } from 'lib/types/ZodSchemas';
@@ -37,7 +37,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     /* parse and validate date from query, use yesterday if not specified (request is coming in at 00:00) */
     const date = z.string()
-      .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
+      .refine(str => isValid(new Date(str)), 'Unable to parse string as Date')
       .transform(str => format(new Date(str), 'yyyy-MM-dd'))
       .parse(req.query.date);
 

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ISOStringToSQLTimestamp } from 'lib/units/convertTimestamp';
-import { endOfToday } from 'date-fns';
+import { endOfToday, isValid } from 'date-fns';
 
 /**
  * schema for parsing location information,
@@ -31,7 +31,7 @@ export const zLocation = z.object({
 export const zTime = z.object({
   /* FIXME: Sort out proper ranges later */
   start_date: z.string().default('2022Z' /* new year 2022 */)
-    .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
+    .refine(str => isValid(new Date(str)), 'Unable to parse string as Date')
     //.refine(str => new Date(str) >= new Date('2022Z'), 'must be after 2022')
     .transform(str => new Date(str).toISOString()),
   end_date: z.string().default(new Date().toISOString() /* current time */)
