@@ -22,3 +22,12 @@ export const dateFormatter = (date, startDate, endDate) => {
   /* otherwise, just include date */
   return format(parsed, "d MMM");
 };
+
+/* round given value to specified precision */
+export const round = (value, decimals) => {
+  const roundFactor = Math.pow(10, decimals);
+  return Math.round(value * roundFactor) / roundFactor;
+};
+
+/* capitalize given string using RegEx */
+export const capitalize = (string) => string?.replace(/^\w/, ch => ch.toUpperCase());

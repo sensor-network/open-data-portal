@@ -2,10 +2,10 @@ import { useContext, useState } from "react";
 import { PreferenceContext } from "src/pages/_app";
 
 import { Grid } from "@mui/material";
-
 import Card from "src/components/Card";
 import DateRangeSelector from "src/components/DateRangeSelector";
 
+import { round, capitalize } from "src/lib/utilityFunctions";
 import styles from "src/styles/Summary.module.css";
 
 /* FIXME: fetch from history table */
@@ -35,12 +35,7 @@ const data = [
   { sensor: "PH", start: 7, end: 7, min: 6.8, max: 7.5, avg: 7.1, maxAvg: 7.0, lastYearsAvg: 6.8, everywhereAvg: 7.0 },
 ];
 
-const round = (value, decimals) => (
-  Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals)
-);
-const capitalize = (string) => string?.replace(/^\w/, ch => ch.toUpperCase());
-
-const Summary = ({}) => {
+const Summary = () => {
   const { preferences } = useContext(PreferenceContext);
   const [startDate, setStartDate] = useState(new Date(1));
   const [endDate, setEndDate] = useState(new Date());
@@ -56,30 +51,42 @@ const Summary = ({}) => {
           {/* empty div but force height with 0-width unicode symbol */}
           <div className={styles.header}>{"\u200b"}</div>
 
+          {/* period's delta */}
           <div className={styles.section}>
             <div className={styles.row}>Start</div>
             <div className={styles.row}>End</div>
             <div className={styles.row}>Delta</div>
           </div>
 
+          {/* current period */}
           <div className={styles.section}>
             <div className={styles.row}>Min</div>
             <div className={styles.row}>Max</div>
             <div className={styles.row}>Average</div>
           </div>
 
+          {/* compared to section */}
           <div className={styles.section}>
             <div className={`${styles.row}  ${styles.comparedToHeader}`}>
               Compared to:
             </div>
+
+            {/* compared to all-time */}
             <div className={`${styles.row}  ${styles.comparedTo}`}>
-              <span className={styles.icon}>{"\u27A4"}</span>{"all time's average"}
+              <span className={styles.icon}>{"\u27A4"}</span>
+              {"all time's average"}
             </div>
+
+            {/* compared to last year */}
             <div className={`${styles.row}  ${styles.comparedTo}`}>
-              <span className={styles.icon}>{"\u27A4"}</span>same period last year
+              <span className={styles.icon}>{"\u27A4"}</span>
+              same period last year
             </div>
+
+            {/* compared to the archipelago */}
             <div className={`${styles.row}  ${styles.comparedTo}`}>
-              <span className={styles.icon}>{"\u27A4"}</span>the entire archipelago
+              <span className={styles.icon}>{"\u27A4"}</span>
+              the entire archipelago
             </div>
           </div>
 
@@ -120,6 +127,7 @@ const Summary = ({}) => {
 
             return (
               <Grid item key={index} xs={6} md={4} lg={3} className={styles.gridValue}>
+
                 <div className={styles.header}>{item.sensor} {capitalizedUnit && `(${capitalizedUnit})`}</div>
 
                 {/* period's delta */}
@@ -142,6 +150,8 @@ const Summary = ({}) => {
 
                 {/* compared to section */}
                 <div className={styles.section}>
+
+                  {/* empty div but force height with 0-width unicode symbol */}
                   <div className={`${styles.row} ${styles.comparedToHeader}`}>{"\u200b"}</div>
 
                   {/* compared to all-time */}
