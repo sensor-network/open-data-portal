@@ -1,6 +1,8 @@
 import { useRef, useEffect, useCallback } from "react";
 import useSWR from "swr";
 
+import { fetcher as defaultFetcher } from "src/lib/utilityFunctions";
+
 /**
  * Taken from the official docs at:
  * https://swr.vercel.app/docs/middleware#keep-previous-result
@@ -43,7 +45,7 @@ export function laggy(useSWRNext) {
 
 
 /* Wrapper for SWR using 'laggy' data */
-export function useMeasurements(url, fetcher){
+export const useMeasurements = (url, fetcher = defaultFetcher) => {
   const { data, isLagging } = useSWR(url, {
     fetcher: () => fetcher(url),
     use: [laggy],
