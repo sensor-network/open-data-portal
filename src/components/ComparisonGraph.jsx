@@ -10,7 +10,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
 
 import { PreferenceContext } from "src/pages/_app";
-import style from "src/styles/AreaChart.module.css";
+import style from "src/styles/ComparisonGraph.module.css";
 import { useWidth } from "../lib/hooks/useWidth";
 
 const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, dateFormatter }) => {
