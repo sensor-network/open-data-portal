@@ -10,6 +10,7 @@ import styles from "src/styles/Visualization.module.css";
 import { PreferenceContext } from "src/pages/_app";
 import { fetcher, urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
 import { useMeasurements } from "src/lib/hooks/swr-extensions";
+import { formatISO } from "date-fns";
 
 const ENDPOINT = "http://localhost:3000/api/v2/data?";
 
@@ -30,13 +31,18 @@ const renderSelectValue = (valueKey) => {
 };
 
 const Visualization = () => {
-  /* Get correct url for fetching the filtered data */
   const { preferences } = useContext(PreferenceContext);
+  const [startDate, setStartDate] = useState(new Date(1));
+  const [endDate, setEndDate] = useState(new Date());
+
+  /* Get correct url for fetching the filtered data */
   const url = useMemo(() => urlWithParams(ENDPOINT, {
     temperature_unit: preferences.temperature_unit.symbol,
     conductivity_unit: preferences.conductivity_unit.symbol,
     location_name: preferences.location.symbol,
-  }), [preferences]);
+    start_date: formatISO(startDate),
+    end_date: formatISO(endDate),
+  }), [preferences, startDate, endDate]);
 
   const { measurements } = useMeasurements(url, fetcher);
 
@@ -64,9 +70,6 @@ const Visualization = () => {
     const valuesWithout = compareValues.filter(v => v.key !== key);
     setCompareValues(valuesWithout);
   };
-
-  const [startDate, setStartDate] = useState(new Date(1));
-  const [endDate, setEndDate] = useState(new Date());
 
   return (
     <Card title="Visualize">
