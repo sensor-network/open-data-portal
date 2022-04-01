@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
+import { Skeleton } from "@mui/material";
 
 import { PreferenceContext } from "src/pages/_app";
 import style from "src/styles/ComparisonGraph.module.css";
@@ -91,6 +92,17 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
     );
   };
 
+  if (!data.length) {
+    return (
+      <div style={{ width: "100%", height: "100%", minHeight: 500 }}>
+        <h4 style={{ margin: "5px 0" }}>Sorry, but there is no data matching your selected filters.</h4>
+        <p style={{ margin: "5px 0" }}>Try selecting a longer time-range or change the preferred location in the
+          settings-menu at the top.</p>
+        <Skeleton animatin="wave" variant="rect" width="100%" height={400}/>
+      </div>
+    );
+  }
+
   return (
     <ResponsiveContainer width="100%" height="100%" minHeight={500}>
       <ComposedChart
@@ -131,7 +143,6 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
       </ComposedChart>
 
     </ResponsiveContainer>
-
   );
 };
 
