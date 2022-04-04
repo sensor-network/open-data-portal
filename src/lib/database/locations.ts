@@ -9,3 +9,13 @@ export const findMany = async () => {
   `);
   return <RowDataPacket[]>locations;
 };
+
+export const findByName = async (name: string) => {
+  const connection = await getConnectionPool();
+  const [result] = await connection.query(`
+      SELECT id
+      FROM locations
+      WHERE name = ?
+  `, [name]);
+  return (<RowDataPacket[]>result)[0];
+};
