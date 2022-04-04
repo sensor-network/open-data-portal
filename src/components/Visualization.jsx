@@ -8,7 +8,7 @@ import DateRangeSelector from "src/components/DateRangeSelector";
 import styles from "src/styles/Visualization.module.css";
 
 import { PreferenceContext } from "src/pages/_app";
-import { fetcher, urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
+import { urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
 import { useMeasurements } from "src/lib/hooks/swr-extensions";
 import { formatISO } from "date-fns";
 
@@ -44,12 +44,11 @@ const Visualization = () => {
     end_date: formatISO(endDate),
   }), [preferences, startDate, endDate]);
 
-  const { measurements } = useMeasurements(url, fetcher);
+  const { measurements } = useMeasurements(url);
 
   /* mainValue is graphed as an Area */
   const [mainValue, setMainValue] = useState(valueOptions[0]);
-  const selectMainValue = (event) => {
-    const key = event.target.value;
+  const selectMainValue = (key) => {
     const value = valueOptions.find(v => v.key === key);
     setMainValue(value);
     dontCompareValue(key);
@@ -63,7 +62,7 @@ const Visualization = () => {
     const value = valueOptions.find(v => v.key === key);
     const alreadyIn = compareValues.findIndex(v => v.key === key) !== -1;
     if (!alreadyIn) {
-      setCompareValues([...compareValues, value]);
+      setCompareValues(prev => [...prev, value]);
     }
   };
   const dontCompareValue = (key) => {
@@ -79,7 +78,7 @@ const Visualization = () => {
           <Select
             className={styles.select}
             value={mainValue.key}
-            onChange={selectMainValue}
+            onChange={e => selectMainValue(e.target.value)}
             renderValue={renderSelectValue}
           >
             {valueOptions.map((value) => (
