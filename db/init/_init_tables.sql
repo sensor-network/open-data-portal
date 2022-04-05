@@ -13,7 +13,7 @@ CREATE TABLE sensor
     `id`       int primary key auto_increment,
     `name`     varchar(255),
     `firmware` varchar(255),
-    `type`     varchar(255)
+    `type`     varchar(255) NOT NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
@@ -33,9 +33,9 @@ CREATE TABLE station
 CREATE TABLE sensor_data
 (
     `sensor_id` int,
-    `type`      varchar(255),
     `value`     float,
     `time`      timestamp,
+    primary key (`sensor_id`, `time`),
     foreign key (`sensor_id`) references sensor (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
