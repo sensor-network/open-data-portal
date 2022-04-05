@@ -12,23 +12,82 @@ export const createOne = async (
   return <OkPacket>result;
 };
 
+export const findMany = async () => {
+  const connection = await getConnectionPool();
+  const [result] = await connection.query(`
+      SELECT station.id,
+             station.location_name,
+             JSON_OBJECT(
+                     'id', sensor.id,
+                     'name', sensor.name,
+                     'firmware', sensor.firmware,
+                     'type', sensor.type
+                 ) as sensor
+      FROM station
+               JOIN sensor ON station.sensor_id = sensor.id
+  `);
+  const rows = <RowDataPacket[]>result;
+  const sensors = rows.map(row => row.sensor);
+  return {
+    id: rows[0].id,
+    locationName: rows[0].location_name,
+    sensors,
+  };
+};
+
 export const findById = async (
-  { id, expandSensors = true }: { id: number, expandSensors: boolean },
+  { id }: { id: number },
 ) => {
   const connection = await getConnectionPool();
-  const [result] = expandSensors ? await connection.query(`
-              SELECT DISTINCT station.id  as station_id,
-                              sensor.type as sensor_type
-              FROM station
-                       INNER JOIN sensor
-              WHERE station.id = ?
-    `, [id]) :
-    await connection.execute(`
-        SELECT *
-        FROM station
-        WHERE id = ?
-    `, [id]);
-  return (<RowDataPacket[]>result);
+
+  const [result] = await connection.query(`
+      SELECT DISTINCT station.id,
+                      station.location_name,
+                      JSON_OBJECT(
+                              'id', sensor.id,
+                              'name', sensor.name,
+                              'firmware', sensor.firmware,
+                              'type', sensor.type
+                          ) as sensor
+      FROM station
+               INNER JOIN sensor ON station.sensor_id = sensor.id
+      WHERE station.id = ?;
+  `, [id]);
+  const rows = <RowDataPacket[]>result;
+  const sensors = rows.map(row => row.sensor);
+  return {
+    id: rows[0].id,
+    locationName: rows[0].location_name,
+    sensors,
+  };
+};
+
+export const findByLocationName = async (
+  { locationName }: { locationName: string },
+) => {
+  const connection = await getConnectionPool();
+
+  const [result] = await connection.query(`
+      SELECT DISTINCT station.id,
+                      station.location_name,
+                      JSON_OBJECT(
+                              'id', sensor.id,
+                              'name', sensor.name,
+                              'firmware', sensor.firmware,
+                              'type', sensor.type
+                          ) as sensor
+      FROM station
+               INNER JOIN sensor ON station.sensor_id = sensor.id
+      WHERE station.location_name = ?;
+  `, [locationName]);
+  const rows = <RowDataPacket[]>result;
+  console.log(rows);
+  const sensors = rows.map(row => row.sensor);
+  return {
+    id: rows[0].id,
+    locationName: rows[0].location_name,
+    sensors,
+  };
 };
 
 export const findBySensorId = async (
