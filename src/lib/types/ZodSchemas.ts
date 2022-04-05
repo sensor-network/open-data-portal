@@ -78,3 +78,22 @@ export const zCreateInstance = z.object({
     conductivity_unit: z.string().optional(),
   }).strict()
 }).strict();
+
+
+/* new schema for uploading sensor data */
+export const zCreateSensorData = z.object({
+  timestamp: z.preprocess(
+    // maximize compatibility and validate the inputted date
+    inputStr => ISOStringToSQLTimestamp(inputStr), z.string()
+  ),
+  sensors: z.array(z.object({
+    sensor_id: z.number(),
+    value: z.number(),
+    unit: z.string().optional(),
+  }))
+});
+
+export const zCreateStation = z.object({
+  location_name: z.string(),
+  sensor_ids: z.array(z.number().int().positive()),
+});
