@@ -2,13 +2,13 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Sensor Network - Open Data Portal API",
-    "description": "WARNING: This version is deprecated. You only got here if you explicitly entered the version in the url. To get to the latest version, go to `/docs` and you will be redirected to the latest version.",
+    "description": "WARNING: This version is deprecated AND NOT supported anymore. You only got here if you explicitly entered the version in the url. To get to the latest version, go to `/docs` and you will be redirected to the latest version.",
     "version": "1.0"
   },
   "servers": [
     {
       "url": "http://localhost:3000/api/v1",
-      "description": "Developer Server"
+      "description": "NOT SUPPORTED"
     }
   ],
   "paths": {
@@ -134,7 +134,7 @@
         }
       }
     },
-    "/temperature":{
+    "/temperature": {
       "get": {
         "tags": [
           "Fetch by data-type"
@@ -160,7 +160,7 @@
           "200": {
             "description": "The data is successfully returned.",
             "content": {
-              "application/json":{
+              "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -186,7 +186,7 @@
               }
             }
           },
-          "405":{
+          "405": {
             "description": "Method not allowed. The endpoint only accepts GET-requests.",
             "content": {
               "application/json": {
@@ -221,7 +221,7 @@
         }
       }
     },
-    "/ph":{
+    "/ph": {
       "get": {
         "tags": [
           "Fetch by data-type"
@@ -233,7 +233,7 @@
           "200": {
             "description": "The data is successfully returned.",
             "content": {
-              "application/json":{
+              "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -243,7 +243,7 @@
               }
             }
           },
-          "405":{
+          "405": {
             "description": "Method not allowed. The endpoint only accepts GET-requests.",
             "content": {
               "application/json": {
@@ -284,7 +284,7 @@
         }
       }
     },
-    "/conductivity":{
+    "/conductivity": {
       "get": {
         "tags": [
           "Fetch by data-type"
@@ -310,7 +310,7 @@
           "200": {
             "description": "The data is successfully returned.",
             "content": {
-              "application/json":{
+              "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -336,7 +336,7 @@
               }
             }
           },
-          "405":{
+          "405": {
             "description": "Method not allowed. The endpoint only accepts GET-requests.",
             "content": {
               "application/json": {
@@ -371,7 +371,7 @@
         }
       }
     },
-    "/":{
+    "/": {
       "get": {
         "tags": [
           "Fetch generic data"
@@ -409,7 +409,7 @@
           "200": {
             "description": "The data is successfully returned.",
             "content": {
-              "application/json":{
+              "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -435,7 +435,7 @@
               }
             }
           },
-          "405":{
+          "405": {
             "description": "Method not allowed. The endpoint only accepts GET-requests.",
             "content": {
               "application/json": {
@@ -472,7 +472,9 @@
     },
     "/bylocation": {
       "get": {
-        "tags": ["Fetch generic data"],
+        "tags": [
+          "Fetch generic data"
+        ],
         "summary": "Outputs measurements for a given location",
         "description": "Queries database and selects all given measurments avaiable at user-specified location. Location is specified with the query parameters 'long', 'lat', 'rad' in the SRID 4326 system.",
         "operationId": "getLocationData",
@@ -498,7 +500,7 @@
             "explode": true,
             "schema": {
               "type": "number",
-              "example": "56.00694388528538" 
+              "example": "56.00694388528538"
             }
           },
           {
@@ -673,7 +675,7 @@
           {
             "name": "name",
             "in": "query",
-          "description": "Optional. Name of location.",
+            "description": "Optional. Name of location.",
             "required": false,
             "style": "form",
             "explode": true,
@@ -864,7 +866,6 @@
             "example": "2017-08-16T20:19:44.000Z"
           }
         },
-        
         "description": "The response from `GET: / pH`-endpoint."
       },
       "ConductivityResponse": {
