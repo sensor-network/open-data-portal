@@ -1,4 +1,4 @@
-SET character_set_results = 'utf8', character_set_client = 'utf8', character_set_connection = 'utf8', character_set_database = 'utf8', character_set_server = 'utf8';
+/*SET character_set_results = 'utf8', character_set_client = 'utf8', character_set_connection = 'utf8', character_set_database = 'utf8', character_set_server = 'utf8';
 
 INSERT INTO 
 	Locations (name,radius,position) 
@@ -25,3 +25,4 @@ VALUES
 	("2022-01-09:12:34:25", ST_GeomFromText('POINT(56.182646 15.582125)', 4326), 6.111315351351331, 285.3451345134513, 0.04123151717171),
 	("2022-01-09:12:34:25", ST_GeomFromText('POINT(56.166751 15.549488)', 4326), 7.761771171713244, 285.8145125171821, 0.06124512341321),
 	("2022-01-09:12:34:25", ST_GeomFromText('POINT(56.137023 15.602861)', 4326), 6.631461346134777, 285.3468161888123, 0.01235161615616);
+ */
