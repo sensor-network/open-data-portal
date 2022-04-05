@@ -8,6 +8,7 @@ import {
 } from "recharts";
 import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
+import { Skeleton } from "@mui/material";
 
 import { PreferenceContext } from "src/pages/_app";
 import style from "src/styles/ComparisonGraph.module.css";
@@ -54,7 +55,7 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
     return (
       <div style={{ display: "flex", gap: 15 }}>
         {
-          payload.filter(p => p.dataKey !== mainValue.key).map((entry, idx) => (
+          payload.filter(p => p.value !== mainValue.name).map((entry, idx) => (
             <div
               key={idx}
               style={{
@@ -70,7 +71,7 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
               <CircleIcon fontSize={"small"} sx={{ color: entry.color, cursor: "pointer" }}/>
               {entry.value}
               <CloseIcon fontSize={"small"} sx={{ fontWeight: "bold", cursor: "pointer" }}
-                         onClick={() => dontCompareValue(entry.dataKey)}/>
+                         onClick={() => dontCompareValue(entry.value)}/>
             </div>
           ))
         }
@@ -90,6 +91,17 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
       </g>
     );
   };
+
+  if (!data.length) {
+    return (
+      <div style={{ width: "100%", height: "100%", minHeight: 500 }}>
+        <h4 style={{ margin: "5px 0" }}>Sorry, but there is no data matching your selected filters.</h4>
+        <p style={{ margin: "5px 0" }}>Try selecting a longer time-range or change the preferred location in the
+          settings-menu at the top.</p>
+        <Skeleton animatin="wave" variant="rect" width="100%" height={400}/>
+      </div>
+    );
+  }
 
   return (
     <ResponsiveContainer width="100%" height="100%" minHeight={500}>
@@ -119,19 +131,19 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
         <Legend verticalAlign="top" height={36} content={CustomLegend}/>
         <Tooltip content={CustomTooltip}/>
         <Area
-          connectNulls type="monotone" dataKey={mainValue.key} name={mainValue.name} stroke={mainValue.color}
+          connectNulls type="monotone" dataKey={`sensors[${mainValue.key}].avg`} name={mainValue.name}
+          stroke={mainValue.color}
           fillOpacity={1} fill={`url(#area-gradient)`} key={mainValue.key} strokeWidth={2}
         />
         {valuesToCompare.map(v => (
           <Line
-            connectNulls type="monotone" dataKey={v.key} name={v.name} stroke={v.color}
+            connectNulls type="monotone" dataKey={`sensors[${v.key}].avg`} name={v.name} stroke={v.color}
             key={v.key} dot={false} strokeWidth={2}
           />
         ))}
       </ComposedChart>
 
     </ResponsiveContainer>
-
   );
 };
 
