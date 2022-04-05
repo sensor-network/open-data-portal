@@ -9,17 +9,16 @@ import styles from "src/styles/Visualization.module.css";
 
 import { PreferenceContext } from "src/pages/_app";
 import { urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
-import { useMeasurements } from "src/lib/hooks/swr-extensions";
+import { useSummarizedMeasurements } from "src/lib/hooks/swr-extensions";
 import { formatISO } from "date-fns";
 
-const ENDPOINT = "http://localhost:3000/api/v2/data?";
+const ENDPOINT = "http://localhost:3000/api/v2/data/history?";
 
 const valueOptions = [
   { key: "temperature", name: "Temperature", color: "#1565c0" },
   { key: "ph", name: "PH", color: "#A83636" },
   { key: "conductivity", name: "Conductivity", color: "#A4C42F" },
 ];
-
 const renderSelectValue = (valueKey) => {
   const value = valueOptions.find(v => v.key === valueKey);
   return (
@@ -44,14 +43,14 @@ const Visualization = () => {
     end_date: formatISO(endDate),
   }), [preferences, startDate, endDate]);
 
-  const { measurements } = useMeasurements(url);
+  const { summarizedMeasurements: measurements } = useSummarizedMeasurements(url);
 
   /* mainValue is graphed as an Area */
   const [mainValue, setMainValue] = useState(valueOptions[0]);
   const selectMainValue = (key) => {
     const value = valueOptions.find(v => v.key === key);
     setMainValue(value);
-    dontCompareValue(key);
+    dontCompareValue(value.name);
   };
 
   /* compareValues are graphed as Lines */
@@ -65,8 +64,8 @@ const Visualization = () => {
       setCompareValues(prev => [...prev, value]);
     }
   };
-  const dontCompareValue = (key) => {
-    const valuesWithout = compareValues.filter(v => v.key !== key);
+  const dontCompareValue = (name) => {
+    const valuesWithout = compareValues.filter(v => v.name !== name);
     setCompareValues(valuesWithout);
   };
 

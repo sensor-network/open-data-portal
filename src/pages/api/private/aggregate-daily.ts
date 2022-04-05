@@ -51,7 +51,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     for (const locationId of locationIds) {
       for (const sensorType of sensorTypes) {
         /* see if data for such date and sensor has already been aggregated */
-        const history = await HistoryDaily.findMany({ date, sensorType, locationId });
+        const history = await HistoryDaily.findByFilter({ date, locationId, sensorType });
         if (history.length === 0) {
           const insertId = await HistoryDaily.createOne({ date, sensorType, locationId });
           insertedIds.push(insertId);

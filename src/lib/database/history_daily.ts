@@ -2,12 +2,18 @@ import { getConnectionPool } from 'lib/database/connection';
 import { RowDataPacket, OkPacket } from 'mysql2/promise';
 
 export type Options = {
+  endDate: string,
+  startDate: string,
+  locationId: number,
+}
+
+export type Entry = {
   date: string,
   sensorType: string,
   locationId: number,
 }
 
-export const createOne = async ({ date, sensorType, locationId }: Options) => {
+export const createOne = async ({ date, sensorType, locationId }: Entry) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       INSERT INTO history_daily
@@ -25,14 +31,26 @@ export const createOne = async ({ date, sensorType, locationId }: Options) => {
   return (<OkPacket>result).insertId;
 };
 
-export const findMany = async ({ date, sensorType, locationId }: Options) => {
+export const findMany = async ({ startDate, endDate, locationId }: Options) => {
+  const connection = await getConnectionPool();
+  const [result] = await connection.query(`
+      SELECT *
+      FROM history_daily
+      WHERE date >= ?
+        AND date <= ?
+        AND location_id = ?
+  `, [startDate, endDate, locationId]);
+  return <RowDataPacket[]>result;
+};
+
+export const findByFilter = async ({ date, locationId, sensorType }: Entry) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       SELECT *
       FROM history_daily
       WHERE date = ?
+        AND location_id = ?
         AND sensor_type = ?
-        AND location_id = ?;
-  `, [date, sensorType, locationId]);
+  `, [date, locationId, sensorType]);
   return <RowDataPacket[]>result;
 };

@@ -13,7 +13,7 @@ export const findMany = async () => {
 export const findByName = async (name: string) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT id
+      SELECT id, name
       FROM locations
       WHERE name = ?
   `, [name]);
