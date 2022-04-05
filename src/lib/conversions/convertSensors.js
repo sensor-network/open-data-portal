@@ -2,6 +2,9 @@ import { parseConductivity } from "lib/units/conductivity";
 import { parseTemperature } from "lib/units/temperature";
 import {ZodError} from "zod";
 
+const DECIMAL_COUNT = 2;
+const ROUND_FACTOR = Math.pow(10, DECIMAL_COUNT);
+
 export function sensorDataAsSI(sensors) {
     // Converts all the sensor data provided. If units are not specified they will default to SI units.
     let converted = {}
@@ -22,10 +25,11 @@ export function sensorDataAsSI(sensors) {
         }
     }
 
-    // Push back items that don't need to be converted.
+    // Push back items that don't need to be converted, after rounding them to 2 decimals.
     if (!(sensors.ph_level === undefined || sensors.ph_level === null))
-        converted.ph_level = sensors.ph_level;
+        converted.ph_level = Math.round(sensors.ph_level * ROUND_FACTOR) / ROUND_FACTOR;
 
+    /* Don't allow measurements without any datapoints */
     if (!Object.keys(converted).length) {
         throw new ZodError([{
             code: 'too_small',
@@ -37,5 +41,5 @@ export function sensorDataAsSI(sensors) {
         }])
     }
 
-    return Math.round(converted,2);
+    return converted;
 }
