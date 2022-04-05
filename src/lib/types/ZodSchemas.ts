@@ -11,15 +11,18 @@ export const zLocation = z.object({
     .transform(str => Number(str))
     .refine((num) => num >= -90, 'should be greater than or equal to -90')
     .refine((num) => num <= 90, 'should be less than or equal to 90')
+    .or(z.number().gte(-90).lte(90))
   ),
   long: z.optional(z.string()
     .transform(str => Number(str))
     .refine((num) => num >= -180, 'should be greater than or equal to -180')
     .refine((num) => num <= 180, 'should be less than or equal to 180')
+    .or(z.number().gte(-180).lte(180))
   ),
   rad: z.string().optional().default('200')
     .transform(str => Number(str))
     .refine((num) => num > 0, 'should be positive')
+    .or(z.number().positive())
   ,
   location_name: z.string().optional(),
 });

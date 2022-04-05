@@ -4,21 +4,26 @@ import { RowDataPacket, OkPacket } from 'mysql2/promise';
 const SRID = 4326;
 
 export const createOne = async (
-  { name, lat, lng, rad }: { name: string; lat: number; lng: number; rad: number },
+  { name, lat, long, rad }: { name: string; lat: number; long: number; rad: number },
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       INSERT INTO location
           (name, radius, position)
       VALUES (?, ?, ST_GeomFromText('POINT(? ?)', ?))
-  `, [name, rad, lat, lng, SRID]);
+  `, [name, rad, lat, long, SRID]);
   return <OkPacket>result;
 };
 
 export const findMany = async () => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT *
+      SELECT name,
+             radius,
+             JSON_OBJECT(
+                     'lat', ST_X(position),
+                     'long', ST_Y(position)
+                 ) as position
       FROM location
   `);
   return <RowDataPacket[]>result;
@@ -27,7 +32,12 @@ export const findMany = async () => {
 export const findByName = async ({ name }: { name: string }) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT *
+      SELECT name,
+             radius,
+             JSON_OBJECT(
+                     'lat', ST_X(position),
+                     'long', ST_Y(position)
+                 ) as position
       FROM location
       WHERE name = ?
   `, [name]);
@@ -36,13 +46,18 @@ export const findByName = async ({ name }: { name: string }) => {
 
 
 export const findByGeo = async (
-  { lat, lng, rad }: { lat: number; lng: number, rad: number }
+  { lat, long, rad }: { lat: number; long: number, rad: number }
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT *
+      SELECT name,
+             radius,
+             JSON_OBJECT(
+                     'lat', ST_X(position),
+                     'long', ST_Y(position)
+                 ) as position
       FROM location
       WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
-  `, [lat, lng, SRID, rad]);
+  `, [lat, long, SRID, rad]);
   return <RowDataPacket[]>result;
 };
