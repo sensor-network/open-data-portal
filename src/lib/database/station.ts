@@ -13,15 +13,22 @@ export const createOne = async (
 };
 
 export const findById = async (
-  { id }: { id: number }
+  { id, expandSensors = true }: { id: number, expandSensors: boolean },
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
-      SELECT *
-      FROM station
-      WHERE id = ?
-  `, [id]);
-  return (<RowDataPacket[]>result)[0];
+  const [result] = expandSensors ? await connection.query(`
+              SELECT DISTINCT station.id  as station_id,
+                              sensor.type as sensor_type
+              FROM station
+                       INNER JOIN sensor
+              WHERE station.id = ?
+    `, [id]) :
+    await connection.execute(`
+        SELECT *
+        FROM station
+        WHERE id = ?
+    `, [id]);
+  return (<RowDataPacket[]>result);
 };
 
 export const findBySensorId = async (
