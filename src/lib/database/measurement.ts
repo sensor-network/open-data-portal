@@ -49,7 +49,7 @@ export const createOne = async (
   const [result] = await connection.query(`
       INSERT INTO measurement (sensor_id, value, time, type, location_id)
       VALUES (?, ?, ?, ?, ?)
-  `, [sensor_id, value, time, sensor_type, location_id],);
+  `, [sensor_id, value, time, sensor_type, location_id]);
   return <OkPacket>result;
 };
 
