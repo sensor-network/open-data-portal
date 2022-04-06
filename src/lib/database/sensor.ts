@@ -63,3 +63,13 @@ export const updateFirmware = async (
   `, [firmware, id]);
   return (<OkPacket>result).changedRows;
 };
+
+
+export const findAllTypes = async () => {
+  const connection = await getConnectionPool();
+  const [result] = await connection.execute(`
+      SELECT DISTINCT type
+      FROM sensor
+  `);
+  return (<RowDataPacket[]>result).map(row => row.type) as Array<string>;
+};
