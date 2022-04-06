@@ -65,20 +65,20 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const pagedData = data.slice(offset, offset + page_size);
 
       /* convert necessary sensors (or just round) to selected unit */
-      pagedData.forEach(({ sensors }) => {
-        if (sensors.hasOwnProperty("temperature")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-          sensors.temperature = temperature_unit.fromKelvin(sensors.temperature);
-        }
-        if (sensors.hasOwnProperty("conductivity")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-          sensors.conductivity = conductivity_unit.fromSiemensPerMeter(sensors.conductivity);
-        }
-        if (sensors.hasOwnProperty("ph")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-          sensors.ph = round(sensors.ph, 3);
-        }
-      });
+      /*pagedData.forEach(({ sensors }) => {
+       if (sensors.hasOwnProperty("temperature")) {
+       // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+       sensors.temperature = temperature_unit.fromKelvin(sensors.temperature);
+       }
+       if (sensors.hasOwnProperty("conductivity")) {
+       // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+       sensors.conductivity = conductivity_unit.fromSiemensPerMeter(sensors.conductivity);
+       }
+       if (sensors.hasOwnProperty("ph")) {
+       // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+       sensors.ph = round(sensors.ph, 3);
+       }
+       });*/
 
       /* Returning the locations with STATUS.OK response code */
       res.status(STATUS.OK).json({

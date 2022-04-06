@@ -2,13 +2,13 @@ import { getConnectionPool } from 'lib/database/connection';
 import { OkPacket, RowDataPacket } from 'mysql2/promise';
 
 export const createOne = async (
-  { sensorId, locationName }: { sensorId: number, locationName: string },
+  { sensor_id, location_id }: { sensor_id: number, location_id: string },
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      INSERT INTO station (sensor_id, location_name)
+      INSERT INTO station (sensor_id, location_id)
       VALUES (?, ?)
-  `, [sensorId, locationName]);
+  `, [sensor_id, location_id]);
   return <OkPacket>result;
 };
 
@@ -16,20 +16,23 @@ export const findMany = async () => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       SELECT station.id,
-             station.location_name,
+             station.location_id,
+             location.name AS location_name,
              JSON_OBJECT(
                      'id', sensor.id,
                      'name', sensor.name,
                      'firmware', sensor.firmware,
                      'type', sensor.type
-                 ) as sensor
+                 )         as sensor
       FROM station
                JOIN sensor ON station.sensor_id = sensor.id
+               JOIN location ON station.location_id = location.id
   `);
   const rows = <RowDataPacket[]>result;
   const sensors = rows.map(row => row.sensor);
   return {
     id: rows[0].id,
+    location_id: rows[0].location_id,
     locationName: rows[0].location_name,
     sensors,
   };
@@ -63,13 +66,13 @@ export const findById = async (
 };
 
 export const findByLocationName = async (
-  { locationName }: { locationName: string },
+  { location_id }: { location_id: number },
 ) => {
   const connection = await getConnectionPool();
 
   const [result] = await connection.query(`
       SELECT DISTINCT station.id,
-                      station.location_name,
+                      station.location_id,
                       JSON_OBJECT(
                               'id', sensor.id,
                               'name', sensor.name,
@@ -78,8 +81,8 @@ export const findByLocationName = async (
                           ) as sensor
       FROM station
                INNER JOIN sensor ON station.sensor_id = sensor.id
-      WHERE station.location_name = ?;
-  `, [locationName]);
+      WHERE station.location_id = ?;
+  `, [location_id]);
   const rows = <RowDataPacket[]>result;
   console.log(rows);
   const sensors = rows.map(row => row.sensor);

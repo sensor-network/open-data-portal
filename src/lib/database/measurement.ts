@@ -25,6 +25,7 @@ export const findByLocationName = async (
     { location_name: string, startTime: Date, endTime: Date },
 ) => {
   const connection = await getConnectionPool();
+  console.time('db-call');
   const [result] = await connection.query(`
       SELECT st.location_name,
              m.time,
@@ -55,6 +56,7 @@ export const findByLocationName = async (
     startTime, endTime
   ]);
   const rows = <RowDataPacket[]>result;
+  console.timeEnd('db-call');
 
   const formatted: Array<Measurement> = rows.map(row => {
     const sensors = JSON.parse(row.sensors);

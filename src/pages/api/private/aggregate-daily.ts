@@ -4,7 +4,7 @@ import { format, isValid } from 'date-fns';
 
 import { HTTP_STATUS as STATUS } from 'src/lib/httpStatusCodes';
 import { zDataColumns } from 'lib/types/ZodSchemas';
-import * as Locations from 'lib/database/locations';
+import * as Location from 'lib/database/location';
 import * as HistoryDaily from 'lib/database/history_daily';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -42,18 +42,26 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       .parse(req.query.date);
 
     /* get all locations from database, as well as the available sensors */
-    const locations = await Locations.findMany();
-    const locationIds = Array.from(locations, l => l.id);
-    const sensorTypes = zDataColumns.options;
+    const locations = await Location.findMany();
+    const location_names = locations.map(l => l.name);
+    const sensor_types = zDataColumns.options;
 
     /* now aggregate the data for all locations and sensor-types */
     let insertedIds: Array<number> = [];
-    for (const locationId of locationIds) {
-      for (const sensorType of sensorTypes) {
+    for (const name of location_names) {
+      for (const type of sensor_types) {
         /* see if data for such date and sensor has already been aggregated */
-        const history = await HistoryDaily.findByFilter({ date, locationId, sensorType });
+        const history = await HistoryDaily.findByFilter({ date, sensor_type: type, location_name: name });
         if (history.length === 0) {
-          const insertId = await HistoryDaily.createOne({ date, sensorType, locationId });
+          const [min, avg, max] = [0, 0, 0];
+          const insertId = await HistoryDaily.createOne({
+            date,
+            sensor_type: type,
+            location_name: name,
+            min,
+            avg,
+            max
+          });
           insertedIds.push(insertId);
         }
       }

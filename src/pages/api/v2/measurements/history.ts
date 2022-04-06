@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
-import { HTTP_STATUS as STATUS } from 'src/lib/httpStatusCodes';
-import * as HistoryDaily from 'src/lib/database/history_daily';
-import * as Measurements from 'src/lib/database/data';
-import * as Locations from 'src/lib/database/locations';
+import { HTTP_STATUS as STATUS } from 'lib/httpStatusCodes';
+import * as HistoryDaily from 'lib/database/history_daily';
+import * as Measurements from 'lib/database/data';
+import * as Location from 'lib/database/location';
 import { z, ZodError } from 'zod';
-import { zDataColumns, zTime, zLocation } from 'src/lib/types/ZodSchemas';
+import { zDataColumns, zTime, zLocation } from 'lib/types/ZodSchemas';
 
 import { add, format } from 'date-fns';
 import { RowDataPacket } from 'mysql2/promise';
@@ -18,9 +18,9 @@ import {
   round,
   defineDataDensity,
   findLast
-} from 'src/lib/utilityFunctions';
-import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
-import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
+} from 'lib/utilityFunctions';
+import { parseUnit as parseTempUnit } from "lib/units/temperature";
+import { parseUnit as parseCondUnit } from "lib/units/conductivity";
 
 const DAILY_DENSITIES = ['5min', '30min', '1h', '12h'] as const;
 const HISTORY_DENSITIES = ['1d', '1w', '2w', '1mon', '1y'] as const;
@@ -74,12 +74,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     /* parse necessary parameters */
-    const { start_date: startDate, end_date: endDate } = zTime.parse(req.query);
+    const { start_date, end_date } = zTime.parse(req.query);
     const includeMeasurements = z.enum(['true', 'false']).default('true')
       .transform(str => str === 'true')
       .parse(req.query.include_measurements);
-    let locationName = z.string().default('Karlskrona').parse(req.query.location_name);
-    const density = zDensity.parse(req.query.density) || defineDataDensity(new Date(startDate), new Date(endDate));
+    let location_name = z.string().default('Karlskrona').parse(req.query.location_name);
+    const density = zDensity.parse(req.query.density) || defineDataDensity(new Date(start_date), new Date(end_date));
     const nextDateOptions = DENSITY_OPTIONS[density];
 
     const tempUnitParam = z.string().default('k').parse(req.query.temperature_unit);
@@ -88,16 +88,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const conductivityUnit = parseCondUnit(condUnitParam);
 
     /* find specified location */
-    const location = await Locations.findByName(locationName);
+    const location = await Location.findByName({ name: location_name });
     if (!location) {
-      console.log(`/api/v2/data/history:: Location '${locationName}' not found`);
+      console.log(`/api/v2/data/history:: Location '${location_name}' not found`);
       res.status(STATUS.OK).json({});
     }
 
     const summary: Summary = {
-      location_name: locationName,
-      start_date: format(new Date(startDate), 'yyyy-MM-dd'),
-      end_date: format(new Date(endDate), 'yyyy-MM-dd'),
+      location_name,
+      start_date: format(new Date(start_date), 'yyyy-MM-dd'),
+      end_date: format(new Date(end_date), 'yyyy-MM-dd'),
       sensors: {},
     };
     let measurements: Array<SummarizedMeasurement> = [];
@@ -108,9 +108,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const response = await Measurements.findMany('by-location-name', {
         offset: 0,
         page_size: 10000,
-        location_name: locationName,
-        start_date: startDate,
-        end_date: endDate,
+        location_name,
+        start_date,
+        end_date,
       }, zDataColumns.options);
       const rows = <RowDataPacket[]>response;
       const converted = rows.map(row => {
@@ -136,9 +136,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         });
       }
 
-      let currentDate = new Date(startDate);
+      let currentDate = new Date(start_date);
       /* FIXME: This loop is quite expensive */
-      while (currentDate <= new Date(endDate)) {
+      while (currentDate <= new Date(end_date)) {
         /* add the density */
         const nextDate = add(currentDate, nextDateOptions);
         /* get all rows within the current range */
@@ -163,7 +163,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /* query history table if density is larger */
     else {
       const response = await HistoryDaily.findMany({
-        startDate, endDate, locationId: location.id,
+        start_date, end_date, location_name,
       });
 
       /* convert to correct units */
@@ -204,8 +204,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         });
       }
 
-      let currentDate = new Date(startDate);
-      while (currentDate <= new Date(endDate)) {
+      let currentDate = new Date(start_date);
+      while (currentDate <= new Date(end_date)) {
         const nextDate = add(currentDate, nextDateOptions);
         const inRange = converted.filter(row => (
           currentDate <= new Date(row.date) && new Date(row.date) < nextDate

@@ -3,15 +3,15 @@ import { add } from 'date-fns';
 
 const c = {
   /* define time range of when to insert measurements */
-  START_TIME: new Date('2022Z'),
+  START_TIME: new Date('2021-01-01Z'),
   END_TIME: new Date('2024Z'),
 
   /* select time interval between measurements (seconds) */
   DATA_DENSITY: 5 * 60,
 
-  TEMP_SENSOR_ID: 1,
-  PH_SENSOR_ID: 3,
-  CONDUCTIVITY_SENSOR_ID: 2,
+  TEMP_SENSOR_ID: 4,
+  PH_SENSOR_ID: 6,
+  CONDUCTIVITY_SENSOR_ID: 5,
 
   /* define ranges for measurements (in SI-units) */
   MIN_TEMP: 283,
@@ -77,17 +77,23 @@ export const loadData = async () => {
     s.cond = adjustCond(s.cond);
     s.ph = adjustPH(s.ph);
 
-    await connection.query(`
-        INSERT INTO measurement (sensor_id, value, time)
-        VALUES (?, ?, ?),
-               (?, ?, ?),
-               (?, ?, ?);
-    `, [
-      c.TEMP_SENSOR_ID, s.temp, time,
-      c.PH_SENSOR_ID, s.ph, time,
-      c.CONDUCTIVITY_SENSOR_ID, s.cond, time,
-    ]);
-    console.log(time);
+    try {
+      await connection.query(`
+          INSERT INTO measurement (sensor_id, value, time)
+          VALUES (?, ?, ?),
+                 (?, ?, ?),
+                 (?, ?, ?);
+      `, [
+        c.TEMP_SENSOR_ID, s.temp, time,
+        c.PH_SENSOR_ID, s.ph, time,
+        c.CONDUCTIVITY_SENSOR_ID, s.cond, time,
+      ]);
+      console.log(time);
+
+    }
+    catch (e) {
+      console.log(`Duplicate entry for ${time}. Skipping.`);
+    }
   }
   return;
 };
