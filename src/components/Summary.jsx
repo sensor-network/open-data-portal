@@ -10,7 +10,7 @@ import { useSummarizedData } from "src/lib/hooks/swr-extensions";
 import { round, capitalize, urlWithParams } from "src/lib/utilityFunctions";
 import styles from "src/styles/Summary.module.css";
 
-const ENDPOINT = "http://localhost:3000/api/v2/data/history?";
+const ENDPOINT = "http://localhost:3000/api/v2/measurements/history?";
 
 const Summary = () => {
   const { preferences } = useContext(PreferenceContext);
