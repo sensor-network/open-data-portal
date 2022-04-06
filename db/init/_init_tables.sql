@@ -1,8 +1,8 @@
 CREATE TABLE location
 (
-    `name`     varchar(255) NOT NULL primary key,
-    `position` POINT        NOT NULL SRID 4326,
-    `radius`   int,
+    `name`          varchar(255) NOT NULL primary key,
+    `position`      POINT        NOT NULL SRID 4326,
+    `radius_meters` int,
     SPATIAL INDEX (`position`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
@@ -30,7 +30,7 @@ CREATE TABLE station
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
 
-CREATE TABLE sensor_data
+CREATE TABLE measurement
 (
     `sensor_id` int,
     `value`     float,

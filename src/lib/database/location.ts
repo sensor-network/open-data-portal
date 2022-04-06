@@ -9,7 +9,7 @@ export const createOne = async (
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       INSERT INTO location
-          (name, radius, position)
+          (name, radius_meters, position)
       VALUES (?, ?, ST_GeomFromText('POINT(? ?)', ?))
   `, [name, rad, lat, long, SRID]);
   return <OkPacket>result;
@@ -19,7 +19,7 @@ export const findMany = async () => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       SELECT name,
-             radius,
+             radius_meters,
              JSON_OBJECT(
                      'lat', ST_X(position),
                      'long', ST_Y(position)
@@ -33,7 +33,7 @@ export const findByName = async ({ name }: { name: string }) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       SELECT name,
-             radius,
+             radius_meters,
              JSON_OBJECT(
                      'lat', ST_X(position),
                      'long', ST_Y(position)
@@ -51,7 +51,7 @@ export const findByGeo = async (
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       SELECT name,
-             radius,
+             radius_meters,
              JSON_OBJECT(
                      'lat', ST_X(position),
                      'long', ST_Y(position)
