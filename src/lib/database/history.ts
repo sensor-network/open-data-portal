@@ -11,7 +11,7 @@ export const createOne = async (
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       INSERT INTO history
-          (date, sensor_type, location_id, daily_min, daily_avg, daily_max)
+          (date, type, location_id, daily_min, daily_avg, daily_max)
       VALUES (?, ?, ?,
               (SELECT MIN(value) FROM measurement WHERE date(time) = ? AND type = ? AND location_id = ?),
               (SELECT AVG(value) FROM measurement WHERE date(time) = ? AND type = ? AND location_id = ?),
@@ -51,7 +51,7 @@ export const findByFilter = async (
       FROM history
       WHERE date = ?
         AND location_id = ?
-        AND sensor_type = ?
+        AND type = ?
   `, [date, location_id, sensor_type]);
   return <RowDataPacket[]>result;
 };

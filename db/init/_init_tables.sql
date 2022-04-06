@@ -57,7 +57,7 @@ CREATE TABLE history
 (
     id          INT          NOT NULL AUTO_INCREMENT,
     date        DATE         NOT NULL,
-    sensor_type VARCHAR(255) NOT NULL,
+    type        VARCHAR(255) NOT NULL,
     location_id int          NOT NULL,
     daily_min   FLOAT,
     daily_avg   FLOAT,

@@ -9,6 +9,18 @@ export type Measurement = {
   }>
 }
 
+export const findQuick = async (
+  { start_time, end_time }: { start_time: Date | string, end_time: Date | string },
+) => {
+  const connection = await getConnectionPool();
+  const [result] = await connection.query(`
+      SELECT *
+      FROM measurement
+      WHERE time BETWEEN ? AND ?
+  `, [start_time, end_time]);
+  return <RowDataPacket[]>result;
+};
+
 export const createOne = async (
   {
     sensor_id,
@@ -54,7 +66,7 @@ export const findMany = async (
 
 export const findByLocationId = async (
   { location_id, startTime, endTime }:
-    { location_id: number, startTime: Date, endTime: Date },
+    { location_id: number, startTime: Date | string, endTime: Date | string },
 ) => {
   const connection = await getConnectionPool();
   console.time('db-call-by-id');
