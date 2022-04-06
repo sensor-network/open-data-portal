@@ -3,6 +3,15 @@ import { RowDataPacket, OkPacket } from 'mysql2/promise';
 
 const SRID = 4326;
 
+export type Location = {
+  name: string,
+  position: {
+    lat: number,
+    lng: number
+  },
+  radius: number,
+}
+
 export const createOne = async (
   { name, lat, long, rad }: { name: string; lat: number; long: number; rad: number },
 ) => {
@@ -26,7 +35,13 @@ export const findMany = async () => {
                  ) as position
       FROM location
   `);
-  return <RowDataPacket[]>result;
+  const rows = <RowDataPacket[]>result;
+
+  return rows.map(row => ({
+    name: row.name,
+    radius: row.radius_meters,
+    position: row.position,
+  })) as Array<Location>;
 };
 
 export const findByName = async ({ name }: { name: string }) => {
@@ -41,7 +56,13 @@ export const findByName = async ({ name }: { name: string }) => {
       FROM location
       WHERE name = ?
   `, [name]);
-  return (<RowDataPacket[]>result)[0];
+  const rows = <RowDataPacket[]>result;
+  console.assert(rows.length <= 1, 'Found multiple locations with the same name');
+  return rows.length ? {
+    name: rows[0].name,
+    radius: rows[0].radius_meters,
+    position: rows[0].position,
+  } as Location : {};
 };
 
 
@@ -59,5 +80,11 @@ export const findByGeo = async (
       FROM location
       WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
   `, [lat, long, SRID, rad]);
-  return <RowDataPacket[]>result;
+  const rows = <RowDataPacket[]>result;
+
+  return rows.map(row => ({
+    name: row.name,
+    radius: row.radius_meters,
+    position: row.position,
+  })) as Array<Location>;
 };
