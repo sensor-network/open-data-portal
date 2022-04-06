@@ -4,20 +4,24 @@ import * as Station from "src/lib/database/station";
 import * as Sensor from "src/lib/database/sensor";
 import * as Location from "src/lib/database/location";
 import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 import { zCreateStation } from 'src/lib/types/ZodSchemas';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") {
     try {
       /* parse parameters */
+      const { id: stationId, location_name: locationName } = z.object({
+        id: z.optional(z.string()  // input is a string which has to be transformed
+          .transform(str => Number(str))
+          .refine((num) => num > 0, 'id has to be positive'),
+        ),
+        location_name: z.optional(z.string()),
+      }).parse(req.query);
 
-      const stations = await Station.findById({
-        id: 2,
-        expandSensors: true,
-      });
-
-      console.log(stations);
+      const stations = locationName ? await Station.findByLocationName({ locationName }) :
+        stationId ? await Station.findById({ id: stationId }) :
+          await Station.findMany();
 
       /* Returning the locations with STATUS.OK response code */
       res.status(STATUS.OK).json(stations);
