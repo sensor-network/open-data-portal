@@ -1,118 +1,152 @@
 import { getConnectionPool } from 'lib/database/connection';
 import { OkPacket, RowDataPacket } from 'mysql2/promise';
+import type { Sensor } from 'src/lib/database/sensor';
+
+export type Station = {
+  id: number,
+  location_id: number,
+}
+export type ExtendedStation = Station & {
+  location_name: string,
+  sensors: Sensor[],
+}
 
 export const createOne = async (
-  { sensor_id, location_id }: { sensor_id: number, location_id: string },
+  { sensor_id, location_id }: { sensor_id: number, location_id: number },
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       INSERT INTO station (sensor_id, location_id)
       VALUES (?, ?)
   `, [sensor_id, location_id]);
-  return <OkPacket>result;
+  return (<OkPacket>result).insertId;
 };
 
 export const findMany = async () => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT station.id,
-             station.location_id,
-             location.name AS location_name,
-             JSON_OBJECT(
-                     'id', sensor.id,
-                     'name', sensor.name,
-                     'firmware', sensor.firmware,
-                     'type', sensor.type
-                 )         as sensor
-      FROM station
-               JOIN sensor ON station.sensor_id = sensor.id
-               JOIN location ON station.location_id = location.id
+      SELECT min(st.id) AS id,
+             min(l.id)  AS location_id,
+             l.name     AS location_name,
+             CONCAT('[',
+                    GROUP_CONCAT('{',
+                                 CONCAT(
+                                         '"id":', sn.id,
+                                         ', "name":', JSON_QUOTE(sn.name),
+                                         ', "firmware":', JSON_QUOTE(sn.firmware),
+                                         ', "type":', JSON_QUOTE(sn.type)
+                                     ),
+                                 '}')
+                 , ']')
+                        AS sensors
+      FROM station st
+               JOIN sensor sn ON st.sensor_id = sn.id
+               JOIN location l ON st.location_id = l.id
+      GROUP BY l.name
   `);
-  const rows = <RowDataPacket[]>result;
-  const sensors = rows.map(row => row.sensor);
-  return {
-    id: rows[0].id,
-    location_id: rows[0].location_id,
-    locationName: rows[0].location_name,
-    sensors,
-  };
+  return (<RowDataPacket[]>result).map(row => ({
+    ...row, sensors: JSON.parse(row.sensors)
+  })) as Array<ExtendedStation>;
 };
 
-export const findById = async (
-  { id }: { id: number },
+export const findByStationId = async (
+  { station_id }: { station_id: number },
 ) => {
   const connection = await getConnectionPool();
 
   const [result] = await connection.query(`
-      SELECT DISTINCT station.id,
-                      station.location_name,
-                      JSON_OBJECT(
-                              'id', sensor.id,
-                              'name', sensor.name,
-                              'firmware', sensor.firmware,
-                              'type', sensor.type
-                          ) as sensor
-      FROM station
-               INNER JOIN sensor ON station.sensor_id = sensor.id
-      WHERE station.id = ?;
-  `, [id]);
-  const rows = <RowDataPacket[]>result;
-  const sensors = rows.map(row => row.sensor);
-  return {
-    id: rows[0].id,
-    locationName: rows[0].location_name,
-    sensors,
-  };
+      SELECT min(st.id) AS id,
+             min(l.id)  AS location_id,
+             l.name     AS location_name,
+             CONCAT('[',
+                    GROUP_CONCAT('{',
+                                 CONCAT(
+                                         '"id":', sn.id,
+                                         ', "name":', JSON_QUOTE(sn.name),
+                                         ', "firmware":', JSON_QUOTE(sn.firmware),
+                                         ', "type":', JSON_QUOTE(sn.type)
+                                     ),
+                                 '}')
+                 , ']')
+                        AS sensors
+      FROM station st
+               JOIN sensor sn ON st.sensor_id = sn.id
+               JOIN location l ON st.location_id = l.id
+      WHERE st.id = ?
+  `, [station_id]);
+  console.log(result);
+  return (<RowDataPacket[]>result).map(row => ({
+    ...row, sensors: JSON.parse(row.sensors)
+  })) as Array<ExtendedStation>;
 };
 
 export const findByLocationName = async (
-  { location_id }: { location_id: number },
+  { location_name }: { location_name: string },
 ) => {
   const connection = await getConnectionPool();
 
   const [result] = await connection.query(`
-      SELECT DISTINCT station.id,
-                      station.location_id,
-                      JSON_OBJECT(
-                              'id', sensor.id,
-                              'name', sensor.name,
-                              'firmware', sensor.firmware,
-                              'type', sensor.type
-                          ) as sensor
-      FROM station
-               INNER JOIN sensor ON station.sensor_id = sensor.id
-      WHERE station.location_id = ?;
-  `, [location_id]);
-  const rows = <RowDataPacket[]>result;
-  console.log(rows);
-  const sensors = rows.map(row => row.sensor);
-  return {
-    id: rows[0].id,
-    locationName: rows[0].location_name,
-    sensors,
-  };
+      SELECT min(st.id) AS id,
+             min(l.id)  AS location_id,
+             l.name     AS location_name,
+             CONCAT('[',
+                    GROUP_CONCAT('{',
+                                 CONCAT(
+                                         '"id":', sn.id,
+                                         ', "name":', JSON_QUOTE(sn.name),
+                                         ', "firmware":', JSON_QUOTE(sn.firmware),
+                                         ', "type":', JSON_QUOTE(sn.type)
+                                     ),
+                                 '}')
+                 , ']')
+                        AS sensors
+      FROM station st
+               JOIN sensor sn ON st.sensor_id = sn.id
+               JOIN location l ON st.location_id = l.id
+      WHERE l.name = ?
+  `, [location_name]);
+  return (<RowDataPacket[]>result).map(row => ({
+    ...row, sensors: JSON.parse(row.sensors)
+  })) as Array<ExtendedStation>;
 };
 
 export const findBySensorId = async (
-  { sensorId }: { sensorId: number }
+  { sensor_id }: { sensor_id: number }
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.execute(`
-      SELECT *
-      FROM station
-      WHERE sensor_id = ?
-  `, [sensorId]);
-  return <RowDataPacket[]>result;
+      SELECT min(st.id)  AS id,
+             min(l.id)   AS location_id,
+             min(l.name) AS location_name,
+             CONCAT('[',
+                    GROUP_CONCAT('{',
+                                 CONCAT(
+                                         '"id":', sn.id,
+                                         ', "name":', JSON_QUOTE(sn.name),
+                                         ', "firmware":', JSON_QUOTE(sn.firmware),
+                                         ', "type":', JSON_QUOTE(sn.type)
+                                     ),
+                                 '}')
+                 , ']')
+                         AS sensors
+      FROM station st
+               JOIN sensor sn ON st.sensor_id = sn.id
+               JOIN location l ON st.location_id = l.id
+      WHERE sn.id = ?
+  `, [sensor_id]);
+  return (<RowDataPacket[]>result).map(row => ({
+    ...row, sensors: JSON.parse(row.sensors)
+  })) as Array<ExtendedStation>;
 };
 
 export const updateLocation = async (
-  { id, locationName }: { id: number, locationName: string },
+  { id, location_id }: { id: number, location_id: number },
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       UPDATE station
-      SET location_name = ?
+      SET location_id = ?
       WHERE id = ?
-  `, [locationName, id]);
+  `, [location_id, id]);
   return <OkPacket>result;
 };

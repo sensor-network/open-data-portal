@@ -94,6 +94,6 @@ export const zCreateSensorData = z.object({
 });
 
 export const zCreateStation = z.object({
-  location_name: z.string(),
+  location_id: z.string().transform(str => Number(str)),
   sensor_ids: z.array(z.number().int().positive()),
 });

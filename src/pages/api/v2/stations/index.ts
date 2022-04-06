@@ -11,17 +11,31 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") {
     try {
       /* parse parameters */
-      const { id: stationId, location_name: locationName } = z.object({
-        id: z.optional(z.string()  // input is a string which has to be transformed
+      const { station_id, sensor_id, location_name } = z.object({
+        station_id: z.optional(z.string()  // input is a string which has to be transformed
+          .transform(str => Number(str))
+          .refine((num) => num > 0, 'id has to be positive'),
+        ),
+        sensor_id: z.optional(z.string()  // input is a string which has to be transformed
           .transform(str => Number(str))
           .refine((num) => num > 0, 'id has to be positive'),
         ),
         location_name: z.optional(z.string()),
       }).parse(req.query);
 
-      const stations = locationName ? await Station.findByLocationName({ locationName }) :
-        stationId ? await Station.findById({ id: stationId }) :
-          await Station.findMany();
+      let stations: Array<Station.Station> | Station.Station;
+      if (location_name) {
+        stations = await Station.findByLocationName({ location_name });
+      }
+      else if (station_id) {
+        stations = await Station.findByStationId({ station_id });
+      }
+      else if (sensor_id) {
+        stations = await Station.findBySensorId({ sensor_id });
+      }
+      else {
+        stations = await Station.findMany();
+      }
 
       /* Returning the locations with STATUS.OK response code */
       res.status(STATUS.OK).json(stations);
@@ -43,29 +57,29 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   else if (req.method === "POST") {
     try {
       /* parse request body */
-      const { sensor_ids: sensorIds, location_name: locationName } = zCreateStation.parse(req.body);
+      const { sensor_ids, location_id } = zCreateStation.parse(req.body);
 
       /* */
-      for (const sensorId of sensorIds) {
-        const sensor = await Sensor.findById({ id: sensorId });
+      for (const sensor_id of sensor_ids) {
+        const sensor = await Sensor.findById({ id: sensor_id });
         if (!sensor) {
           res.status(STATUS.BAD_REQUEST)
-            .json({ error: `Sensor with id ${sensorId} not found` });
+            .json({ error: `Sensor with id ${sensor_id} not found` });
           return;
         }
 
-        const location = await Location.findByName({ name: locationName });
+        const location = await Location.findById({ id: location_id });
         if (!location) {
           res.status(STATUS.BAD_REQUEST)
-            .json({ error: `Location with name ${locationName} not found` });
+            .json({ error: `Location with id ${location_id} not found` });
           return;
         }
 
-        await Station.createOne({ sensorId, locationName });
+        await Station.createOne({ sensor_id, location_id });
       }
 
       /* Returning the location with STATUS.CREATED response code */
-      res.status(STATUS.CREATED).json({ sensorIds, locationName });
+      res.status(STATUS.CREATED).json({ sensor_ids, location_id });
     }
 
     catch (e) {
@@ -79,6 +93,17 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
       }
     }
+  }
+  else if (req.method === 'PATCH') {
+    console.assert(false, "Not implemented");
+    res.status(200).json("Not implemented");
+  }
+  else {
+    console.log(`${req.method}: /api/v2/stations:: Method not allowed`);
+    res.setHeader('Allow', 'POST, GET, PATCH')
+      .status(STATUS.NOT_ALLOWED)
+      .json({ error: `Method '${req.method}' not allowed.` });
+    return;
   }
 };
 
