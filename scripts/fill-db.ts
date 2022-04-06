@@ -9,9 +9,10 @@ const c = {
   /* select time interval between measurements (seconds) */
   DATA_DENSITY: 5 * 60,
 
-  TEMP_SENSOR_ID: 4,
-  PH_SENSOR_ID: 6,
-  CONDUCTIVITY_SENSOR_ID: 5,
+  TEMP_SENSOR_ID: 1,
+  PH_SENSOR_ID: 2,
+  CONDUCTIVITY_SENSOR_ID: 3,
+  LOCATION_ID: 1,
 
   /* define ranges for measurements (in SI-units) */
   MIN_TEMP: 283,
@@ -79,14 +80,14 @@ export const loadData = async () => {
 
     try {
       await connection.query(`
-          INSERT INTO measurement (sensor_id, value, time)
-          VALUES (?, ?, ?),
-                 (?, ?, ?),
-                 (?, ?, ?);
+          INSERT INTO measurement (sensor_id, location_id, value, time, type)
+          VALUES (?, ?, ?, ?, ?),
+                 (?, ?, ?, ?, ?),
+                 (?, ?, ?, ?, ?);
       `, [
-        c.TEMP_SENSOR_ID, s.temp, time,
-        c.PH_SENSOR_ID, s.ph, time,
-        c.CONDUCTIVITY_SENSOR_ID, s.cond, time,
+        c.TEMP_SENSOR_ID, c.LOCATION_ID, s.temp, time, 'temperature',
+        c.PH_SENSOR_ID, c.LOCATION_ID, s.ph, time, 'ph',
+        c.CONDUCTIVITY_SENSOR_ID, c.LOCATION_ID, s.cond, time, 'conductivity',
       ]);
       console.log(time);
 
