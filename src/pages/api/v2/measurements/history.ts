@@ -1,17 +1,17 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 
 import { HTTP_STATUS as STATUS } from 'lib/httpStatusCodes';
-import * as HistoryDaily from 'lib/database/history_daily';
-import * as Measurements from 'lib/database/data';
+import * as History from 'lib/database/history';
+import * as Measurement from 'lib/database/measurement';
 import * as Location from 'lib/database/location';
+import * as Sensor from 'lib/database/sensor';
 import { z, ZodError } from 'zod';
-import { zDataColumns, zTime, zLocation } from 'lib/types/ZodSchemas';
+import { zTime } from 'lib/types/ZodSchemas';
+import type { CombinedFormat } from 'lib/database/history';
 
 import { add, format } from 'date-fns';
-import { RowDataPacket } from 'mysql2/promise';
 
 import {
-  summarizeValues,
   getAverage,
   getMin,
   getMax,
@@ -37,21 +37,11 @@ const DENSITY_OPTIONS = {
   '1y': { years: 1 },
 };
 
-interface SensorSummary {
-  min: number,
-  avg: number,
-  max: number,
-}
-
-interface ExtendedSensors extends SensorSummary {
-  start: number,
-  end: number,
-}
 
 type SummarizedMeasurement = {
   date: string,
   sensors: {
-    [key: string]: SensorSummary,
+    [key: string]: { min: number, avg: number, max: number },
   },
 };
 type Summary = {
@@ -59,7 +49,13 @@ type Summary = {
   start_date: string,
   end_date: string,
   sensors: {
-    [key: string]: ExtendedSensors,
+    [key: string]: {
+      min: number,
+      avg: number,
+      max: number,
+      start: number,
+      end: number,
+    },
   },
 }
 
@@ -75,23 +71,31 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     /* parse necessary parameters */
     const { start_date, end_date } = zTime.parse(req.query);
-    const includeMeasurements = z.enum(['true', 'false']).default('true')
+    /* whether we should include all measurements or just summarize */
+    const include_measurements = z.enum(['true', 'false']).default('true')
       .transform(str => str === 'true')
       .parse(req.query.include_measurements);
     let location_name = z.string().default('Karlskrona').parse(req.query.location_name);
+    /* how much time between each measurement */
     const density = zDensity.parse(req.query.density) || defineDataDensity(new Date(start_date), new Date(end_date));
-    const nextDateOptions = DENSITY_OPTIONS[density];
+    const next_date_options = DENSITY_OPTIONS[density];
 
-    const tempUnitParam = z.string().default('k').parse(req.query.temperature_unit);
-    const temperatureUnit = parseTempUnit(tempUnitParam);
-    const condUnitParam = z.string().default('spm').parse(req.query.conductivity_unit);
-    const conductivityUnit = parseCondUnit(condUnitParam);
+    const temperature_unit = parseTempUnit(
+      z.string().default("k")
+        .parse(req.query.temperature_unit)
+    );
+    const conductivity_unit = parseCondUnit(
+      z.string()
+        .default("spm")
+        .parse(req.query.conductivity_unit)
+    );
 
     /* find specified location */
     const location = await Location.findByName({ name: location_name });
     if (!location) {
       console.log(`/api/v2/data/history:: Location '${location_name}' not found`);
       res.status(STATUS.OK).json({});
+      return;
     }
 
     const summary: Summary = {
@@ -102,149 +106,104 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     };
     let measurements: Array<SummarizedMeasurement> = [];
 
+
     /* decide what table to query */
+    /* FIXME: manually setting id to null if name = Karlskrona is a bit hacky way to select all */
+    let rows: Array<CombinedFormat>;
     if (DAILY_DENSITIES.find(d => d === density)) {
-      /* get all measurements for specified location */
-      const response = await Measurements.findMany('by-location-name', {
-        offset: 0,
-        page_size: 10000,
-        location_name,
+      rows = await Measurement.findInCombinedFormat({
+        location_id: location_name === 'Karlskrona' ? null : location.id,
+        start_time: start_date,
+        end_time: end_date,
+      });
+    }
+    else {
+      rows = await History.findInCombinedFormat({
+        location_id: location_name === 'Karlskrona' ? null : location.id,
         start_date,
         end_date,
-      }, zDataColumns.options);
-      const rows = <RowDataPacket[]>response;
-      const converted = rows.map(row => {
+      });
+    }
+
+    /* convert to correct units */
+    const converted = rows.map(row => {
+      if (row.type === 'temperature') {
         Object.assign(row, {
-          temperature: temperatureUnit.fromKelvin(row.temperature),
-          conductivity: conductivityUnit.fromSiemensPerMeter(row.conductivity),
-          ph: round(row.ph, 1),
+          min: round(temperature_unit.fromKelvin(row.min), 1),
+          avg: round(temperature_unit.fromKelvin(row.avg), 1),
+          max: round(temperature_unit.fromKelvin(row.max), 1),
         });
-        return row;
+      }
+      else if (row.type === 'conductivity') {
+        Object.assign(row, {
+          min: round(conductivity_unit.fromSiemensPerMeter(row.min), 1),
+          avg: round(conductivity_unit.fromSiemensPerMeter(row.avg), 1),
+          max: round(conductivity_unit.fromSiemensPerMeter(row.max), 1),
+        });
+      }
+      else {
+        Object.assign(row, {
+          min: round(row.min, 1),
+          avg: round(row.avg, 1),
+          max: round(row.max, 1),
+        });
+      }
+      return row;
+    });
+
+    /* set start & end here for each sensor, rest of the properties are set later... */
+    const sensor_types = await Sensor.findAllTypes();
+    if (converted.length) {
+      sensor_types.forEach(type => {
+        Object.assign(summary.sensors, {
+          [type]: {
+            start: converted.find(row => row.type === type)?.avg,
+            end: findLast(converted, (row: CombinedFormat) => row.type === type)?.avg,
+          },
+        });
       });
-
-      console.log(rows);
-
-      /* set start & end here for each sensor, rest of the properties are set later... */
-      if (converted.length) {
-        zDataColumns.options.forEach(column => {
-          Object.assign(summary.sensors, {
-            [column]: {
-              start: converted[0][column],
-              end: converted[rows.length - 1][column],
-            },
-          });
-        });
-      }
-
-      let currentDate = new Date(start_date);
-      /* FIXME: This loop is quite expensive */
-      while (currentDate <= new Date(end_date)) {
-        /* add the density */
-        const nextDate = add(currentDate, nextDateOptions);
-        /* get all rows within the current range */
-        const inRange = converted.filter(row => (
-          currentDate <= new Date(row.date) && new Date(row.date) < nextDate
-        ));
-        /* summarize the rows */
-        const measurement: SummarizedMeasurement = {
-          date: format(currentDate, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
-          sensors: {},
-        };
-        zDataColumns.options.forEach(column => {
-          const values = inRange.map(row => row[column]);
-          measurement.sensors[column] = summarizeValues(values);
-        });
-
-        measurements.push(measurement);
-        currentDate = nextDate;
-      }
     }
 
-    /* query history table if density is larger */
-    else {
-      const response = await HistoryDaily.findMany({
-        start_date, end_date, location_name,
-      });
+    let current_time = new Date(start_date);
+    while (current_time <= new Date(end_date)) {
+      const next_time = add(current_time, next_date_options);
+      const in_range = converted.filter(row => (
+        current_time <= row.time && row.time < next_time
+      ));
 
-      /* convert to correct units */
-      const converted = response.map(row => {
-        if (row.sensor_type === 'temperature') {
-          Object.assign(row, {
-            daily_min: round(temperatureUnit.fromKelvin(row.daily_min), 1),
-            daily_avg: round(temperatureUnit.fromKelvin(row.daily_avg), 1),
-            daily_max: round(temperatureUnit.fromKelvin(row.daily_max), 1),
-          });
-        }
-        else if (row.sensor_type === 'conductivity') {
-          Object.assign(row, {
-            daily_min: round(conductivityUnit.fromSiemensPerMeter(row.daily_min), 1),
-            daily_avg: round(conductivityUnit.fromSiemensPerMeter(row.daily_avg), 1),
-            daily_max: round(conductivityUnit.fromSiemensPerMeter(row.daily_max), 1),
-          });
-        }
-        else if (row.sensor_type === 'ph') {
-          Object.assign(row, {
-            daily_min: round(row.daily_min, 1),
-            daily_avg: round(row.daily_avg, 1),
-            daily_max: round(row.daily_max, 1),
-          });
-        }
-        return row;
-      });
-
-      /* set start & end here for each sensor, rest of the properties are set later... */
-      if (converted.length) {
-        zDataColumns.options.forEach(column => {
-          Object.assign(summary.sensors, {
-            [column]: {
-              start: converted.find(row => row.sensor_type === column)?.daily_avg,
-              end: findLast(converted, (row: any) => row.sensor_type === column)?.daily_avg,
-            },
-          });
-        });
+      if (!in_range.length) {
+        current_time = next_time;
+        continue;
       }
 
-      let currentDate = new Date(start_date);
-      while (currentDate <= new Date(end_date)) {
-        const nextDate = add(currentDate, nextDateOptions);
-        const inRange = converted.filter(row => (
-          currentDate <= new Date(row.date) && new Date(row.date) < nextDate
-        ));
+      const measurement: SummarizedMeasurement = {
+        date: format(current_time, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+        sensors: {},
+      };
 
-        if (!inRange.length) {
-          currentDate = nextDate;
-          continue;
-        }
-
-        const measurement: SummarizedMeasurement = {
-          date: format(currentDate, "yyyy-MM-dd"),
-          sensors: {},
-        };
-
-        zDataColumns.options.forEach(column => {
-          const values = inRange.filter(row => row.sensor_type === column)
-            .map(row => ({ min: row.daily_min, avg: row.daily_avg, max: row.daily_max, }));
-          Object.assign(measurement.sensors, {
-            [column]: {
-              min: round(getMin(values.map(v => v.min)), 1),
-              avg: round(getAverage(values.map(v => v.avg)), 1),
-              max: round(getMax(values.map(v => v.max)), 1),
-            }
-          });
+      sensor_types.forEach(type => {
+        const values = in_range.filter(row => row.type === type)
+          .map(row => ({ min: row.min, avg: row.avg, max: row.max, }));
+        Object.assign(measurement.sensors, {
+          [type]: {
+            min: round(getMin(values.map(v => v.min)), 1),
+            avg: round(getAverage(values.map(v => v.avg)), 1),
+            max: round(getMax(values.map(v => v.max)), 1),
+          }
         });
+      });
 
-        measurements.push(measurement);
-        currentDate = nextDate;
-      }
+      measurements.push(measurement);
+      current_time = next_time;
     }
 
-    zDataColumns.options.forEach(column => {
+    sensor_types.forEach(type => {
       /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
-      if (summary.sensors[column]) {
-        Object.assign(summary.sensors[column], {
-          min: round(getMin(measurements.map(m => m.sensors[column].min)), 1),
-          avg: round(getAverage(measurements.map(m => m.sensors[column].avg)), 1),
-          max: round(getMax(measurements.map(m => m.sensors[column].max)), 1),
+      if (summary.sensors.hasOwnProperty(type)) {
+        Object.assign(summary.sensors[type], {
+          min: round(getMin(measurements.map(m => m.sensors[type].min)), 1),
+          avg: round(getAverage(measurements.map(m => m.sensors[type].avg)), 1),
+          max: round(getMax(measurements.map(m => m.sensors[type].max)), 1),
         });
       }
     });
@@ -252,7 +211,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     //console.log("GET: /api/v2/data/history :: returning from handler with");
     //console.log(summary);
     res.status(STATUS.OK)
-      .json(includeMeasurements ? { summary, measurements } : { summary });
+      .json(include_measurements ? { summary, measurements } : { summary });
   }
   catch (e) {
     if (e instanceof ZodError) {
