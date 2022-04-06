@@ -10,62 +10,75 @@ export type Measurement = {
 }
 
 export const createOne = async (
-  { sensorId, value, time }: { sensorId: number, value: number, time: Date | string },
+  {
+    sensor_id,
+    value,
+    time,
+    sensor_type,
+    location_id
+  }: { sensor_id: number, value: number, time: Date | string, sensor_type: string, location_id: number },
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      INSERT INTO measurement (sensor_id, value, time)
-      VALUES (?, ?, ?)
-  `, [sensorId, value, time],);
+      INSERT INTO measurement (sensor_id, value, time, type, location_id)
+      VALUES (?, ?, ?, ?, ?)
+  `, [sensor_id, value, time, sensor_type, location_id],);
   return <OkPacket>result;
 };
 
-export const findByLocationName = async (
-  { location_name, startTime, endTime }:
-    { location_name: string, startTime: Date, endTime: Date },
+export const findMany = async (
+  { start_date, end_date }: { start_date: Date | string, end_date: Date | string },
 ) => {
   const connection = await getConnectionPool();
-  console.time('db-call');
+  console.time('db-call-all');
   const [result] = await connection.query(`
-      SELECT st.location_name,
+      select l.name     as location_name,
+             l.position as position,
              m.time,
              CONCAT('{',
-                    (
-                        SELECT GROUP_CONCAT(
-                                       CONCAT(JSON_QUOTE(s2.type), ':', m2.value)
-                                       SEPARATOR ','
-                                   )
-                        FROM measurement m2
-                                 INNER JOIN sensor s2
-                                            ON s2.id = m2.sensor_id
-                        WHERE m2.time = m.time
-                        GROUP BY m2.time
-                    ),
-                    '}') AS sensors
-      FROM station st
-               INNER JOIN sensor s
-                          ON st.sensor_id = s.id
-               INNER JOIN measurement m
-                          ON s.id = m.sensor_id
-      WHERE st.location_name = ?
+                    GROUP_CONCAT(CONCAT(JSON_QUOTE(m.type), ':', m.value) separator ',')
+                 , '}') as sensors
+      from measurement m
+               INNER JOIN location l
+                          ON l.id = m.location_id
+                              AND m.time BETWEEN ? AND ?
+      group by m.time, l.position, l.name
+      order by m.time
+  `, [start_date, end_date]);
+  console.timeEnd('db-call-all');
+  return (<RowDataPacket[]>result).map(row => ({
+    ...row,
+    sensors: JSON.parse(row.sensors),
+  })) as Array<Measurement>;
+};
+
+export const findByLocationId = async (
+  { location_id, startTime, endTime }:
+    { location_id: number, startTime: Date, endTime: Date },
+) => {
+  const connection = await getConnectionPool();
+  console.time('db-call-by-id');
+  const [result] = await connection.query(`
+      select l.name     as location_name,
+             l.position as position,
+             m.time,
+             CONCAT('{',
+                    GROUP_CONCAT(CONCAT(JSON_QUOTE(m.type), ':', m.value) separator ',')
+                 , '}') as sensors
+      from measurement m
+               INNER JOIN location l
+                          ON l.id = m.location_id
+      where m.location_id = ?
         AND m.time BETWEEN ? AND ?
-      GROUP BY m.time
-      ORDER BY m.time
+      group by m.time
+      order by m.time;
   `, [
-    location_name,
+    location_id,
     startTime, endTime
   ]);
-  const rows = <RowDataPacket[]>result;
-  console.timeEnd('db-call');
-
-  const formatted: Array<Measurement> = rows.map(row => {
-    const sensors = JSON.parse(row.sensors);
-    return {
-      location_name: row.location_name,
-      time: row.time,
-      sensors,
-    };
-  });
-
-  return formatted;
+  console.timeEnd('db-call-by-id');
+  return (<RowDataPacket[]>result).map(row => ({
+    ...row,
+    sensors: JSON.parse(row.sensors),
+  })) as Array<Measurement>;
 };

@@ -8,6 +8,7 @@ export type Station = {
 }
 export type ExtendedStation = Station & {
   location_name: string,
+  location_id: number,
   sensors: Sensor[],
 }
 
