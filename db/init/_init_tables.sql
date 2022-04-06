@@ -10,6 +10,7 @@ CREATE TABLE location
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
 
+/* sensor table not needed? */
 CREATE TABLE sensor
 (
     `id`       int primary key auto_increment,
@@ -36,12 +37,14 @@ CREATE TABLE station
 
 CREATE TABLE measurement
 (
-    `sensor_id`   int       NOT NULL,
-    `location_id` int       NOT NULL,
-    `value`       float     NOT NULL,
-    `time`        timestamp NOT NULL,
+    `sensor_id`   int          NOT NULL,
+    `location_id` int          NOT NULL,
+    `value`       float        NOT NULL,
+    `time`        timestamp    NOT NULL,
+    `type`        varchar(255) NOT NULL,
     primary key (`sensor_id`, `time`),
     foreign key (`sensor_id`) references sensor (`id`),
+    foreign key (`type`) references sensor (`type`),
     foreign key (`location_id`) references location (`id`),
     INDEX (`sensor_id`),
     INDEX (`location_id`)
