@@ -3,50 +3,100 @@ import { z, ZodError } from "zod";
 
 import * as Measurement from "src/lib/database/measurement";
 import * as Sensor from "src/lib/database/sensor";
+import * as Location from "src/lib/database/location";
 import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
 import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
 import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
 
-import { zCreateSensorData, zTime } from 'src/lib/types/ZodSchemas';
+import { zCreateSensorData, zTime, zPage, zLocation } from 'src/lib/types/ZodSchemas';
+import { round } from 'src/lib/utilityFunctions';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") {
     try {
       /* parse parameters */
-      const temperatureUnit = parseTempUnit(
+      const temperature_unit = parseTempUnit(
         z.string().default("k")
           .parse(req.query.temperature_unit)
       );
-      const conductivityUnit = parseCondUnit(
+      const conductivity_unit = parseCondUnit(
         z.string()
           .default("spm")
           .parse(req.query.conductivity_unit)
       );
+      const { long, lat, rad, location_name } = zLocation.parse(req.query);
+      const { start_date, end_date } = zTime.parse(req.query);
+      let { page, page_size } = zPage.parse(req.query);
+      const offset = (page - 1) * page_size;  // last row of previous page
 
-      const data = await Measurement.findByLocationName({
-        locationName: 'Hästö',
-        startTime: new Date('2022-01-05'), endTime: new Date('2022-01-07')
-      });
+      /* query the db based on parameters */
+      let data: Array<Measurement.Measurement> = [];
+      if (location_name) {
+        data = await Measurement.findByLocationName({
+          location_name,
+          startTime: new Date(start_date), endTime: new Date(end_date)
+        });
+      }
+      else {
+        /* first find matching locations */
+        let locations: Array<Location.Location> = [];
+        if (lat && long && rad) {
+          locations = await Location.findByGeo({ long, lat, rad });
+        }
+        else {
+          locations = await Location.findMany();
+        }
+        /* then get data for all locations fitting the parameters */
+        for (const { name } of locations) {
+          const measurements = await Measurement.findByLocationName({
+            location_name: name,
+            startTime: new Date(start_date), endTime: new Date(end_date)
+          });
+          data = data.concat(measurements);
+        }
+      }
 
-      const jsonParsed = data.map(d => {
-        const s = JSON.parse(d.sensors);
-        if (s.hasOwnProperty("temperature")) {
-          s.temperature = temperatureUnit.fromKelvin(s.temperature);
+      /* apply pagination options */
+      const row_count = data.length;
+      const last_page = Math.ceil(row_count / page_size) || 1; /* if rows=0, still want last_page=1 */
+      if (page > last_page) {
+        page = last_page;
+      }
+      const pagedData = data.slice(offset, offset + page_size);
+
+      /* convert necessary sensors (or just round) to selected unit */
+      pagedData.forEach(({ sensors }) => {
+        if (sensors.hasOwnProperty("temperature")) {
+          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+          sensors.temperature = temperature_unit.fromKelvin(sensors.temperature);
         }
-        if (s.hasOwnProperty("conductivity")) {
-          s.conductivity = conductivityUnit.fromSiemensPerMeter(s.conductivity);
+        if (sensors.hasOwnProperty("conductivity")) {
+          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+          sensors.conductivity = conductivity_unit.fromSiemensPerMeter(sensors.conductivity);
         }
-        if (s.hasOwnProperty("ph")) {
-          s.ph = Math.round(s.ph * 1E2) / 1E2;
+        if (sensors.hasOwnProperty("ph")) {
+          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+          sensors.ph = round(sensors.ph, 3);
         }
-        return {
-          ...d,
-          sensors: s
-        };
       });
 
       /* Returning the locations with STATUS.OK response code */
-      res.status(STATUS.OK).json(jsonParsed);
+      res.status(STATUS.OK).json({
+        pagination: {
+          page,
+          page_size: page_size,
+          last_page: last_page,
+          total_rows: row_count,
+          has_previous_page: page > 1,
+          has_next_page: page < last_page
+        },
+        units: {
+          time: "UTC",
+          temperature_unit: temperature_unit.symbol,
+          conductivity_unit: conductivity_unit.symbols[0]
+        },
+        data: pagedData
+      });
     }
 
     catch (e) {
