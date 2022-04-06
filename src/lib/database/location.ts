@@ -4,12 +4,13 @@ import { RowDataPacket, OkPacket } from 'mysql2/promise';
 const SRID = 4326;
 
 export type Location = {
+  id: number,
   name: string,
   position: {
     lat: number,
-    lng: number
+    long: number
   },
-  radius: number,
+  radius_meters: number,
 }
 
 export const createOne = async (
@@ -21,13 +22,14 @@ export const createOne = async (
           (name, radius_meters, position)
       VALUES (?, ?, ST_GeomFromText('POINT(? ?)', ?))
   `, [name, rad, lat, long, SRID]);
-  return <OkPacket>result;
+  return (<OkPacket>result).insertId;
 };
 
 export const findMany = async () => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT name,
+      SELECT id,
+             name,
              radius_meters,
              JSON_OBJECT(
                      'lat', ST_X(position),
@@ -35,19 +37,15 @@ export const findMany = async () => {
                  ) as position
       FROM location
   `);
-  const rows = <RowDataPacket[]>result;
 
-  return rows.map(row => ({
-    name: row.name,
-    radius: row.radius_meters,
-    position: row.position,
-  })) as Array<Location>;
+  return <RowDataPacket[]>result as Array<Location>;
 };
 
 export const findByName = async ({ name }: { name: string }) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT name,
+      SELECT id,
+             name,
              radius_meters,
              JSON_OBJECT(
                      'lat', ST_X(position),
@@ -58,11 +56,7 @@ export const findByName = async ({ name }: { name: string }) => {
   `, [name]);
   const rows = <RowDataPacket[]>result;
   console.assert(rows.length <= 1, 'Found multiple locations with the same name');
-  return rows.length ? {
-    name: rows[0].name,
-    radius: rows[0].radius_meters,
-    position: rows[0].position,
-  } as Location : {};
+  return rows[0] as Location;
 };
 
 
@@ -71,7 +65,8 @@ export const findByGeo = async (
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      SELECT name,
+      SELECT id,
+             name,
              radius_meters,
              JSON_OBJECT(
                      'lat', ST_X(position),
@@ -80,11 +75,6 @@ export const findByGeo = async (
       FROM location
       WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
   `, [lat, long, SRID, rad]);
-  const rows = <RowDataPacket[]>result;
 
-  return rows.map(row => ({
-    name: row.name,
-    radius: row.radius_meters,
-    position: row.position,
-  })) as Array<Location>;
+  return <RowDataPacket[]>result as Array<Location>;
 };
