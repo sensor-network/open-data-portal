@@ -54,15 +54,15 @@ CREATE TABLE measurement
 
 CREATE TABLE history
 (
-    id            INT          NOT NULL AUTO_INCREMENT,
-    date          DATE         NOT NULL,
-    sensor_type   VARCHAR(255) NOT NULL,
-    location_name VARCHAR(255) NOT NULL,
-    daily_min     FLOAT,
-    daily_avg     FLOAT,
-    daily_max     FLOAT,
+    id          INT          NOT NULL AUTO_INCREMENT,
+    date        DATE         NOT NULL,
+    sensor_type VARCHAR(255) NOT NULL,
+    location_id int          NOT NULL,
+    daily_min   FLOAT,
+    daily_avg   FLOAT,
+    daily_max   FLOAT,
     PRIMARY KEY (id),
-    FOREIGN KEY (location_name) REFERENCES location (`name`)
+    FOREIGN KEY (location_id) REFERENCES location (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
