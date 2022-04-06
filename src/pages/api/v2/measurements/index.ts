@@ -3,6 +3,7 @@ import { z, ZodError } from "zod";
 
 import * as Measurement from "src/lib/database/measurement";
 import * as Sensor from "src/lib/database/sensor";
+import * as Station from "src/lib/database/station";
 import * as Location from "src/lib/database/location";
 import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
 import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
@@ -32,29 +33,28 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       /* query the db based on parameters */
       let data: Array<Measurement.Measurement> = [];
       if (location_name) {
-        data = await Measurement.findByLocationName({
-          location_name,
-          startTime: new Date(start_date), endTime: new Date(end_date)
-        });
+        const location = await Location.findByName({ name: location_name });
+        if (location) {
+          data = await Measurement.findByLocationId({
+            location_id: location.id,
+            startTime: new Date(start_date), endTime: new Date(end_date)
+          });
+        }
       }
-      else {
-        /* first find matching locations */
-        let locations: Array<Location.Location> = [];
-        if (lat && long && rad) {
-          locations = await Location.findByGeo({ long, lat, rad });
-        }
-        else {
-          locations = await Location.findMany();
-        }
-        /* then get data for all locations fitting the parameters */
-        for (const { name } of locations) {
-          const measurements = await Measurement.findByLocationName({
-            location_name: name,
+      else if (long && lat && rad) {
+        const locations = await Location.findByGeo({ long, lat, rad });
+        for (const { id } of locations) {
+          const measurements = await Measurement.findByLocationId({
+            location_id: id,
             startTime: new Date(start_date), endTime: new Date(end_date)
           });
           data = data.concat(measurements);
         }
       }
+      else {
+        data = await Measurement.findMany({ start_date, end_date });
+      }
+
 
       /* apply pagination options */
       const row_count = data.length;
@@ -65,20 +65,20 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const pagedData = data.slice(offset, offset + page_size);
 
       /* convert necessary sensors (or just round) to selected unit */
-      /*pagedData.forEach(({ sensors }) => {
-       if (sensors.hasOwnProperty("temperature")) {
-       // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-       sensors.temperature = temperature_unit.fromKelvin(sensors.temperature);
-       }
-       if (sensors.hasOwnProperty("conductivity")) {
-       // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-       sensors.conductivity = conductivity_unit.fromSiemensPerMeter(sensors.conductivity);
-       }
-       if (sensors.hasOwnProperty("ph")) {
-       // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-       sensors.ph = round(sensors.ph, 3);
-       }
-       });*/
+      pagedData.forEach(({ sensors }) => {
+        if (sensors.hasOwnProperty("temperature")) {
+          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+          sensors.temperature = temperature_unit.fromKelvin(sensors.temperature);
+        }
+        if (sensors.hasOwnProperty("conductivity")) {
+          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+          sensors.conductivity = conductivity_unit.fromSiemensPerMeter(sensors.conductivity);
+        }
+        if (sensors.hasOwnProperty("ph")) {
+          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+          sensors.ph = round(sensors.ph, 3);
+        }
+      });
 
       /* Returning the locations with STATUS.OK response code */
       res.status(STATUS.OK).json({
@@ -121,6 +121,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       for (const { sensor_id, value, unit } of sensors) {
         /* find associated sensor by the id to get its type */
         const sensor = await Sensor.findById({ id: sensor_id });
+        if (!sensor) {
+          console.log(`Sensor with id ${sensor_id} not found`);
+          res.status(STATUS.BAD_REQUEST)
+            .json({ error: `Sensor with id ${sensor_id} not found` });
+        }
+        /* then find the location where the sensor is placed through its station */
+        const [station] = await Station.findBySensorId({ sensor_id: sensor_id });
 
         /* convert the value to SI-unit if there is one */
         let convertedValue = value;
@@ -133,9 +140,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
         /* insert sensor data into db */
         await Measurement.createOne({
-          sensorId: sensor_id,
+          sensor_id: sensor_id,
           value: convertedValue,
-          time: timestamp
+          time: timestamp,
+          sensor_type: sensor.type,
+          location_id: station.location_id,
         });
 
         /* push to response array */
@@ -157,6 +166,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
       }
     }
+  }
+  else {
+    console.log(`${req.method}: /api/private/aggregate-daily:: Method not allowed`);
+    res.setHeader('Allow', 'POST, GET')
+      .status(STATUS.NOT_ALLOWED)
+      .json({ error: `Method '${req.method}' not allowed.` });
+    return;
   }
 };
 
