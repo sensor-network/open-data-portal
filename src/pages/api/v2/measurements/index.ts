@@ -1,21 +1,52 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { z, ZodError } from "zod";
 
-import * as SensorData from "src/lib/database/sensor_data";
+import * as Measurement from "src/lib/database/measurement";
 import * as Sensor from "src/lib/database/sensor";
 import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
-import { ZodError } from "zod";
 import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
 import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
 
-import { zCreateSensorData } from 'src/lib/types/ZodSchemas';
+import { zCreateSensorData, zTime } from 'src/lib/types/ZodSchemas';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") {
     try {
       /* parse parameters */
+      const temperatureUnit = parseTempUnit(
+        z.string().default("k")
+          .parse(req.query.temperature_unit)
+      );
+      const conductivityUnit = parseCondUnit(
+        z.string()
+          .default("spm")
+          .parse(req.query.conductivity_unit)
+      );
+
+      const data = await Measurement.findByLocationName({
+        locationName: 'Hästö',
+        startTime: new Date('2022-01-05'), endTime: new Date('2022-01-07')
+      });
+
+      const jsonParsed = data.map(d => {
+        const s = JSON.parse(d.sensors);
+        if (s.hasOwnProperty("temperature")) {
+          s.temperature = temperatureUnit.fromKelvin(s.temperature);
+        }
+        if (s.hasOwnProperty("conductivity")) {
+          s.conductivity = conductivityUnit.fromSiemensPerMeter(s.conductivity);
+        }
+        if (s.hasOwnProperty("ph")) {
+          s.ph = Math.round(s.ph * 1E2) / 1E2;
+        }
+        return {
+          ...d,
+          sensors: s
+        };
+      });
 
       /* Returning the locations with STATUS.OK response code */
-      res.status(STATUS.OK).json({ status: "not implemented" });
+      res.status(STATUS.OK).json(jsonParsed);
     }
 
     catch (e) {
@@ -51,7 +82,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         }
 
         /* insert sensor data into db */
-        await SensorData.createOne({
+        await Measurement.createOne({
           sensorId: sensor_id,
           value: convertedValue,
           time: timestamp
@@ -64,7 +95,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       /* Returning the location with STATUS.CREATED response code */
       res.status(STATUS.CREATED).json(insertedData);
     }
-    
+
     catch (e) {
       if (e instanceof ZodError) {
         console.log("Error parsing request body:\n", e.flatten());
