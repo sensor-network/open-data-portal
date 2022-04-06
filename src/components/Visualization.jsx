@@ -12,7 +12,7 @@ import { urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
 import { useSummarizedMeasurements } from "src/lib/hooks/swr-extensions";
 import { formatISO } from "date-fns";
 
-const ENDPOINT = "http://localhost:3000/api/v2/data/history?";
+const ENDPOINT = "http://localhost:3000/api/v2/measurements/history?";
 
 const valueOptions = [
   { key: "temperature", name: "Temperature", color: "#1565c0" },
