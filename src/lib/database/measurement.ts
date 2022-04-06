@@ -1,5 +1,7 @@
 import { OkPacket, RowDataPacket } from 'mysql2/promise';
 import { getConnectionPool } from 'src/lib//database/connection';
+import type { CombinedFormat } from 'src/lib/database/history';
+import mysql from 'mysql2/promise';
 
 export type Measurement = {
   location_name: string,
@@ -9,16 +11,29 @@ export type Measurement = {
   }>
 }
 
-export const findQuick = async (
-  { start_time, end_time }: { start_time: Date | string, end_time: Date | string },
+/* query for getting data formatted the same way for history and measurement table */
+export const findInCombinedFormat = async (
+  {
+    start_time,
+    end_time,
+    location_id
+  }: { start_time: Date | string, end_time: Date | string, location_id: number | null },
 ) => {
+  /* if location_id specified select with it, else select all */
+  const query = location_id ? mysql.format(`
+              SELECT type, value as avg, time, value as min, value as max
+              FROM measurement
+              WHERE location_id = ?
+                AND time BETWEEN ? AND ?
+    `, [location_id, start_time, end_time]) :
+    mysql.format(`
+        SELECT type, value as avg, time, value as min, value as max
+        FROM measurement
+        WHERE time BETWEEN ? AND ?
+    `, [start_time, end_time]);
   const connection = await getConnectionPool();
-  const [result] = await connection.query(`
-      SELECT *
-      FROM measurement
-      WHERE time BETWEEN ? AND ?
-  `, [start_time, end_time]);
-  return <RowDataPacket[]>result;
+  const [result] = await connection.query(query);
+  return <RowDataPacket[]>result as Array<CombinedFormat>;
 };
 
 export const createOne = async (
