@@ -1,21 +1,22 @@
 import { getConnectionPool } from "./connection";
 import { RowDataPacket, OkPacket } from 'mysql2/promise';
 
+export type Sensor = {
+  id: number,
+  name: string,
+  firmware: string,
+  type: string
+}
+
 export const createOne = async (
   { name, firmware, type }: { name?: string, firmware?: string, type: string },
 ) => {
-  if (!name) {
-    name = "";
-  }
-  if (!firmware) {
-    firmware = "";
-  }
   const connection = await getConnectionPool();
   const [result] = await connection.execute(`
       INSERT INTO sensor (name, firmware, type)
       VALUES (?, ?, ?)
   `, [name, firmware, type]);
-  return <OkPacket>result;
+  return (<OkPacket>result).insertId;
 };
 
 export const findById = async (
@@ -23,11 +24,11 @@ export const findById = async (
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.execute(`
-      SELECT *
+      SELECT id, name, firmware, type
       FROM sensor
       WHERE id = ?
   `, [id]);
-  return (<RowDataPacket>result)[0];
+  return (<RowDataPacket>result)[0] as Sensor;
 };
 
 export const findByType = async (
@@ -35,20 +36,20 @@ export const findByType = async (
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.execute(`
-      SELECT *
+      SELECT id, name, firmware, type
       FROM sensor
       WHERE type = ?
   `, [type]);
-  return <RowDataPacket[]>result;
+  return <RowDataPacket[]>result as Array<Sensor>;
 };
 
 export const findAll = async () => {
   const connection = await getConnectionPool();
   const [result] = await connection.execute(`
-      SELECT *
+      SELECT id, name, firmware, type
       FROM sensor
   `);
-  return <RowDataPacket[]>result;
+  return <RowDataPacket[]>result as Array<Sensor>;
 };
 
 export const updateFirmware = async (
@@ -60,5 +61,5 @@ export const updateFirmware = async (
       SET firmware = ?
       WHERE id = ?
   `, [firmware, id]);
-  return <OkPacket>result;
+  return (<OkPacket>result).changedRows;
 };
