@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "Sensor Network - Open Data Portal API",
-    "description": "The API for fetching data about the Karlskrona Archipelago's water quality",
+    "description": "The API for fetching data about the Karlskrona Archipelago's water quality. Documentation is a work in progress. To learn more about how to use the API and what order to query it in, see [github docs](https://github.com/sensor-network/open-data-portal/tree/main/docs)",
     "version": "2.0"
   },
   "servers": [
@@ -12,12 +12,12 @@
     }
   ],
   "paths": {
-    "/data":{
+    "/measurements": {
       "get": {
         "tags": [
-          "Data"
+          "Measurements"
         ],
-        "summary": "Gets a list of all data",
+        "summary": "Gets a collection of measurements",
         "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `data`-property is an array of datapoints. Data can be filtered in multiple ways, e.g. by location. A location can be selected either by its name or its geoinformation (lat, long, rad). If no location filter is provided, data is selected from all over the archipelago.",
         "operationId": "getData",
         "parameters": [
@@ -113,26 +113,6 @@
             }
           },
           {
-            "name": "include",
-            "in": "query",
-            "required": false,
-            "description": "Select what columns you would like to include in the response. If not selected, all columns will be included. Separate column names with `,`. Can be used in conjunction with `exclude`.",
-            "schema": {
-              "type": "string",
-              "example": "temperature,conductivity"
-            }
-          },
-          {
-            "name": "exclude",
-            "in": "query",
-            "required": false,
-            "description": "Select what columns you would like to exclude in the response. If not selected, no columns will be excluded. Separate column names with `,`. Can be used in conjunction with `include`.",
-            "schema": {
-              "type": "string",
-              "example": "temperature"
-            }
-          },
-          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -161,7 +141,7 @@
           "200": {
             "description": "The data is successfully returned. The data is provided in the selected units, and the time in UTC time.",
             "content": {
-              "application/json":{
+              "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
@@ -174,7 +154,7 @@
                     "data": {
                       "type": "array",
                       "items": {
-                        "$ref": "#/components/schemas/DataContent"
+                        "$ref": "#/components/schemas/Measurement"
                       }
                     }
                   }
@@ -189,16 +169,27 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "One of the provided units is not supported. Read the documentation for valid parameters."
+                    "formErrors": {
+                      "type": "array"
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "temperature_unit": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Unexpected unit g. Expected k, c, f."
+                          }
+                        }
+                      }
                     }
                   }
                 }
               }
             }
           },
-          "405":{
+          "405": {
             "description": "Method not allowed.",
             "content": {
               "application/json": {
@@ -234,9 +225,9 @@
       },
       "post": {
         "tags": [
-          "Data"
+          "Measurements"
         ],
-        "summary": "Uploads a new set of measurements to the database",
+        "summary": "Uploads a new measurement to the database",
         "description": "Uploads a new set of measurements to the database",
         "operationId": "uploadMeasurements",
         "parameters": [
@@ -258,20 +249,75 @@
           "content": {
             "application/json": {
               "schema": {
-                  "$ref": "#/components/schemas/UploadRequest"
+                "type": "object",
+                "properties": {
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2022-01-01T00:00:00+02"
+                  },
+                  "location_id": {
+                    "type": "number",
+                    "format": "integer",
+                    "example": 1
+                  },
+                  "sensors": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "sensor_id",
+                        "value"
+                      ],
+                      "properties": {
+                        "sensor_id": {
+                          "type": "number",
+                          "format": "integer",
+                          "example": 1
+                        },
+                        "value": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 29.6
+                        },
+                        "unit": {
+                          "type": "string",
+                          "example": "c"
+                        }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "The data uploaded to the database. The data will be converted from the units provided to their respective SI unit (timestamp in UTC+0). The result of the conversions are shown in the response.",
+            "description": "The Measurement was successfully uploaded to the database",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/UploadResponse"
+                    "type": "object",
+                    "properties": {
+                      "sensor_id": {
+                        "type": "number",
+                        "format": "integer",
+                        "example": 1
+                      },
+                      "value": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 29.6
+                      },
+                      "time": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2021-12-31T22:00:00.000Z"
+                      }
+                    }
                   }
                 }
               }
@@ -359,20 +405,32 @@
         }
       }
     },
-
+    "/measurements/history": {
+      "get": {
+        "tags": [
+          "Measurements"
+        ],
+        "summary": "Get summary of history data",
+        "description": "Retrieves a summary of the data for a selected time period. The data is selected more sparse than if querying `/measurements`. For example, the default density for querying a years worth of data is 1 measurement per week.",
+        "operationId": "getMeasurementsHistory",
+        "parameters": [],
+        "responses": {
+        }
+      }
+    },
     "/locations": {
       "get": {
         "tags": [
           "Locations"
         ],
-        "summary": "Gets all data between two time intervals",
+        "summary": "Gets a collection of locations",
         "description": "Retrieves a JSON array with objects containing all the available locations.",
         "operationId": "getLocation",
         "parameters": [
           {
             "name": "name",
             "in": "query",
-          "description": "Optional. Name of location.",
+            "description": "Optional. Name of location.",
             "required": false,
             "style": "form",
             "explode": true,
@@ -429,51 +487,170 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Adds a new location",
+        "description": "Adds a new location to the database. The location is added to the database and the ID is returned.",
+        "operationId": "addLocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Gräsvik"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+        }
+      }
+    },
+    "/stations": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Gets a collection of stations",
+        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "operationId": "getStations",
+        "parameters": [],
+        "responses": {
+        }
+      },
+      "post": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Adds a new station",
+        "description": "Adds a new station to the database. The station is added to the database and the ID is returned.",
+        "operationId": "addStation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Gräsvik"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+        }
+      }
+    },
+    "/sensors": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets a collection of sensors",
+        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "operationId": "getSensors",
+        "parameters": [],
+        "responses": {
+        }
+      },
+      "post": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Adds a new sensor",
+        "description": "Adds a new station to the database. The station is added to the database and the ID is returned.",
+        "operationId": "addSensor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Gräsvik"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+        }
+      }
+    },
+    "/sensors/types": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets all different sensor types used throughout the application",
+        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "operationId": "getSensorTypes",
+        "parameters": [],
+        "responses": {
+        }
       }
     }
-
   },
-
   "components": {
     "schemas": {
-      "DataContent": {
+      "Measurement": {
         "type": "object",
-        "description": "Content returned from `GET: /data`",
         "properties": {
-          "id": {
-            "type": "number",
-            "format": "integer",
-            "example": 1
-          },
-          "date": {
+          "location_name": {
             "type": "string",
-            "format": "date-time",
-            "example": "2022-01-01T01:10:00.000Z"
+            "example": "Karlskrona"
           },
-          "longitude": {
-            "type": "number",
-            "format": "float",
-            "example": 15.58676
+          "position": {
+            "type": "object",
+            "properties": {
+              "lat": {
+                "type": "number",
+                "format": "float",
+                "example": 56.16192
+              },
+              "long": {
+                "type": "number",
+                "format": "float",
+                "example": 15.58676
+              }
+            }
           },
-          "latitude": {
-            "type": "number",
-            "format": "float",
-            "example": 56.16192
-          },
-          "temperature": {
-            "type": "number",
-            "format": "float",
-            "example": 26.162
-          },
-          "conductivity": {
-            "type": "number",
-            "format": "float",
-            "example": 5.643
-          },
-          "ph": {
-            "type": "number",
-            "format": "float",
-            "example": 6.86
+          "sensors": {
+            "description": "Some example of sensors, there can be arbitrary many sensors and they are not limited to these examples.",
+            "type": "object",
+            "properties": {
+              "temperature": {
+                "type": "number",
+                "format": "float",
+                "example": 26.162
+              },
+              "conductivity": {
+                "type": "number",
+                "format": "float",
+                "example": 5.643
+              },
+              "ph": {
+                "type": "number",
+                "format": "float",
+                "example": 6.86
+              }
+            }
           }
         }
       },
@@ -489,6 +666,14 @@
             "type": "number",
             "example": 100
           },
+          "last_page": {
+            "type": "number",
+            "example": 550
+          },
+          "total_rows": {
+            "type": "number",
+            "example": 567436
+          },
           "has_previous_page": {
             "type": "boolean",
             "example": false
@@ -501,7 +686,7 @@
       },
       "Units": {
         "type": "object",
-        "description": "Displays information about the units used for the query.",
+        "description": "Displays information about the units used for the query. There can be arbitrary many units and they are not limited to these examples.",
         "properties": {
           "date": {
             "type": "string",
@@ -517,73 +702,7 @@
           }
         }
       },
-      "UploadRequest": {
-        "required": [
-          "latitude",
-          "longitude",
-          "sensors",
-          "timestamp"
-        ],
-        "type": "object",
-        "properties": {
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2022-02-12T15:12:34Z"
-          },
-          "latitude": {
-            "type": "number",
-            "format": "float",
-            "example": 56.16082
-          },
-          "longitude": {
-            "type": "number",
-            "format": "float",
-            "example": 15.58671
-          },
-          "sensors": {
-            "$ref": "#/components/schemas/UploadRequest.Sensors"
-          }
-        },
-        "description": "The given contract to upload data to the database."
-      },
-      "UploadRequest.Sensors": {
-        "minProperties": 1,
-        "type": "object",
-        "properties": {
-          "temperature": {
-            "type": "number",
-            "format": "float",
-            "example": 20.6
-          },
-          "temperature_unit": {
-            "type": "string",
-            "example": "C"
-          },
-          "conductivity": {
-            "type": "number",
-            "format": "float",
-            "example": 4.8
-          },
-          "conductivity_unit": {
-            "type": "string",
-            "example": "Spm"
-          },
-          "ph_level": {
-            "type": "number",
-            "format": "float",
-            "example": 7.1
-          }
-        },
-        "description": "At least one of the value-properties should be supplied. Supplying only a unit will throw an error. Units defaults to their SI-representative if not specified."
-      },
-      "UploadResponse": {
-        "required": [
-          "latitude",
-          "longitude",
-          "sensors",
-          "timestamp"
-        ],
+      "Location": {
         "type": "object",
         "properties": {
           "id": {
@@ -591,68 +710,277 @@
             "format": "integer",
             "example": 1
           },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time",
-            "example": "2022-02-22 13:12:34"
-          },
-          "latitude": {
-            "type": "number",
-            "format": "float",
-            "example": 56.16082
-          },
-          "longitude": {
-            "type": "number",
-            "format": "float",
-            "example": 15.58671
-          },
-          "sensors": {
-            "$ref": "#/components/schemas/UploadResponse.Sensors"
-          }
-        },
-        "description": "The response objects from the `upload` endpoint. All data is converted to SI units (timestamp is in UTC+0), which is how they are stored in the database."
-      },
-      "UploadResponse.Sensors": {
-        "type": "object",
-        "properties": {
-          "temperature": {
-            "type": "number",
-            "format": "float",
-            "example": 293.75
-          },
-          "conductivity": {
-            "type": "number",
-            "format": "float",
-            "example": 4.8
-          },
-          "ph_level": {
-            "type": "number",
-            "format": "float",
-            "example": 7.1
-          }
-        }
-      },
-      "Location": {
-        "type": "object",
-        "properties": {
           "name": {
             "type": "string",
             "example": "Trossö"
           },
-          "radius": {
+          "radius_meters": {
             "type": "number",
-            "format": "float",
+            "format": "integer",
             "example": 300
           },
-          "longitude": {
+          "position": {
+            "type": "object",
+            "properties": {
+              "lat": {
+                "type": "number",
+                "format": "float",
+                "example": 56.16192
+              },
+              "long": {
+                "type": "number",
+                "format": "float",
+                "example": 15.58676
+              }
+            }
+          }
+        }
+      },
+      "Sensor": {
+        "type": "object",
+        "properties": {
+          "id": {
             "type": "number",
-            "format": "float",
-            "example": "15.845884248605417"
+            "format": "integer",
+            "example": 1
           },
-          "latitude": {
+          "name": {
+            "type": "string",
+            "example": "sk1000"
+          },
+          "firmware": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "type": {
+            "type": "string",
+            "example": "temperature"
+          }
+        }
+      },
+      "Station": {
+        "type": "object",
+        "properties": {
+          "id": {
             "type": "number",
-            "format": "float",
-            "example": "56.00694388528538"
+            "format": "integer",
+            "example": 1
+          },
+          "location_id": {
+            "type": "number",
+            "format": "integer",
+            "example": 1
+          },
+          "location_name": {
+            "type": "string",
+            "example": "Trossö"
+          },
+          "sensors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "number",
+                  "format": "integer",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "sk1000"
+                },
+                "firmware": {
+                  "type": "string",
+                  "example": "1.0.0"
+                },
+                "type": {
+                  "type": "string",
+                  "example": "temperature"
+                }
+              }
+            }
+          }
+        }
+      },
+      "History": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "object",
+            "properties": {
+              "location_name": {
+                "type": "string",
+                "example": "Trossö"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2022-01-01"
+              },
+              "end_date": {
+                "type": "string",
+                "example": "2022-12-31"
+              },
+              "sensors": {
+                "type": "object",
+                "description": "A summary of the sensors in the location. Given sensor types are examples and there can be arbitrary many sensors.",
+                "properties": {
+                  "conductivity": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 7.7
+                      },
+                      "min": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 5.7
+                      },
+                      "avg": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 3
+                      },
+                      "max": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 5.2
+                      },
+                      "end": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 8
+                      }
+                    }
+                  },
+                  "temperature": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 292.2
+                      },
+                      "min": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 284.9
+                      },
+                      "avg": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 283
+                      },
+                      "max": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 293.2
+                      },
+                      "end": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 298
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "measurements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "location_name": {
+                  "type": "string",
+                  "example": "Karlskrona"
+                },
+                "position": {
+                  "type": "object",
+                  "properties": {
+                    "lat": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 56.16192
+                    },
+                    "long": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 15.58676
+                    }
+                  }
+                },
+                "sensors": {
+                  "description": "Some example of sensors, there can be arbitrary many sensors and they are not limited to these examples.",
+                  "type": "object",
+                  "properties": {
+                    "temperature": {
+                      "type": "object",
+                      "properties": {
+                        "start": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 292.2
+                        },
+                        "min": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 284.9
+                        },
+                        "avg": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 283
+                        },
+                        "max": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 293.2
+                        },
+                        "end": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 298
+                        }
+                      }
+                    },
+                    "conductivity": {
+                      "type": "object",
+                      "properties": {
+                        "start": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 7.7
+                        },
+                        "min": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 5.7
+                        },
+                        "avg": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 3
+                        },
+                        "max": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 5.2
+                        },
+                        "end": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 8
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
