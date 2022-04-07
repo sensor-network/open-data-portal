@@ -162,7 +162,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       });
     }
 
-    console.time('outer-while');
     let current_time = new Date(start_date);
     while (current_time <= new Date(end_date)) {
       const next_time = add(current_time, next_date_options);
@@ -196,9 +195,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       measurements.push(measurement);
       current_time = next_time;
-      console.log('setting current_time to', current_time);
     }
-    console.timeEnd('outer-while');
 
     sensor_types.forEach(type => {
       /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
