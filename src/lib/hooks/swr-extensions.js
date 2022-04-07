@@ -52,8 +52,9 @@ export const useMeasurements = (url, fetcher = defaultFetcher) => {
   });
   return {
     measurements: data?.data,
-    rowCount: data?.pagination.total_rows,
-    isLoading: isLagging,
+    pagination: data?.pagination,
+    isLoading: !data,
+    isLagging: isLagging,
   };
 };
 
