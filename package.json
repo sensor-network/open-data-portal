@@ -8,7 +8,8 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "fill-db": "ts-node ./scripts/fill-db.ts --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\""
+    "fill-db": "ts-node ./scripts/fill-db.ts --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\"",
+    "fill-history-table": "ts-node ./scripts/fill-history-db.ts --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\""
   },
   "dependencies": {
     "@emotion/react": "^11.8.1",
