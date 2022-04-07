@@ -73,7 +73,7 @@ export const zCreateMeasurement = z.object({
 });
 
 export const zCreateStation = z.object({
-  location_id: z.string().transform(str => Number(str)),
+  location_id: z.number().int().positive(),
   sensor_ids: z.array(z.number().int().positive()),
 });
 
