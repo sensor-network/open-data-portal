@@ -128,7 +128,7 @@ solids, just specify multiple sensors in the `sensor_ids` field:
 {
   "timestamp": "2022-04-08T14:08:54+02",
   "location_id": 1,
-  "sensor_ids": [
+  "sensors": [
     {
       "sensor_id": 1,
       "value": 23.5,
