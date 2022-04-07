@@ -122,7 +122,7 @@ $ curl --request POST \
 
 That's it! You can now see the data in the database. This query can be used to continuously upload data from your
 sensor. If you have multiple sensors at the same station, lets say a conductivity sensor which measures total dissolved
-solids, just specify multiple sensors in the `sensor_ids` field:
+solids, just specify multiple sensors in the `sensors` field:
 
 ```json
 {
