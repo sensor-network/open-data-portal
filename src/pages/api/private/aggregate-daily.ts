@@ -1,11 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { z, ZodError } from 'zod';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 import { HTTP_STATUS as STATUS } from 'src/lib/httpStatusCodes';
-import { zDataColumns } from 'lib/types/ZodSchemas';
-import * as Locations from 'lib/database/locations';
-import * as HistoryDaily from 'lib/database/history_daily';
+import * as Location from 'lib/database/location';
+import * as History from 'lib/database/history';
+import * as Sensor from 'lib/database/sensor';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== 'POST') {
@@ -37,28 +37,31 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     /* parse and validate date from query, use yesterday if not specified (request is coming in at 00:00) */
     const date = z.string()
-      .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
+      .refine(str => isValid(new Date(str)), 'Unable to parse string as Date')
       .transform(str => format(new Date(str), 'yyyy-MM-dd'))
       .parse(req.query.date);
 
     /* get all locations from database, as well as the available sensors */
-    const locations = await Locations.findMany();
-    const locationIds = Array.from(locations, l => l.id);
-    const sensorTypes = zDataColumns.options;
+    const locations = await Location.findMany();
+    const sensor_types = await Sensor.findAllTypes();
 
     /* now aggregate the data for all locations and sensor-types */
     let insertedIds: Array<number> = [];
-    for (const locationId of locationIds) {
-      for (const sensorType of sensorTypes) {
+    for (const { id: location_id } of locations) {
+      for (const type of sensor_types) {
         /* see if data for such date and sensor has already been aggregated */
-        const history = await HistoryDaily.findMany({ date, sensorType, locationId });
+        const history = await History.findByFilter({ date, sensor_type: type, location_id });
         if (history.length === 0) {
-          const insertId = await HistoryDaily.createOne({ date, sensorType, locationId });
+          const insertId = await History.createOne({
+            date,
+            sensor_type: type,
+            location_id,
+          });
           insertedIds.push(insertId);
         }
       }
     }
-    res.status(200).json({
+    res.status(STATUS.OK).json({
       inserted_ids: insertedIds,
     });
   }

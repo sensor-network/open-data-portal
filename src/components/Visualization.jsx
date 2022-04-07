@@ -8,17 +8,17 @@ import DateRangeSelector from "src/components/DateRangeSelector";
 import styles from "src/styles/Visualization.module.css";
 
 import { PreferenceContext } from "src/pages/_app";
-import { fetcher, urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
-import { useMeasurements } from "src/lib/hooks/swr-extensions";
+import { urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
+import { useSummarizedMeasurements } from "src/lib/hooks/swr-extensions";
+import { formatISO } from "date-fns";
 
-const ENDPOINT = "http://localhost:3000/api/v2/data?";
+const ENDPOINT = "http://localhost:3000/api/v2/measurements/history?";
 
 const valueOptions = [
   { key: "temperature", name: "Temperature", color: "#1565c0" },
   { key: "ph", name: "PH", color: "#A83636" },
   { key: "conductivity", name: "Conductivity", color: "#A4C42F" },
 ];
-
 const renderSelectValue = (valueKey) => {
   const value = valueOptions.find(v => v.key === valueKey);
   return (
@@ -30,23 +30,27 @@ const renderSelectValue = (valueKey) => {
 };
 
 const Visualization = () => {
-  /* Get correct url for fetching the filtered data */
   const { preferences } = useContext(PreferenceContext);
+  const [startDate, setStartDate] = useState(new Date(1));
+  const [endDate, setEndDate] = useState(new Date());
+
+  /* Get correct url for fetching the filtered data */
   const url = useMemo(() => urlWithParams(ENDPOINT, {
     temperature_unit: preferences.temperature_unit.symbol,
     conductivity_unit: preferences.conductivity_unit.symbol,
     location_name: preferences.location.symbol,
-  }), [preferences]);
+    start_date: formatISO(startDate),
+    end_date: formatISO(endDate),
+  }), [preferences, startDate, endDate]);
 
-  const { measurements } = useMeasurements(url, fetcher);
+  const { summarizedMeasurements: measurements } = useSummarizedMeasurements(url);
 
   /* mainValue is graphed as an Area */
   const [mainValue, setMainValue] = useState(valueOptions[0]);
-  const selectMainValue = (event) => {
-    const key = event.target.value;
+  const selectMainValue = (key) => {
     const value = valueOptions.find(v => v.key === key);
     setMainValue(value);
-    dontCompareValue(key);
+    dontCompareValue(value.name);
   };
 
   /* compareValues are graphed as Lines */
@@ -57,16 +61,13 @@ const Visualization = () => {
     const value = valueOptions.find(v => v.key === key);
     const alreadyIn = compareValues.findIndex(v => v.key === key) !== -1;
     if (!alreadyIn) {
-      setCompareValues([...compareValues, value]);
+      setCompareValues(prev => [...prev, value]);
     }
   };
-  const dontCompareValue = (key) => {
-    const valuesWithout = compareValues.filter(v => v.key !== key);
+  const dontCompareValue = (name) => {
+    const valuesWithout = compareValues.filter(v => v.name !== name);
     setCompareValues(valuesWithout);
   };
-
-  const [startDate, setStartDate] = useState(new Date(1));
-  const [endDate, setEndDate] = useState(new Date());
 
   return (
     <Card title="Visualize">
@@ -76,7 +77,7 @@ const Visualization = () => {
           <Select
             className={styles.select}
             value={mainValue.key}
-            onChange={selectMainValue}
+            onChange={e => selectMainValue(e.target.value)}
             renderValue={renderSelectValue}
           >
             {valueOptions.map((value) => (

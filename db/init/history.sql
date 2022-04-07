@@ -46,7 +46,7 @@
  *  Conclusion: Migrating these small tables if adding more sensors is not really a big problem,
     so perhaps it's worth it to save some space by storing them in a single table.
  **/
-
+/*
 CREATE TABLE history_daily (
     id INT NOT NULL AUTO_INCREMENT,
     date DATE NOT NULL,
@@ -58,3 +58,4 @@ CREATE TABLE history_daily (
     PRIMARY KEY (id),
     FOREIGN KEY (location_id) REFERENCES Locations(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+*/

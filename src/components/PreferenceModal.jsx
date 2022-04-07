@@ -21,7 +21,7 @@ const PreferenceModal = ({ setPreferences, closeModal, isOpen }) => {
       {
         name: "Location",
         key: "location",
-        options: [{ name: "Everywhere", symbol: "all" }, ...locations.map(l => ({ name: l.name, symbol: l.name }))],
+        options: [...locations.map(l => ({ name: l.name, symbol: l.name }))],
         default: preferences.location,
       },
       {
