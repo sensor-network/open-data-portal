@@ -58,34 +58,13 @@ export const zPage = z.object({
   ),
 });
 
-export const zDataColumns = z.enum(["temperature", "conductivity", "ph"]);
-
-/**
- * schema for incoming post-request's body
- **/
-export const zCreateInstance = z.object({
-  timestamp: z.preprocess(
-    // maximize compatibility and validate the inputted date
-    inputStr => ISOStringToSQLTimestamp(inputStr), z.string()
-  ),
-  latitude: z.number().gte(-90).lte(90),      // lat ranges from +-90 deg
-  longitude: z.number().gte(-180).lte(180),   // lng ranges from +-180 deg
-  sensors: z.object({
-    temperature: z.number().optional(),
-    temperature_unit: z.string().optional(),
-    ph_level: z.number().gte(0).lte(14).optional(),    // ph scale ranges from 0 to 14
-    conductivity: z.number().optional(),
-    conductivity_unit: z.string().optional(),
-  }).strict()
-}).strict();
-
-
 /* new schema for uploading sensor data */
-export const zCreateSensorData = z.object({
+export const zCreateMeasurement = z.object({
   timestamp: z.preprocess(
     // maximize compatibility and validate the inputted date
     inputStr => ISOStringToSQLTimestamp(inputStr), z.string()
   ),
+  location_id: z.number().int().positive(),
   sensors: z.array(z.object({
     sensor_id: z.number(),
     value: z.number(),
@@ -96,4 +75,10 @@ export const zCreateSensorData = z.object({
 export const zCreateStation = z.object({
   location_id: z.string().transform(str => Number(str)),
   sensor_ids: z.array(z.number().int().positive()),
+});
+
+export const zCreateSensor = z.object({
+  name: z.string().optional().nullable(),
+  firmware: z.string().optional().nullable(),
+  type: z.string(),
 });

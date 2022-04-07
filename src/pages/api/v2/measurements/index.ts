@@ -9,7 +9,7 @@ import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
 import { parseUnit as parseTempUnit } from "src/lib/units/temperature";
 import { parseUnit as parseCondUnit } from "src/lib/units/conductivity";
 
-import { zCreateSensorData, zTime, zPage, zLocation } from 'src/lib/types/ZodSchemas';
+import { zCreateMeasurement, zTime, zPage, zLocation } from 'src/lib/types/ZodSchemas';
 import { round } from 'src/lib/utilityFunctions';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -115,7 +115,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   else if (req.method === "POST") {
     try {
       /* parse request body */
-      const { timestamp, sensors } = zCreateSensorData.parse(req.body);
+      const { timestamp, sensors } = zCreateMeasurement.parse(req.body);
 
       let insertedData = [];
       for (const { sensor_id, value, unit } of sensors) {

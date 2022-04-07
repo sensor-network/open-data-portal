@@ -9,7 +9,7 @@ export type Sensor = {
 }
 
 export const createOne = async (
-  { name, firmware, type }: { name?: string, firmware?: string, type: string },
+  { name, firmware, type }: { name: string | null, firmware: string | null, type: string },
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.execute(`
@@ -43,7 +43,20 @@ export const findByType = async (
   return <RowDataPacket[]>result as Array<Sensor>;
 };
 
-export const findAll = async () => {
+export const findByStationId = async (
+  { station_id }: { station_id: number }
+) => {
+  const connection = await getConnectionPool();
+  const [result] = await connection.execute(`
+      SELECT sensor.id, sensor.name, sensor.firmware, sensor.type
+      FROM sensor
+               JOIN station ON station.sensor_id = sensor.id
+      WHERE station.id = ?
+  `, [station_id]);
+  return <RowDataPacket[]>result as Array<Sensor>;
+};
+
+export const findMany = async () => {
   const connection = await getConnectionPool();
   const [result] = await connection.execute(`
       SELECT id, name, firmware, type
