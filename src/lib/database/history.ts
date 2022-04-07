@@ -20,7 +20,7 @@ export const createOne = async (
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
       INSERT INTO history
-          (date, type, location_id, daily_min, daily_avg, daily_max)
+          (date, location_id, type, daily_min, daily_avg, daily_max)
       VALUES (?, ?, ?,
               (SELECT MIN(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?),
               (SELECT AVG(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?),
