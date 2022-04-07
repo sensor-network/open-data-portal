@@ -4,6 +4,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import EqualizerIcon from "@mui/icons-material/BarChart";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import MapIcon from '@mui/icons-material/Map';
 
 import Link from "next/link";
 import { useState } from "react";
@@ -46,6 +47,7 @@ export default function Navbar({ setPreferences, height, isMobile }) {
         <div className={style.navHalf}>
           {!isMobile &&
             <>
+              <NavLink text="Map" href="/map" Icon={MapIcon}/>
               <NavLink text="Visualize Data" href="/data" Icon={EqualizerIcon}/>
               <NavLink text="API Docs" href="/docs" Icon={LibraryBooksIcon}/>
             </>
