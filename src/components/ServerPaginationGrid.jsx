@@ -7,9 +7,10 @@ import {
   useGridApiContext,
   useGridSelector,
 } from "@mui/x-data-grid";
+import { ThemeProvider } from "@mui/material/styles";
+import { theme, CustomProgressBar } from "./CustomProgressBar";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import LinearProgress from "@mui/material/LinearProgress";
 import Card from "src/components/Card";
 import DateRangeSelector from "src/components/DateRangeSelector";
 import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
@@ -23,7 +24,7 @@ const ENDPOINT = "http://localhost:3000/api/v2/measurements?";
 const ServerPaginationGrid = () => {
   /* Define pagination options, which can be modified in the grid */
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(100);
 
   /* Define date range, which can be modified in the date range selector */
   const [startDate, setStartDate] = useState(new Date(1));
@@ -88,45 +89,51 @@ const ServerPaginationGrid = () => {
   }, [sensorTypes, preferences]);
 
   const CustomPagination = () => {
-    const [textFieldValue, setTextFieldValue] = useState(`${page + 1}`);
-    const [valid, setValid] = useState(true);
     const apiRef = useGridApiContext();
     const page = useGridSelector(apiRef, gridPageSelector);
     const pageCount = useGridSelector(apiRef, gridPageCountSelector);
 
+    const [textFieldValue, setTextFieldValue] = useState(page + 1);
     const validateInput = () => {
       const value = parseInt(textFieldValue, 10);
-      if (value < 1 || isNaN(value)) {
-        setValid(false);
-      }
-      else {
-        setPage(value);
+      if (!isNaN(value) && value > 0) {
+        setPage(value - 1);
       }
     };
+
     return (
-      <div style={{ display: "flex", alignItems: "center", marginLeft: 650, justifyContent: "flex-end" }}>
-        <TextField value={textFieldValue} onChange={e => setTextFieldValue(e.target.value)}/>
-        <Button onClick={validateInput}>Select</Button>
-        <Pagination
-          color="primary"
-          style={{ width: 5000 }}
-          count={pageCount}
-          page={page + 1}
-          onChange={(event, value) => apiRef.current.setPage(value - 1)}
-        />
+      <div style={{
+        width: "100%",
+        right: 0,
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center",
+      }}>
+        <ThemeProvider theme={theme}>
+          <TextField size="small" label="Page" value={textFieldValue}
+                     onChange={e => setTextFieldValue(e.target.value)}/>
+          <Button variant="contained" color="primary" onClick={validateInput}>Go To</Button>
+          <Pagination
+            color="primary"
+            count={pageCount}
+            page={page + 1}
+            onChange={(event, value) => apiRef.current.setPage(value - 1)}
+          />
+        </ThemeProvider>
       </div>
     );
   };
+
   return (
     <Card title="Explore the data on your own" margin="40px 0 0 0">
       <div style={{ height: 750, margin: "20px 0" }}>
-        {isLoading ? <LinearProgress/> : <DataGrid
+        {isLoading ? <CustomProgressBar/> : <DataGrid
           rows={measurements}
           columns={gridColumns}
           rowCount={pagination?.total_rows}
           loading={isLagging || isLoading}
           getRowId={row => row.time}
-          components={{ LoadingOverlay: LinearProgress, Pagination: CustomPagination }}
+          components={{ LoadingOverlay: CustomProgressBar, Pagination: CustomPagination }}
           pagination
           paginationMode={"server"}
           page={page}

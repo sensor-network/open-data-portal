@@ -2,7 +2,8 @@ import { useContext, useState, useMemo } from "react";
 import { PreferenceContext } from "src/pages/_app";
 import { formatISO, startOfToday, sub } from "date-fns";
 
-import { Grid, LinearProgress } from "@mui/material";
+import { Grid } from "@mui/material";
+import { CustomProgressBar } from "./CustomProgressBar";
 import Card from "src/components/Card";
 import DateRangeSelector from "src/components/DateRangeSelector";
 
@@ -80,7 +81,7 @@ const Summary = () => {
 
   return (
     <Card title="Summarize data over a period">
-      {(isAnyLagging || isAnyLoading) && <LinearProgress/>}
+      {(isAnyLagging || isAnyLoading) && <CustomProgressBar/>}
       {!isLoading && columns <= 0 && <div>No data for selected timerange</div>}
       <Grid container columns={columnCount} spacing={0} className={styles.gridContainer}>
         <Grid item xs={6} sm={4} md={3} sx={{ fontWeight: 600 }}>
