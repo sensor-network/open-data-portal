@@ -1,0 +1,85 @@
+.gridContainer {
+    font-size: .7rem;
+    margin: .25em 0 .75em 0
+}
+
+@media (min-width: 768px ) {
+    .gridContainer {
+        font-size: .9rem;
+    }
+}
+
+@media (min-width: 1024px ) {
+    .gridContainer {
+        font-size: 1rem;
+    }
+}
+
+.gridValues {
+    display: flex;
+    width: max-content;
+    overflow: scroll;
+}
+
+.gridValue {
+    margin: 0 .5em;
+    min-width: max-content;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: bold;
+    font-size: 1.2em;
+    padding: .5em 0;
+    min-width: max-content;
+}
+
+.section {
+    display: flex;
+    font-size: 1em;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px solid #e0e0e0;
+    padding: .3em 0;
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: .3em 0;
+}
+
+.comparedToHeader {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.comparedTo {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-left: .5em;
+}
+
+.tooltipIcon {
+    margin-left: .5em;
+    font-size: .8em;
+    cursor: pointer;
+}
+
+.icon {
+    margin-right: .25em;
+}
+
+.itemsWrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
