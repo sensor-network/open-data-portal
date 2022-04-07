@@ -110,15 +110,15 @@ const ServerPaginationGrid = () => {
         alignItems: "center",
       }}>
         <ThemeProvider theme={theme}>
-          <TextField size="small" label="Page" value={textFieldValue}
-                     onChange={e => setTextFieldValue(e.target.value)}/>
-          <Button variant="contained" color="primary" onClick={validateInput}>Go To</Button>
           <Pagination
             color="primary"
             count={pageCount}
             page={page + 1}
             onChange={(event, value) => apiRef.current.setPage(value - 1)}
           />
+          <TextField size="small" label="Page" value={textFieldValue}
+                     onChange={e => setTextFieldValue(e.target.value)}/>
+          <Button variant="contained" color="primary" onClick={validateInput}>Go To</Button>
         </ThemeProvider>
       </div>
     );
