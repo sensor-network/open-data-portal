@@ -22,14 +22,14 @@ export const createOne = async (
       INSERT INTO history
           (date, type, location_id, daily_min, daily_avg, daily_max)
       VALUES (?, ?, ?,
-              (SELECT MIN(value) FROM measurement WHERE date(time) = ? AND type = ? AND location_id = ?),
-              (SELECT AVG(value) FROM measurement WHERE date(time) = ? AND type = ? AND location_id = ?),
-              (SELECT MAX(value) FROM measurement WHERE date(time) = ? AND type = ? AND location_id = ?))
+              (SELECT MIN(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?),
+              (SELECT AVG(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?),
+              (SELECT MAX(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?))
   `, [
-    date, sensor_type, location_id,
-    date, sensor_type, location_id,
-    date, sensor_type, location_id,
-    date, sensor_type, location_id,
+    date, location_id, sensor_type,
+    date, location_id, sensor_type,
+    date, location_id, sensor_type,
+    date, location_id, sensor_type,
   ]);
   return (<OkPacket>result).insertId;
 };

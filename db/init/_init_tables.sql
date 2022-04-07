@@ -46,6 +46,7 @@ CREATE TABLE measurement
     foreign key (`sensor_id`) references sensor (`id`),
     foreign key (`type`) references sensor (`type`),
     foreign key (`location_id`) references location (`id`),
+    INDEX (time, location_id, type, value),
     INDEX (`sensor_id`),
     INDEX (`location_id`),
     INDEX (`type`)
