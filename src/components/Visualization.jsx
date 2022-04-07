@@ -1,6 +1,7 @@
 import { useContext, useMemo, useState } from "react";
 
-import { Select, MenuItem, LinearProgress } from "@mui/material";
+import { Select, MenuItem } from "@mui/material";
+import { CustomProgressBar } from "./CustomProgressBar";
 import CircleIcon from "@mui/icons-material/Circle";
 import Card from "src/components/Card";
 import ComparisonGraph from "src/components/ComparisonGraph";
@@ -109,7 +110,7 @@ const Visualization = () => {
         <div className={styles.graphContainer}>
           {
             !measurements ?
-              <LinearProgress/> :
+              <CustomProgressBar/> :
               <ComparisonGraph
                 data={measurements} mainValue={mainValue} valuesToCompare={compareValues}
                 dontCompareValue={dontCompareValue} dateFormatter={(date) => dateFormatter(date, startDate, endDate)}
