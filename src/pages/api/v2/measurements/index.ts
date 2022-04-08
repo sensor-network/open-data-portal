@@ -32,7 +32,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* query the db based on parameters */
       let data: Array<Measurement.Measurement> = [];
-      if (location_name) {
+      if (location_name && location_name !== 'Karlskrona') {
         const location = await Location.findByName({ name: location_name });
         if (location) {
           data = await Measurement.findByLocationId({

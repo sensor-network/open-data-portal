@@ -4,11 +4,10 @@ import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon.png";
 import { Icon } from "leaflet";
 import { useLocations } from "src/lib/hooks/useLocations";
-import {useSummarizedMeasurements} from 'src/lib/hooks/swr-extensions';
 import { useSummarizedData } from "src/lib/hooks/swr-extensions";
 import { useContext, useMemo } from "react";
 import { PreferenceContext } from "src/pages/_app";
-import { urlWithParams } from "src/lib/utilityFunctions";
+import { urlWithParams, capitalize } from "src/lib/utilityFunctions";
 
 
 var greenIcon = new Icon({
@@ -21,16 +20,22 @@ var greenIcon = new Icon({
 });
 
 
-const PopupContent = ({location_name}) => {
+const PopupContent = ({ location_name }) => {
   const { preferences } = useContext(PreferenceContext);
-  const url = useMemo(() => urlWithParams('http://localhost:3000/api/v2/measurements/history?', {location_name, temperature_unit: preferences.temperature_unit.symbol}), [location_name, preferences]);
+  const url = useMemo(() => urlWithParams("http://localhost:3000/api/v2/measurements/history?", {
+    location_name,
+    temperature_unit: preferences.temperature_unit.symbol,
+  }), [location_name, preferences]);
   const { summarizedData: summary, isLoading } = useSummarizedData(url);
-  
+
   return (
-    <div>
+    <div style={{ minWidth: 150 }}>
+      {!isLoading && !Object.entries(summary.sensors).length && <p>No data available</p>}
       {!isLoading && Object.entries(summary.sensors).map(([sensor, sensorData], idx) => (
-       <span key={idx}><p key={idx}>{sensor} {sensorData.end}</p></span> 
-       
+        <p key={idx} style={{ margin: "0.25em 0" }}>
+          <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>
+          {sensorData.end} {capitalize(preferences[`${sensor}_unit`]?.symbol)}
+        </p>
       ))}
     </div>
   );
@@ -54,15 +59,15 @@ const Map = () => {
       {formatted?.map(l => (
         <Marker key={l.id} position={l.position} icon={greenIcon}>
           <Popup>
-          <font size="+1"><strong>{l.name}</strong></font> <br/>
-          <strong>Latest data:   </strong> <br/>
-            <PopupContent location_name= {l.name}/>
+            <h2 style={{ margin: 0 }}>{capitalize(l.name)}</h2>
+            <h3 style={{ margin: 0 }}>Latest data:</h3>
+            <PopupContent location_name={l.name}/>
           </Popup>
         </Marker>
       ))}
-    
+
     </MapContainer>
-    
+
   );
 };
 
