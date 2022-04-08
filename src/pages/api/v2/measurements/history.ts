@@ -179,7 +179,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         sensors: {},
       };
 
-      //console.time('inner-loop');
       sensor_types.forEach(type => {
         const values = in_range.filter(row => row.type === type)
           .map(row => ({ min: row.min, avg: row.avg, max: row.max, }));
@@ -191,7 +190,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           }
         });
       });
-      //console.timeEnd('inner-loop');
 
       measurements.push(measurement);
       current_time = next_time;
@@ -208,8 +206,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
     });
 
-    //console.log("GET: /api/v2/data/history :: returning from handler with");
-    //console.log(summary);
     res.status(STATUS.OK)
       .json(include_measurements ? { summary, measurements } : { summary });
   }

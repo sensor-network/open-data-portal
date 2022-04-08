@@ -26,7 +26,7 @@ export const findInCombinedFormat = async (
               FROM measurement
               WHERE time BETWEEN ? AND ?
                 AND location_id = ?
-    `, [location_id, start_time, end_time]) :
+    `, [start_time, end_time, location_id]) :
     mysql.format(`
         SELECT type, value as avg, time, value as min, value as max
         FROM measurement
