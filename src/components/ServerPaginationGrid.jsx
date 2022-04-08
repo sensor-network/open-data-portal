@@ -16,7 +16,7 @@ import DateRangeSelector from "src/components/DateRangeSelector";
 import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
 import { useMeasurements } from "../lib/hooks/swr-extensions";
 import { PreferenceContext } from "../pages/_app";
-import { urlWithParams, capitalize } from "../lib/utilityFunctions";
+import { urlWithParams, capitalize, round } from "../lib/utilityFunctions";
 import { formatISO } from "date-fns";
 
 const ENDPOINT = "http://localhost:3000/api/v2/measurements?";
@@ -49,27 +49,27 @@ const ServerPaginationGrid = () => {
   const gridColumns = useMemo(() => {
     const columns = [
       {
-        field: "time", width: 200,
+        field: "time", width: 180,
         headerName: `Time (${Intl.DateTimeFormat().resolvedOptions().locale})`,
         valueGetter: time => new Date(time.value).toLocaleString(),
       },
       {
         field: "location_name",
-        width: 200,
+        width: 150,
         headerName: "Location Name",
         valueGetter: (measurement) => measurement.row.location_name,
       },
       {
         field: "longitude",
         headerName: "Longitude",
-        width: 150,
-        valueGetter: (measurement) => measurement.row.position.long,
+        width: 120,
+        valueGetter: (measurement) => round(measurement.row.position.long, 6),
       },
       {
         field: "latitude",
         headerName: "Latitude",
-        width: 150,
-        valueGetter: (measurement) => measurement.row.position.lat,
+        width: 120,
+        valueGetter: (measurement) => round(measurement.row.position.lat, 6),
       },
     ];
     const sensorColumns = sensorTypes?.map(sensor => {
