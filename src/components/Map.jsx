@@ -43,7 +43,7 @@ const PopupContent = ({ location_name }) => {
 
 const Map = () => {
   const locations = useLocations("/api/v2/locations");
-
+  const mapCenter = [56.178516, 15.602610];
 
   const formatted = locations?.map(l => ({
     ...l,
@@ -51,8 +51,8 @@ const Map = () => {
   }));
 
   return (
-    <MapContainer center={[56.178516, 15.602610]} zoom={13} tap={false}
-                  style={{ height: "100vh", width: "100vw" }}>
+    <MapContainer center={mapCenter} zoom={13} tap={false}
+                  style={{ height: "95vh", width: "100vw" }}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
