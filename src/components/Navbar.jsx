@@ -4,7 +4,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import EqualizerIcon from "@mui/icons-material/BarChart";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import MapIcon from '@mui/icons-material/Map';
+import MapIcon from "@mui/icons-material/Map";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -60,6 +60,7 @@ export default function Navbar({ setPreferences, height, isMobile }) {
       {isMobile &&
         <div className={style.nav} style={{ bottom: 0, justifyContent: "space-evenly" }}>
           <NavLink href="/" Icon={HomeIcon}/>
+          <NavLink href="/map" Icon={MapIcon}/>
           <NavLink href="/data" Icon={EqualizerIcon}/>
           <NavLink href="/docs" Icon={LibraryBooksIcon}/>
         </div>
