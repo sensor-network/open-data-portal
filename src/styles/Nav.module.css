@@ -2,7 +2,7 @@
 .nav {
     display: flex;
     bottom: 0;
-    z-index: 10;
+    z-index: 1000000;
     position: fixed;
     justify-content: space-between;
     background-color: #fff;
