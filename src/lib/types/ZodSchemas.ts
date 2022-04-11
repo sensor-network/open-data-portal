@@ -11,18 +11,18 @@ export const zLocation = z.object({
     .transform(str => Number(str))
     .refine((num) => num >= -90, 'should be greater than or equal to -90')
     .refine((num) => num <= 90, 'should be less than or equal to 90')
-    .or(z.number().gte(-90).lte(90))
+    .or(z.number().gte(-90).lte(90)) // no need to transform if input is already a number (e.g. when coming from req. body)
   ),
   long: z.optional(z.string()
     .transform(str => Number(str))
     .refine((num) => num >= -180, 'should be greater than or equal to -180')
     .refine((num) => num <= 180, 'should be less than or equal to 180')
-    .or(z.number().gte(-180).lte(180))
+    .or(z.number().gte(-180).lte(180)) // no need to transform if input is already a number (e.g. when coming from req. body)
   ),
   rad: z.string().optional().default('200')
     .transform(str => Number(str))
     .refine((num) => num > 0, 'should be positive')
-    .or(z.number().positive())
+    .or(z.number().positive())  // no need to transform if input is already a number (e.g. when coming from req. body)
   ,
   location_name: z.string().optional(),
 });
@@ -60,13 +60,21 @@ export const zPage = z.object({
 
 /* new schema for uploading sensor data */
 export const zCreateMeasurement = z.object({
-  timestamp: z.preprocess(
+  timestamp: z.string()
     // maximize compatibility and validate the inputted date
-    inputStr => ISOStringToSQLTimestamp(inputStr), z.string()
-  ),
-  location_id: z.number().int().positive(),
+    .transform((str: string) => ISOStringToSQLTimestamp(str)),
+  location: z.object({
+    lat: z.string()
+      .transform(str => Number(str))
+      .refine((num) => num >= -90, 'should be greater than or equal to -90')
+      .refine((num) => num <= 90, 'should be less than or equal to 90'),
+    long: z.string()
+      .transform(str => Number(str))
+      .refine((num) => num >= -180, 'should be greater than or equal to -180')
+      .refine((num) => num <= 180, 'should be less than or equal to 180'),
+  }),
   sensors: z.array(z.object({
-    sensor_id: z.number(),
+    sensor_id: z.number().positive(),
     value: z.number(),
     unit: z.string().optional(),
   }))
@@ -74,7 +82,9 @@ export const zCreateMeasurement = z.object({
 
 export const zCreateStation = z.object({
   location_id: z.number().int().positive(),
-  sensor_ids: z.array(z.number().int().positive()),
+  sensor_ids: z.array(
+    z.number().int().positive()
+  ),
 });
 
 export const zCreateSensor = z.object({

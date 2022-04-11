@@ -39,6 +39,7 @@ CREATE TABLE measurement
 (
     `sensor_id`   int          NOT NULL,
     `location_id` int          NOT NULL,
+    `position`    POINT        NOT NULL SRID 4326,
     `value`       float        NOT NULL,
     `time`        timestamp    NOT NULL,
     `type`        varchar(255) NOT NULL,
@@ -49,7 +50,8 @@ CREATE TABLE measurement
     INDEX (time, location_id, type, value),
     INDEX (`sensor_id`),
     INDEX (`location_id`),
-    INDEX (`type`)
+    INDEX (`type`),
+    SPATIAL INDEX (`position`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
