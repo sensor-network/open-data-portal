@@ -56,12 +56,20 @@ export const findByStationId = async (
   return <RowDataPacket[]>result as Array<Sensor>;
 };
 
-export const findMany = async () => {
+export const findMany = async (
+  { include_status = false }
+) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
-      SELECT id, name, firmware, type
-      FROM sensor
-  `);
+  const query = include_status
+    ? `
+              SELECT id, type, status, last_active
+              FROM sensor
+    `
+    : `
+              SELECT id, name, firmware, type
+              FROM sensor
+    `;
+  const [result] = await connection.execute(query);
   return <RowDataPacket[]>result as Array<Sensor>;
 };
 
@@ -74,6 +82,19 @@ export const updateFirmware = async (
       SET firmware = ?
       WHERE id = ?
   `, [firmware, id]);
+  return (<OkPacket>result).changedRows;
+};
+
+export const updateStatus = async (
+  { id, status }: { id: number, status: string }
+) => {
+  const connection = await getConnectionPool();
+  const [result] = await connection.execute(`
+      UPDATE sensor
+      SET status      = ?,
+          last_active = NOW()
+      WHERE id = ?
+  `, [status, id]);
   return (<OkPacket>result).changedRows;
 };
 

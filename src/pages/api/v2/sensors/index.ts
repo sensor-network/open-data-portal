@@ -33,7 +33,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         sensors = await Sensor.findByType({ type });
       }
       else {
-        sensors = await Sensor.findMany();
+        sensors = await Sensor.findMany({ include_status: false });
       }
 
       /* Returning the locations with STATUS.OK response code */

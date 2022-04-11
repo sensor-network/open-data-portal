@@ -13,10 +13,12 @@ CREATE TABLE location
 /* sensor table not needed? */
 CREATE TABLE sensor
 (
-    `id`       int primary key auto_increment,
-    `name`     varchar(255),
-    `firmware` varchar(255),
-    `type`     varchar(255) NOT NULL,
+    `id`          int primary key auto_increment,
+    `name`        varchar(255),
+    `firmware`    varchar(255),
+    `type`        varchar(255) NOT NULL,
+    `status`      varchar(255) NOT NULL DEFAULT 'ok',
+    `last_active` timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX (`type`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4

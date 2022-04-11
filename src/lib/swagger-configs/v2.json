@@ -605,6 +605,51 @@
         "responses": {
         }
       }
+    },
+    "/sensors/status": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets a collection of sensors including the last known status of each sensor",
+        "description": "When a sensor tries to post a measurement, we record the result of the request. If it is successful, the sensor's status is updated to `OK`, else the status is set to the appropriate error message that occured during the failed request, for example `too_big` (i.e. the measurement wasn't in the valid range), `ER_DUP_ENTRY` (i.e. the sensor had already posted a measurement with the same time). With this endpoint, you can get a list of all sensors with their last known status, so that you could easily see if all the sensors are sending correct measurements.",
+        "operationId": "getSensorStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The list of all the sensors and their last known status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "type": {
+                        "type": "string",
+                        "example": "temperature"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "OK"
+                      },
+                      "last_active": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2022-04-11T22:30:49.000Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
