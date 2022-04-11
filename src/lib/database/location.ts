@@ -1,5 +1,5 @@
 import { getConnectionPool } from "./connection";
-import { RowDataPacket, OkPacket } from 'mysql2/promise';
+import mysql, { RowDataPacket, OkPacket } from 'mysql2/promise';
 
 const SRID = 4326;
 
@@ -79,20 +79,42 @@ export const findByName = async ({ name }: { name: string }) => {
 
 
 export const findByGeo = async (
-  { lat, long, rad }: { lat: number; long: number, rad: number }
+  { lat, long, rad }: { lat: number; long: number, rad?: number }
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.query(`
-      SELECT id,
-             name,
-             radius_meters,
-             JSON_OBJECT(
-                     'lat', ST_X(position),
-                     'long', ST_Y(position)
-                 ) as position
-      FROM location
-      WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
-  `, [lat, long, SRID, rad]);
+  // if rad is provided, use the provided radius
+  const query = rad ? mysql.format(`
+              SELECT id,
+                     name,
+                     radius_meters,
+                     JSON_OBJECT(
+                             'lat', ST_X(position),
+                             'long', ST_Y(position)
+                         ) as position
+              FROM location
+              WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
+              ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
+    `, [
+      lat, long, SRID, rad,
+      lat, long, SRID,
+    ]) :
+    // else use the radius associated with the db-entry
+    mysql.format(`
+        SELECT id,
+               name,
+               radius_meters,
+               JSON_OBJECT(
+                       'lat', ST_X(position),
+                       'long', ST_Y(position)
+                   ) as position
+        FROM location
+        WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= radius_meters
+        ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
+    `, [
+      lat, long, SRID,
+      lat, long, SRID,
+    ]);
+  const [result] = await connection.query(query);
 
   return <RowDataPacket[]>result as Array<Location>;
 };

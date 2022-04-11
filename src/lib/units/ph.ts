@@ -1,0 +1,37 @@
+import { ZodError } from "zod";
+
+const DECIMAL_COUNT = 3;
+const ROUND_FACTOR = Math.pow(10, DECIMAL_COUNT);
+const MIN_PH = 0;
+const MAX_PH = 14;
+
+/* pH doesn't have any unit, but we take this step to validate the range, and keep the system coherent */
+export class PH {
+  value: number;
+
+  constructor(value: number) {
+    if (value < MIN_PH) {
+      throw new ZodError([{
+        code: 'too_small',
+        path: ['ph'],
+        type: 'number',
+        minimum: MIN_PH,
+        inclusive: true,
+        message: `Value should be greater than or equal to ${MIN_PH}.`
+      }]);
+    }
+    if (value > MAX_PH) {
+      throw new ZodError([{
+        code: 'too_big',
+        path: ['ph'],
+        type: 'number',
+        maximum: MAX_PH,
+        inclusive: true,
+        message: `Value should be less than or equal to ${MAX_PH}.`
+      }]);
+    }
+    this.value = value;
+  }
+
+  getValue = () => Math.round((this.value * 1E4 / 1.5625) * ROUND_FACTOR) / ROUND_FACTOR;
+}

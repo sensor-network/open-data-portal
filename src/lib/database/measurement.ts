@@ -43,14 +43,15 @@ export const createOne = async (
     value,
     time,
     sensor_type,
-    location_id
-  }: { sensor_id: number, value: number, time: Date | string, sensor_type: string, location_id: number },
+    location_id,
+    position
+  }: { sensor_id: number, value: number, time: Date | string, sensor_type: string, location_id: number, position: { lat: number, long: number } },
 ) => {
   const connection = await getConnectionPool();
   const [result] = await connection.query(`
-      INSERT INTO measurement (sensor_id, value, time, type, location_id)
-      VALUES (?, ?, ?, ?, ?)
-  `, [sensor_id, value, time, sensor_type, location_id]);
+      INSERT INTO measurement (sensor_id, value, time, type, location_id, position)
+      VALUES (?, ?, ?, ?, ?, ST_GeomFromText('POINT(? ?)', 4326))
+  `, [sensor_id, value, time, sensor_type, location_id, position.lat, position.long]);
   return <OkPacket>result;
 };
 
@@ -61,8 +62,8 @@ export const findMany = async (
   const [result] = await connection.query(`
       select l.name     as location_name,
              JSON_OBJECT(
-                     'lat', ST_X(l.position),
-                     'long', ST_Y(l.position)
+                     'lat', ST_X(m.position),
+                     'long', ST_Y(m.position)
                  )      as position,
              m.time,
              CONCAT('{',
@@ -89,8 +90,8 @@ export const findByLocationId = async (
   const [result] = await connection.query(`
       select l.name     as location_name,
              JSON_OBJECT(
-                     'lat', ST_X(l.position),
-                     'long', ST_Y(l.position)
+                     'lat', ST_X(m.position),
+                     'long', ST_Y(m.position)
                  )      as position,
              m.time,
              CONCAT('{',
