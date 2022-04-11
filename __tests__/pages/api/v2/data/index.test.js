@@ -1,4 +1,3 @@
-import handler from "src/pages/api/v2/data/index";
 import { createOne, findMany, getRowCount } from "src/lib/database/data";
 import { createMocks } from "node-mocks-http";
 
