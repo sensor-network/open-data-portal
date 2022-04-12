@@ -18,10 +18,10 @@ export const findInCombinedFormat = async (
     start_time,
     end_time,
     location_id
-  }: { start_time: Date | string, end_time: Date | string, location_id: number | null },
+  }: { start_time: Date | string, end_time: Date | string, location_id: number },
 ) => {
-  /* if location_id specified select with it, else select all */
-  const query = location_id ? mysql.format(`
+  /* if location_id = -1 we select all, else select with id */
+  const query = location_id > 0 ? mysql.format(`
               SELECT type, value as avg, time, value as min, value as max
               FROM measurement
               WHERE time BETWEEN ? AND ?

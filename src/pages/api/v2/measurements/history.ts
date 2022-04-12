@@ -61,7 +61,7 @@ type Summary = {
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== 'GET') {
-    console.log(`${req.method}: /api/v2/aggregate:: Method not allowed`);
+    console.log(`${req.method}: /api/v2/measurements/history:: Method not allowed`);
     res.setHeader('Allow', 'GET')
       .status(STATUS.NOT_ALLOWED)
       .json({ error: `Method '${req.method}' not allowed.` });
@@ -75,7 +75,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const include_measurements = z.enum(['true', 'false']).default('true')
       .transform(str => str === 'true')
       .parse(req.query.include_measurements);
-    let location_name = z.string().default('Karlskrona').parse(req.query.location_name);
+    let location_name = z.string().optional().parse(req.query.location_name);
+    console.log(location_name);
     /* how much time between each measurement */
     const density = zDensity.parse(req.query.density) || defineDataDensity(new Date(start_date), new Date(end_date));
     const next_date_options = DENSITY_OPTIONS[density];
@@ -90,16 +91,22 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         .parse(req.query.conductivity_unit)
     );
 
-    /* find specified location */
-    const location = await Location.findByName({ name: location_name });
-    if (!location) {
-      console.log(`/api/v2/data/history:: Location '${location_name}' not found`);
-      res.status(STATUS.OK).json({});
-      return;
+    /* find specified location, use a dummy as default, dummy is placeholder to select all locations */
+    let location: Location.Location = { id: -1, name: 'all', position: { lat: 0, long: 0 }, radius_meters: 0 };
+    /* if a specific name was provided, override the dummy and use an actual position */
+    if (location_name) {
+      location = await Location.findByName({ name: location_name });
+      console.log(location);
+      if (!location) {
+        console.log(`/api/v2/measurements/history:: Location '${location_name}' not found`);
+        res.status(STATUS.OK)
+          .json(include_measurements ? { summary: {}, measurements: [] } : { summary: {} });
+        return;
+      }
     }
 
     const summary: Summary = {
-      location_name,
+      location_name: location_name || "Everywhere",
       start_date: format(new Date(start_date), 'yyyy-MM-dd'),
       end_date: format(new Date(end_date), 'yyyy-MM-dd'),
       sensors: {},
@@ -107,18 +114,17 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     let measurements: Array<SummarizedMeasurement> = [];
 
     /* decide what table to query */
-    /* FIXME: manually setting id to null if name = Karlskrona is a bit hacky way to select all */
     let rows: Array<CombinedFormat>;
     if (DAILY_DENSITIES.find(d => d === density)) {
       rows = await Measurement.findInCombinedFormat({
-        location_id: location_name === 'Karlskrona' ? null : location.id,
+        location_id: location.id,
         start_time: start_date,
         end_time: end_date,
       });
     }
     else {
       rows = await History.findInCombinedFormat({
-        location_id: location_name === 'Karlskrona' ? null : location.id,
+        location_id: location.id,
         start_date,
         end_date,
       });

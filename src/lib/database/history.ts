@@ -40,10 +40,10 @@ export const findInCombinedFormat = async (
     start_date,
     end_date,
     location_id
-  }: { start_date: Date | string, end_date: Date | string, location_id: number | null },
+  }: { start_date: Date | string, end_date: Date | string, location_id: number },
 ) => {
-  /* if location_id specified select with it, else select all */
-  const query = location_id ? mysql.format(`
+  /* if location_id = -1 we select all, else select with id */
+  const query = location_id > 0 ? mysql.format(`
               SELECT type, daily_avg as avg, date as time, daily_min as min, daily_max as max
               FROM history
               WHERE location_id = ?
