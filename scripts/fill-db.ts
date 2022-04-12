@@ -9,10 +9,17 @@ const c = {
   /* select time interval between measurements (seconds) */
   DATA_DENSITY: 5 * 60,
 
+  /* define what sensors are sending the data */
   TEMP_SENSOR_ID: 1,
-  PH_SENSOR_ID: 2,
-  CONDUCTIVITY_SENSOR_ID: 3,
+  PH_SENSOR_ID: 3,
+  CONDUCTIVITY_SENSOR_ID: 2,
+
+  /* in the api, the id is found by the coordinates, but here you need to supply both manually */
   LOCATION_ID: 1,
+  LOCATION: {
+    LAT: 56.2,
+    LONG: 15.6,
+  },
 
   /* define ranges for measurements (in SI-units) */
   MIN_TEMP: 283,
@@ -23,7 +30,7 @@ const c = {
   MAX_PH: 9,
 
   /* define how much each datapoint is allowed to change between each point,
-   *  the rate is a randomized value between -<change_rate> < 0 < <change_rate> */
+   * the rate is a randomized value between -<change_rate> < 0 < <change_rate> */
   TEMP_CHANGE_RATE: 0.1,
   COND_CHANGE_RATE: 0.1,
   PH_CHANGE_RATE: 0.1,
@@ -80,14 +87,14 @@ export const loadData = async () => {
 
     try {
       await connection.query(`
-          INSERT INTO measurement (sensor_id, location_id, value, time, type)
-          VALUES (?, ?, ?, ?, ?),
-                 (?, ?, ?, ?, ?),
-                 (?, ?, ?, ?, ?);
+          INSERT INTO measurement (sensor_id, location_id, position, value, time, type)
+          VALUES (?, ?, ST_GeomFromText('POINT(? ?)', 4326), ?, ?, ?),
+                 (?, ?, ST_GeomFromText('POINT(? ?)', 4326), ?, ?, ?),
+                 (?, ?, ST_GeomFromText('POINT(? ?)', 4326), ?, ?, ?);
       `, [
-        c.TEMP_SENSOR_ID, c.LOCATION_ID, s.temp, time, 'temperature',
-        c.PH_SENSOR_ID, c.LOCATION_ID, s.ph, time, 'ph',
-        c.CONDUCTIVITY_SENSOR_ID, c.LOCATION_ID, s.cond, time, 'conductivity',
+        c.TEMP_SENSOR_ID, c.LOCATION_ID, c.LOCATION.LAT, c.LOCATION.LONG, s.temp, time, 'temperature',
+        c.PH_SENSOR_ID, c.LOCATION_ID, c.LOCATION.LAT, c.LOCATION.LONG, s.ph, time, 'ph',
+        c.CONDUCTIVITY_SENSOR_ID, c.LOCATION_ID, c.LOCATION.LAT, c.LOCATION.LONG, s.cond, time, 'conductivity',
       ]);
       console.log(time);
 
