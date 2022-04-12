@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 
 import Navbar from "src/components/Navbar";
 import Footer from "src/components/Footer";
-import { loadPreferences } from "src/lib/loadPreferences";
+import { loadPreferences } from "src/lib/utilityFunctions";
 import { useWidth } from "../lib/hooks/useWidth";
 import { useLocations } from "../lib/hooks/useLocations";
 
@@ -23,7 +23,7 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <>
-      <NextNProgress color={"#1976d2"} height={5} options={{ showSpinner: false }}/>
+      <NextNProgress color={"#185693"} height={5} options={{ showSpinner: false }}/>
       <PreferenceContext.Provider value={{ preferences, locations }}>
         <Navbar isMobile={isMobile} height={NAV_HEIGHT} setPreferences={setPreferences}/>
         <div style={{ paddingTop: isMobile ? 0 : NAV_HEIGHT, paddingBottom: !isMobile ? 0 : NAV_HEIGHT }}>
