@@ -73,7 +73,7 @@ export const findMany = async (
                INNER JOIN location l
                           ON l.id = m.location_id
       WHERE m.time BETWEEN ? AND ?
-      group by m.time, l.position, l.name
+      group by m.time, l.position, l.name, m.position
       order by m.time
   `, [start_date, end_date]);
   return (<RowDataPacket[]>result).map(row => ({
@@ -102,7 +102,7 @@ export const findByLocationId = async (
                           ON l.id = m.location_id
       where m.time BETWEEN ? AND ?
         AND m.location_id = ?
-      group by m.time
+      group by m.time, m.position
       order by m.time;
   `, [
     startTime, endTime,

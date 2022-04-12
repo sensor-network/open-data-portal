@@ -73,7 +73,7 @@ const Summary = () => {
     isLagging: archipelagoLagging,
   } = useSummarizedData(urls.archipelago);
 
-  const columns = isLoading ? 0 : Object.keys(summarizedData.sensors);
+  const columns = isLoading ? 0 : Object.keys(summarizedData.sensors).length;
   const columnCount = 3 + 3 * columns.length;
 
   const isAnyLoading = isLoading || allTimeLoading || lastYearsLoading || archipelagoLoading;
@@ -84,7 +84,7 @@ const Summary = () => {
       {(isAnyLagging || isAnyLoading) && <CustomProgressBar/>}
       {!isLoading && columns <= 0 && <div>No data for selected timerange</div>}
       <Grid container columns={columnCount} spacing={0} className={styles.gridContainer}>
-        <Grid item xs={6} sm={4} md={3} sx={{ fontWeight: 600 }}>
+        <Grid item xs={Math.floor(columnCount / 2)} sm={4} md={3} sx={{ fontWeight: 600 }}>
 
           {/* empty div but force height with 0-width unicode symbol */}
           <div className={styles.header}>{"\u200b"}</div>
@@ -130,7 +130,7 @@ const Summary = () => {
 
         </Grid>
 
-        <Grid item xs={6} sm={8} md={9} className={styles.gridValues}>
+        <Grid item xs={Math.floor(columnCount / 2)} sm={8} md={9} className={styles.gridValues}>
           {!isAnyLoading && Object.entries(summarizedData.sensors).map(([sensor, sensorData], index) => {
             const unit = preferences[`${sensor.toLowerCase()}_unit`]?.symbol;
             const capitalizedUnit = capitalize(unit);
