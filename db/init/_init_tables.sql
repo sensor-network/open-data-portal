@@ -26,9 +26,10 @@ CREATE TABLE sensor
 
 CREATE TABLE station
 (
-    `id`          int primary key AUTO_INCREMENT,
+    `id`          int AUTO_INCREMENT,
     `sensor_id`   int     NOT NULL,
     `location_id` int(11) NOT NULL,
+    primary key (`id`, `sensor_id`),
     foreign key (`location_id`) references location (`id`),
     foreign key (`sensor_id`) references sensor (`id`),
     INDEX (`location_id`),
