@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ISOStringToSQLTimestamp } from 'lib/units/convertTimestamp';
-import { endOfToday, isValid } from 'date-fns';
+import { isValid } from 'date-fns';
 
 /**
  * schema for parsing location information,
@@ -24,7 +24,7 @@ export const zLocation = z.object({
     .refine((num) => num > 0, 'should be positive')
     .or(z.number().positive())  // no need to transform if input is already a number (e.g. when coming from req. body)
   ,
-  location_name: z.string().optional(),
+  locationName: z.string().optional(),
 });
 
 /**
@@ -33,27 +33,27 @@ export const zLocation = z.object({
  **/
 export const zTime = z.object({
   /* FIXME: Sort out proper ranges later */
-  start_date: z.string().default('2022Z' /* new year 2022 */)
+  startDate: z.string().default('2022Z' /* new year 2022 */)
     .refine(str => isValid(new Date(str)), 'Unable to parse string as Date')
     //.refine(str => new Date(str) >= new Date('2022Z'), 'must be after 2022')
     .transform(str => new Date(str).toISOString()),
-  end_date: z.string().default(new Date().toISOString() /* current time */)
+  endDate: z.string().default(new Date().toISOString() /* current time */)
     .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
-    .refine(str => new Date(str) <= endOfToday(), "can't be a future date")
+    //.refine(str => new Date(str) <= endOfToday(), "can't be a future date")
     .transform(str => new Date(str).toISOString()),
-}).refine(({ start_date, end_date }) => end_date >= start_date, 'end_date must be before start_date');
+}).refine(({ startDate, endDate }) => endDate >= startDate, 'endDate must be before startDate');
 
 /**
  * schema for selecting pagination options,
- * defaults to page 1 with page_size 100
+ * defaults to page 1 with pageSize 100
  **/
 export const zPage = z.object({
   page: z.preprocess(
     page => Number(z.string().default("1").parse(page)),
     z.number().int().positive()
   ),
-  page_size: z.preprocess(
-    page_size => Number(z.string().default("100").parse(page_size)),
+  pageSize: z.preprocess(
+    pageSize => Number(z.string().default("100").parse(pageSize)),
     z.number().int().positive()
   ),
 });
@@ -78,15 +78,15 @@ export const zCreateMeasurement = z.object({
 
   }),
   sensors: z.array(z.object({
-    sensor_id: z.number().positive(),
+    sensorId: z.number().positive(),
     value: z.number(),
     unit: z.string().optional(),
   }))
 });
 
 export const zCreateStation = z.object({
-  location_id: z.number().int().positive(),
-  sensor_ids: z.array(
+  locationId: z.number().int().positive(),
+  sensorIds: z.array(
     z.number().int().positive()
   ),
 });
@@ -96,3 +96,26 @@ export const zCreateSensor = z.object({
   firmware: z.string().optional().nullable(),
   type: z.string(),
 });
+
+export const zStationExpandParam = z.optional(
+  z.enum(['sensors', 'location'])
+    .or(z.array(
+      z.enum(['sensors', 'location'])
+    ))
+).default([]);
+
+export const zStationParams = z.object({
+  sensorId: z.optional(z.string()  // input is a string which has to be transformed
+    .transform(str => parseInt(str, 10))
+    .refine((num) => num > 0, 'id has to be positive'),
+  ),
+  locationName: z.optional(z.string()),
+  sensorType: z.optional(z.string()),
+  expand: zStationExpandParam,
+}).strict();
+
+export const zIdFromString = z.string()
+  .transform(str => parseInt(str, 10))
+  .refine((num) => num > 0, 'id has to be positive');
+
+export const zId = z.number().int().positive();
