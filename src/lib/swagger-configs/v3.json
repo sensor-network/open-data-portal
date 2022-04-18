@@ -2257,10 +2257,56 @@
           "Sensors"
         ],
         "summary": "Gets all different sensor types used throughout the application",
-        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "description": "Retrieves a JSON array with all the sensor types used throughout the application.",
         "operationId": "getSensorTypes",
         "parameters": [],
         "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "temperature"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No sensor types found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
