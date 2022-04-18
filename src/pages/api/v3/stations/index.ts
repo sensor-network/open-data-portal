@@ -154,9 +154,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     }
   }
 
+  /**
+   * {unknown} /api/v3/stations
+   **/
   else {
     console.log(`${req.method}: /api/v3/stations:: Method not allowed`);
-    res.setHeader('Allow', 'POST, GET, PATCH')
+    res.setHeader('Allow', 'POST, GET')
       .status(STATUS.NOT_ALLOWED)
       .json({ error: `Method '${req.method}' not allowed.` });
     return;
