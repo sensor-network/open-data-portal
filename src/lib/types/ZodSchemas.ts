@@ -2,6 +2,14 @@ import { z } from 'zod';
 import { ISOStringToSQLTimestamp } from 'lib/units/convertTimestamp';
 import { isValid } from 'date-fns';
 
+
+/* GENERAL SCHEMAS */
+export const zIdFromString = z.string()
+  .transform(str => parseInt(str, 10))
+  .refine((num) => num > 0, 'id has to be positive');
+
+export const zId = z.number().int().positive();
+
 /**
  * schema for parsing location information,
  * geo-information is validated to be in range
@@ -58,7 +66,8 @@ export const zPage = z.object({
   ),
 });
 
-/* new schema for uploading sensor data */
+
+/* MEASUREMENT SCHEMA */
 export const zCreateMeasurement = z.object({
   timestamp: z.string()
     // maximize compatibility and validate the inputted date
@@ -84,17 +93,13 @@ export const zCreateMeasurement = z.object({
   }))
 });
 
+
+/* STATION SCHEMAS */
 export const zCreateStation = z.object({
   locationId: z.number().int().positive(),
   sensorIds: z.array(
     z.number().int().positive()
   ),
-});
-
-export const zCreateSensor = z.object({
-  name: z.string().optional().nullable(),
-  firmware: z.string().optional().nullable(),
-  type: z.string(),
 });
 
 export const zStationExpandParam = z.optional(
@@ -114,8 +119,10 @@ export const zStationParams = z.object({
   expand: zStationExpandParam,
 }).strict();
 
-export const zIdFromString = z.string()
-  .transform(str => parseInt(str, 10))
-  .refine((num) => num > 0, 'id has to be positive');
 
-export const zId = z.number().int().positive();
+/* SENSOR SCHEMAS */
+export const zCreateSensor = z.object({
+  name: z.string().optional().nullable(),
+  firmware: z.string().optional().nullable(),
+  type: z.string(),
+});
