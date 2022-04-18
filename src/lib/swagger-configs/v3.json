@@ -7,12 +7,12 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000/api/v3",
-      "description": "Developer Server"
-    },
-    {
       "url": "http://sensornetwork.diptsrv003.bth.se/api/v3",
       "description": "Production Server"
+    },
+    {
+      "url": "http://localhost:3000/api/v3",
+      "description": "Development Server"
     }
   ],
   "paths": {
@@ -427,8 +427,8 @@
         "tags": [
           "Locations"
         ],
-        "summary": "Gets a collection of locations",
-        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "summary": "Gets the available locations",
+        "description": "Retrieves a JSON array with all the available locations. Filter options are taken in the following order: `name` -> `lat/long`.",
         "operationId": "getLocation",
         "parameters": [
           {
@@ -442,40 +442,144 @@
               "type": "string",
               "example": "Gräsvik"
             }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Optional. Latitude of location. Must be specified together with `long`.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": 56.183016
+            }
+          },
+          {
+            "name": "long",
+            "in": "query",
+            "description": "Optional. Longitude of location. Must be specified together with `lat`.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": 15.58817
+            }
+          },
+          {
+            "name": "rad",
+            "in": "query",
+            "description": "Optional. Radius of search area (in meters). If not provided, the radius is inherited from the `location`-entries from the database.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": 100
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "The data is successfully returned.",
+            "description": "Successful operation.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Location"
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Gräsvik"
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "lat": {
+                            "type": "number",
+                            "example": 56.183016,
+                            "format": "float"
+                          },
+                          "lng": {
+                            "type": "number",
+                            "example": 15.58817,
+                            "format": "float"
+                          }
+                        }
+                      },
+                      "radiusMeters": {
+                        "type": "number",
+                        "example": 100,
+                        "format": "float"
+                      }
+                    }
                   }
                 }
               }
             }
           },
-          "405": {
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Method POST is not allowed for this endpoint"
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "lat and long must be provided together"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "rad": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Number must be greater than 0"
+                          }
+                        },
+                        "long": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "should be greater than or equal to -180"
+                          }
+                        }
+                      }
                     }
                   }
                 }
               }
-            },
-            "description": "External users are currently not allowed to push locations."
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No location with name 'Trossö' found."
+                    }
+                  }
+                }
+              }
+            }
           },
           "500": {
-            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
             "content": {
               "application/json": {
                 "schema": {
@@ -483,7 +587,7 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "Error fetching data from the database"
+                      "example": "Internal server error"
                     }
                   }
                 }
@@ -496,9 +600,14 @@
         "tags": [
           "Locations"
         ],
-        "summary": "Adds a new location",
-        "description": "Adds a new location to the database. The location is added to the database and the ID is returned.",
-        "operationId": "addLocation",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Creates a new location",
+        "description": "Adds a new location to the database. The inserted location is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "operationId": "createLocation",
         "requestBody": {
           "content": {
             "application/json": {
@@ -508,6 +617,18 @@
                   "name": {
                     "type": "string",
                     "example": "Gräsvik"
+                  },
+                  "lat": {
+                    "type": "number",
+                    "example": 56.183016
+                  },
+                  "long": {
+                    "type": "number",
+                    "example": 15.588170
+                  },
+                  "rad": {
+                    "type": "number",
+                    "example": 320
                   }
                 }
               }
@@ -516,6 +637,401 @@
           "required": true
         },
         "responses": {
+          "201": {
+            "description": "The location was successfully created. The created location is returned to the client.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Gräsvik"
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "example": 56.183016
+                        },
+                        "long": {
+                          "type": "number",
+                          "example": 15.588170
+                        }
+                      }
+                    },
+                    "radiusMeters": {
+                      "type": "number",
+                      "example": 320
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `lat/long` was not provided correctly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'locationName'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "long": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Number must be less than or equal to 180"
+                          }
+                        },
+                        "rad": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{id}": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Gets a single location with a given id",
+        "description": "Gets a single location with a given id. The id is passed in the url-parameter.",
+        "operationId": "getLocationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the location to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Gräsvik"
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "example": 56.183016,
+                          "format": "float"
+                        },
+                        "lng": {
+                          "type": "number",
+                          "example": 15.58817,
+                          "format": "float"
+                        }
+                      }
+                    },
+                    "radiusMeters": {
+                      "type": "number",
+                      "example": 100,
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Location with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Update a location",
+        "description": "Update a location. The locationId must be given in the URL. Updated values should be given in the request body. Currently, its only possible to update the `name` of a location, which is useful if your locations have been generated for you. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "updateLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the location to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Hästö"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The location was updated successfully. The updated value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "totalChanges": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "updatedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Hästö"
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "example": 56.183016
+                            },
+                            "lng": {
+                              "type": "number",
+                              "example": 15.58817
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Expected object, received string"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Location with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1800,383 +2316,6 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "default"
-      }
-    },
-    "schemas": {
-      "Measurement": {
-        "type": "object",
-        "properties": {
-          "location_name": {
-            "type": "string",
-            "example": "Karlskrona"
-          },
-          "position": {
-            "type": "object",
-            "properties": {
-              "lat": {
-                "type": "number",
-                "format": "float",
-                "example": 56.16192
-              },
-              "long": {
-                "type": "number",
-                "format": "float",
-                "example": 15.58676
-              }
-            }
-          },
-          "sensors": {
-            "description": "Some example of sensors, there can be arbitrary many sensors and they are not limited to these examples.",
-            "type": "object",
-            "properties": {
-              "temperature": {
-                "type": "number",
-                "format": "float",
-                "example": 26.162
-              },
-              "conductivity": {
-                "type": "number",
-                "format": "float",
-                "example": 5.643
-              },
-              "ph": {
-                "type": "number",
-                "format": "float",
-                "example": 6.86
-              }
-            }
-          }
-        }
-      },
-      "Pagination": {
-        "type": "object",
-        "description": "Displays information about the pagination options used for the query.",
-        "properties": {
-          "page": {
-            "type": "number",
-            "example": 1
-          },
-          "page_size": {
-            "type": "number",
-            "example": 100
-          },
-          "last_page": {
-            "type": "number",
-            "example": 550
-          },
-          "total_rows": {
-            "type": "number",
-            "example": 567436
-          },
-          "has_previous_page": {
-            "type": "boolean",
-            "example": false
-          },
-          "has_next_page": {
-            "type": "boolean",
-            "example": true
-          }
-        }
-      },
-      "Units": {
-        "type": "object",
-        "description": "Displays information about the units used for the query. There can be arbitrary many units and they are not limited to these examples.",
-        "properties": {
-          "date": {
-            "type": "string",
-            "example": "UTC"
-          },
-          "temperature_unit": {
-            "type": "string",
-            "example": "c"
-          },
-          "conductivity_unit": {
-            "type": "string",
-            "example": "ppm"
-          }
-        }
-      },
-      "Location": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number",
-            "format": "integer",
-            "example": 1
-          },
-          "name": {
-            "type": "string",
-            "example": "Trossö"
-          },
-          "radius_meters": {
-            "type": "number",
-            "format": "integer",
-            "example": 300
-          },
-          "position": {
-            "type": "object",
-            "properties": {
-              "lat": {
-                "type": "number",
-                "format": "float",
-                "example": 56.16192
-              },
-              "long": {
-                "type": "number",
-                "format": "float",
-                "example": 15.58676
-              }
-            }
-          }
-        }
-      },
-      "Sensor": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number",
-            "format": "integer",
-            "example": 1
-          },
-          "name": {
-            "type": "string",
-            "example": "sk1000"
-          },
-          "firmware": {
-            "type": "string",
-            "example": "1.0.0"
-          },
-          "type": {
-            "type": "string",
-            "example": "temperature"
-          }
-        }
-      },
-      "Station": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "number",
-            "format": "integer",
-            "example": 1
-          },
-          "location_id": {
-            "type": "number",
-            "format": "integer",
-            "example": 1
-          },
-          "location_name": {
-            "type": "string",
-            "example": "Trossö"
-          },
-          "sensors": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "number",
-                  "format": "integer",
-                  "example": 1
-                },
-                "name": {
-                  "type": "string",
-                  "example": "sk1000"
-                },
-                "firmware": {
-                  "type": "string",
-                  "example": "1.0.0"
-                },
-                "type": {
-                  "type": "string",
-                  "example": "temperature"
-                }
-              }
-            }
-          }
-        }
-      },
-      "History": {
-        "type": "object",
-        "properties": {
-          "summary": {
-            "type": "object",
-            "properties": {
-              "location_name": {
-                "type": "string",
-                "example": "Trossö"
-              },
-              "start_date": {
-                "type": "string",
-                "format": "date",
-                "example": "2022-01-01"
-              },
-              "end_date": {
-                "type": "string",
-                "example": "2022-12-31"
-              },
-              "sensors": {
-                "type": "object",
-                "description": "A summary of the sensors in the location. Given sensor types are examples and there can be arbitrary many sensors.",
-                "properties": {
-                  "conductivity": {
-                    "type": "object",
-                    "properties": {
-                      "start": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 7.7
-                      },
-                      "min": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 5.7
-                      },
-                      "avg": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 3
-                      },
-                      "max": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 5.2
-                      },
-                      "end": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 8
-                      }
-                    }
-                  },
-                  "temperature": {
-                    "type": "object",
-                    "properties": {
-                      "start": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 292.2
-                      },
-                      "min": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 284.9
-                      },
-                      "avg": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 283
-                      },
-                      "max": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 293.2
-                      },
-                      "end": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 298
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "measurements": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "location_name": {
-                  "type": "string",
-                  "example": "Karlskrona"
-                },
-                "position": {
-                  "type": "object",
-                  "properties": {
-                    "lat": {
-                      "type": "number",
-                      "format": "float",
-                      "example": 56.16192
-                    },
-                    "long": {
-                      "type": "number",
-                      "format": "float",
-                      "example": 15.58676
-                    }
-                  }
-                },
-                "sensors": {
-                  "description": "Some example of sensors, there can be arbitrary many sensors and they are not limited to these examples.",
-                  "type": "object",
-                  "properties": {
-                    "temperature": {
-                      "type": "object",
-                      "properties": {
-                        "start": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 292.2
-                        },
-                        "min": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 284.9
-                        },
-                        "avg": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 283
-                        },
-                        "max": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 293.2
-                        },
-                        "end": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 298
-                        }
-                      }
-                    },
-                    "conductivity": {
-                      "type": "object",
-                      "properties": {
-                        "start": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 7.7
-                        },
-                        "min": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 5.7
-                        },
-                        "avg": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 3
-                        },
-                        "max": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 5.2
-                        },
-                        "end": {
-                          "type": "number",
-                          "format": "float",
-                          "example": 8
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     }
   }
