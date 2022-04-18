@@ -21,7 +21,7 @@ export const createOne = async (
       INSERT INTO location
           (name, radius_meters, position)
       VALUES (?, ?, ST_GeomFromText('POINT(? ?)', ?))
-  `, [name, rad, long, lat, SRID]);
+  `, [name, rad, lat, long, SRID]);
   return result.insertId;
 };
 
