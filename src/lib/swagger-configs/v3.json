@@ -639,14 +639,6 @@
                             "type": {
                               "type": "string",
                               "example": "temperature"
-                            },
-                            "status": {
-                              "type": "string",
-                              "example": "ok"
-                            },
-                            "lastActive": {
-                              "type": "string",
-                              "example": "2022-04-15T19:54:26.000Z"
                             }
                           }
                         }
@@ -966,14 +958,6 @@
                           "type": {
                             "type": "string",
                             "example": "temperature"
-                          },
-                          "status": {
-                            "type": "string",
-                            "example": "ok"
-                          },
-                          "lastActive": {
-                            "type": "string",
-                            "example": "2022-04-15T19:54:26.000Z"
                           }
                         }
                       }

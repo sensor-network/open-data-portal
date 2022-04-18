@@ -43,8 +43,6 @@ const reformatSQLResult = (result: RowDataPacket[], expandLocation: boolean, exp
           name: row.sensor_name,
           firmware: row.firmware,
           type: row.type,
-          status: row.status,
-          lastActive: row.last_active,
         } :
         row.sensor_id
     );
@@ -80,7 +78,7 @@ export const findMany = async (
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
       SELECT st.id AS station_id,
              ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
-             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type, sn.status, sn.last_active' : 'sn.id AS sensor_id'}
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
@@ -99,7 +97,7 @@ export const findByStationId = async (
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
       SELECT st.id AS station_id,
              ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
-             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type, sn.status, sn.last_active' : 'sn.id AS sensor_id'}
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
@@ -121,7 +119,7 @@ export const findByLocationName = async (
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
       SELECT st.id AS station_id,
              ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
-             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type, sn.status, sn.last_active' : 'sn.id AS sensor_id'}
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
@@ -152,7 +150,7 @@ export const findBySensorId = async (
   const [result, __]: [result: RowDataPacket[], __: any] = await connection.query(`
       SELECT st.id AS station_id,
              ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
-             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type, sn.status, sn.last_active' : 'sn.id AS sensor_id'}
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
@@ -184,7 +182,7 @@ export const findBySensorType = async (
   const [result, __]: [result: RowDataPacket[], __: any] = await connection.query(`
       SELECT st.id AS station_id,
              ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
-             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type, sn.status, sn.last_active' : 'sn.id AS sensor_id'}
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
