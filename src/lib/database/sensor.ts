@@ -5,105 +5,139 @@ export type Sensor = {
   id: number,
   name: string,
   firmware: string,
-  type: string
+  type: string,
+  status?: string,
+  lastActive?: Date
 }
 
 export const createOne = async (
   { name, firmware, type }: { name: string | null, firmware: string | null, type: string },
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
+  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
       INSERT INTO sensor (name, firmware, type)
       VALUES (?, ?, ?)
   `, [name, firmware, type]);
-  return (<OkPacket>result).insertId;
+  return result.insertId;
 };
 
 export const findById = async (
-  { id }: { id: number }
+  { id, includeStatus = false }: { id: number, includeStatus?: boolean },
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
-      SELECT id, name, firmware, type
-      FROM sensor
-      WHERE id = ?
-  `, [id]);
-  return (<RowDataPacket>result)[0] as Sensor;
+  const query = includeStatus
+    ? `
+              SELECT id, name, firmware, type, status, last_active AS lastActive
+              FROM sensor
+              WHERE id = ?
+    `
+    : `
+              SELECT id, name, firmware, type
+              FROM sensor
+              WHERE id = ?
+    `;
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(query, [id]);
+  return result[0] as Sensor;
+};
+
+export const findByName = async (
+  { name, includeStatus = false }: { name: string, includeStatus?: boolean }
+) => {
+  const connection = await getConnectionPool();
+  const query = includeStatus
+    ? `
+              SELECT id, name, firmware, type, status, last_active AS lastActive
+              FROM sensor
+              WHERE name = ?
+    `
+    : `
+              SELECT id, name, firmware, type
+              FROM sensor
+              WHERE name = ?
+    `;
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(query, [name]);
+  return result as Sensor[];
 };
 
 export const findByType = async (
-  { type }: { type: string }
+  { type, includeStatus = false }: { type: string, includeStatus?: boolean }
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
-      SELECT id, name, firmware, type
-      FROM sensor
-      WHERE type = ?
-  `, [type]);
-  return <RowDataPacket[]>result as Array<Sensor>;
-};
-
-export const findByStationId = async (
-  { station_id }: { station_id: number }
-) => {
-  const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
-      SELECT sensor.id, sensor.name, sensor.firmware, sensor.type
-      FROM sensor
-               JOIN station ON station.sensor_id = sensor.id
-      WHERE station.id = ?
-  `, [station_id]);
-  return <RowDataPacket[]>result as Array<Sensor>;
+  const query = includeStatus
+    ? `
+              SELECT id, name, firmware, type, status, last_active AS lastActive
+              FROM sensor
+              WHERE type = ?
+    `
+    : `
+              SELECT id, name, firmware, type
+              FROM sensor
+              WHERE type = ?
+    `;
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(query, [type]);
+  return result as Sensor[];
 };
 
 export const findMany = async (
-  { include_status = false }
+  { includeStatus = false }: { includeStatus?: boolean }
 ) => {
   const connection = await getConnectionPool();
-  const query = include_status
+  const query = includeStatus
     ? `
-              SELECT id, type, status, last_active
+              SELECT id, name, firmware, type, status, last_active AS lastActive
               FROM sensor
     `
     : `
               SELECT id, name, firmware, type
               FROM sensor
     `;
-  const [result] = await connection.execute(query);
-  return <RowDataPacket[]>result as Array<Sensor>;
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(query);
+  return result as Sensor[];
 };
 
 export const updateFirmware = async (
   { id, firmware }: { id: number, firmware: string }
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
+  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
       UPDATE sensor
       SET firmware = ?
       WHERE id = ?
   `, [firmware, id]);
-  return (<OkPacket>result).changedRows;
+  return result;
+};
+
+export const updateName = async (
+  { id, name }: { id: number, name: string }
+) => {
+  const connection = await getConnectionPool();
+  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
+      UPDATE sensor
+      SET name = ?
+      WHERE id = ?
+  `, [name, id]);
+  return result;
 };
 
 export const updateStatus = async (
   { id, status }: { id: number, status: string }
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
+  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
       UPDATE sensor
       SET status      = ?,
           last_active = NOW()
       WHERE id = ?
   `, [status, id]);
-  return (<OkPacket>result).changedRows;
+  return result;
 };
 
 
 export const findAllTypes = async () => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
       SELECT DISTINCT type
       FROM sensor
   `);
-  return (<RowDataPacket[]>result).map(row => row.type) as Array<string>;
+  return result.map(row => row.type) as string[];
 };

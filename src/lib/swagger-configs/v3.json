@@ -731,7 +731,7 @@
             "bearerAuth": []
           }
         ],
-        "description": "Adds a new station to the database. When creating a station, you link a group of sensors together and places them at a selected location. The inserted id is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "description": "Adds a new station to the database. When creating a station, you link a group of sensors together and places them at a selected location. The inserted station is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
         "operationId": "createStation",
         "requestBody": {
           "content": {
@@ -1073,43 +1073,56 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "id": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "totalChanges": {
                       "type": "number",
                       "example": 1
                     },
-                    "location": {
+                    "updatedValue": {
                       "type": "object",
                       "properties": {
                         "id": {
                           "type": "number",
                           "example": 1
                         },
-                        "name": {
-                          "type": "string",
-                          "example": "Gräsvik"
-                        },
-                        "position": {
+                        "location": {
                           "type": "object",
                           "properties": {
-                            "lat": {
+                            "id": {
                               "type": "number",
-                              "example": 56.183016,
-                              "format": "float"
+                              "example": 1
                             },
-                            "lng": {
-                              "type": "number",
-                              "example": 15.58817,
-                              "format": "float"
+                            "name": {
+                              "type": "string",
+                              "example": "Gräsvik"
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "lat": {
+                                  "type": "number",
+                                  "example": 56.183016,
+                                  "format": "float"
+                                },
+                                "lng": {
+                                  "type": "number",
+                                  "example": 15.58817,
+                                  "format": "float"
+                                }
+                              }
                             }
                           }
+                        },
+                        "sensors": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "example": 1
+                          }
                         }
-                      }
-                    },
-                    "sensors": {
-                      "type": "array",
-                      "items": {
-                        "type": "number",
-                        "example": 1
                       }
                     }
                   }
@@ -1197,11 +1210,126 @@
         "tags": [
           "Sensors"
         ],
-        "summary": "Gets a collection of sensors",
-        "description": "Retrieves a JSON array with objects containing all the available locations.",
+        "summary": "Gets all available sensors.",
+        "description": "Retrieves a JSON array with all the available sensors. Filter options are taken in the following order: `name` -> `type`",
         "operationId": "getSensors",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Optional. Get available sensors matching a specific name.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "rkz1000"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Optional. Get available sensors with the specified type.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "temperature"
+            }
+          }
+        ],
         "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "rkz1000"
+                      },
+                      "type": {
+                        "type": "string",
+                        "example": "temperature"
+                      },
+                      "firmware": {
+                        "type": "string",
+                        "example": "1.0.0"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'sensor_id'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Expected string, received array"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No sensors with type 'bacteria' found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       },
       "post": {
@@ -1209,17 +1337,34 @@
           "Sensors"
         ],
         "summary": "Adds a new sensor",
-        "description": "Adds a new station to the database. The station is added to the database and the ID is returned.",
+        "description": "Adds a new sensor to the database. The inserted sensor is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "operationId": "addSensor",
         "requestBody": {
+          "description": "The sensor to add to the database. Only `type` is required. Other fields defaults to `null`.",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
+                  "type": {
+                    "type": "string",
+                    "required": true,
+                    "example": "conductivity"
+                  },
                   "name": {
                     "type": "string",
-                    "example": "Gräsvik"
+                    "required": false,
+                    "example": "tds-sensor"
+                  },
+                  "firmware": {
+                    "type": "string",
+                    "required": true,
+                    "example": "1.0.0"
                   }
                 }
               }
@@ -1228,6 +1373,365 @@
           "required": true
         },
         "responses": {
+          "201": {
+            "description": "The sensor was successfully created. The created sensor is returned to the client.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "tds-sensor"
+                    },
+                    "firmware": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "conductivity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `type` was not specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'sensorType'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sensors/{id}": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets a single sensor with a given id",
+        "description": "Gets a single sensor with a given id. The id is passed in the url-parameter.",
+        "operationId": "getSensorById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the sensor to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "tds-sensor"
+                    },
+                    "firmware": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "conductivity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `id` was not a positive integer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Sensor with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Update a sensor",
+        "description": "Update a sensor. The sensorId must be given in the URL. Updated values should be given in the request body. You can not change the sensors `type` after its creation since it may have relations to `Measurements`. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "updateSensor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the sensor to update",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "tds-sensor-2"
+                  },
+                  "firmware": {
+                    "type": "string",
+                    "example": "2.0.0"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The sensor was updated successfully. The updated value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "totalChanges": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "updatedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "tds-sensor-2"
+                        },
+                        "firmware": {
+                          "type": "string",
+                          "example": "2.0.0"
+                        },
+                        "type": {
+                          "type": "string",
+                          "example": "conductivity"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `locationId` parameter was not valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'type'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Sensor with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
