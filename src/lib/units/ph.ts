@@ -1,7 +1,7 @@
 import { ZodError } from "zod";
+import { DECIMAL_PLACES } from 'src/lib/constants';
 
-const DECIMAL_COUNT = 3;
-const ROUND_FACTOR = Math.pow(10, DECIMAL_COUNT);
+const ROUND_FACTOR = Math.pow(10, DECIMAL_PLACES);
 const MIN_PH = 0;
 const MAX_PH = 14;
 
@@ -33,5 +33,5 @@ export class PH {
     this.value = value;
   }
 
-  getValue = () => Math.round((this.value * 1E4 / 1.5625) * ROUND_FACTOR) / ROUND_FACTOR;
+  getValue = () => Math.round(this.value * ROUND_FACTOR) / ROUND_FACTOR;
 }
