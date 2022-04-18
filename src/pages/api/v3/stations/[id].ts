@@ -38,12 +38,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/stations/[id]:: Error parsing request:\n${e.flatten()}`);
+        console.log(`${req.method}: /api/v3/stations/[id]:: Error parsing request:\n`, e.flatten());
         res.status(STATUS.BAD_REQUEST)
           .json(e.flatten());
       }
       else {
-        console.error(e);
+        console.error(`${req.method}: /api/v3/stations/[id]::`, e);
         res.status(STATUS.SERVER_ERROR)
           .json({ message: "Internal server error" });
       }
@@ -104,12 +104,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/stations/[id]:: Error parsing request body:\n${e.flatten()}`);
+        console.log(`${req.method}: /api/v3/stations/[id]:: Error parsing request body:\n`, e.flatten());
         res.status(STATUS.BAD_REQUEST)
           .json(e.flatten());
       }
       else {
-        console.error(`${req.method}: /api/v3/stations/[id]:: ${e}`);
+        console.error(`${req.method}: /api/v3/stations/[id]::`, e);
         res.status(STATUS.SERVER_ERROR)
           .json({ error: "Internal server error" });
       }
