@@ -81,6 +81,7 @@ export const zLocation = z.object({
     return Number(rad);
   }, z.number().int().positive().nullable()),
   name: z.optional(z.string()),
+  locationName: z.optional(z.string()),
 })
   .refine(({ lat, long }) => {
     /* if one of them are specified, both have to be specified */

@@ -29,7 +29,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           .default("spm")
           .parse(req.query.conductivityUnit)
       );
-      const { long, lat, rad, name: locationName } = zLocation.parse(req.query);
+      const { lat, long, rad, locationName } = zLocation.parse(req.query);
       const { startTime, endTime } = zTime.parse(req.query);
       let { page, pageSize } = zPage.parse(req.query);
       const offset = (page - 1) * pageSize;  // last row of previous page
@@ -111,11 +111,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       measurements.forEach(({ sensors }) => {
         if (sensors.hasOwnProperty("temperature")) {
           // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-          sensors.temperature = temperature_unit.fromKelvin(sensors.temperature);
+          sensors.temperature = temperatureUnit.fromKelvin(sensors.temperature);
         }
         if (sensors.hasOwnProperty("conductivity")) {
           // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-          sensors.conductivity = conductivity_unit.fromSiemensPerMeter(sensors.conductivity);
+          sensors.conductivity = conductivityUnit.fromSiemensPerMeter(sensors.conductivity);
         }
         if (sensors.hasOwnProperty("ph")) {
           // @ts-ignore - this validation is apparently not enough to keep TS happy :(
@@ -162,6 +162,23 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
    * POST /api/v3/measurements
    **/
   else if (req.method === "POST") {
+    /**
+     * TODO: Implement more sophisticated authentication
+     */
+    const AUTHENTICATION_SCHEMA = 'Bearer';
+    const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
+    const { authorization } = req.headers;
+
+    if (authorization !== `${AUTHENTICATION_SCHEMA} ${AUTHENTICATION_TOKEN}`) {
+      const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
+      console.log(`${req.method} /api/v3/measurements:: ${errorMessage}`);
+
+      res.setHeader('WWW-Authenticate', AUTHENTICATION_SCHEMA)
+        .status(STATUS.UNAUTHORIZED)
+        .json({ error: errorMessage });
+      return;
+    }
+
     try {
       /* parse request body */
       const { time, location, sensors } = zCreateMeasurement.parse(req.body);
