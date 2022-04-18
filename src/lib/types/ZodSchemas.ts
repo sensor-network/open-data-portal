@@ -18,15 +18,15 @@ export const zId = z.number().int().positive();
  **/
 export const zTime = z.object({
   /* FIXME: Sort out proper ranges later */
-  startDate: z.string().default('2022Z' /* new year 2022 */)
+  startTime: z.string().default('2022Z' /* new year 2022 */)
     .refine(str => isValid(new Date(str)), 'Unable to parse string as Date')
     //.refine(str => new Date(str) >= new Date('2022Z'), 'must be after 2022')
     .transform(str => new Date(str).toISOString()),
-  endDate: z.string().default(new Date().toISOString() /* current time */)
+  endTime: z.string().default(new Date().toISOString() /* current time */)
     .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
     //.refine(str => new Date(str) <= endOfToday(), "can't be a future date")
     .transform(str => new Date(str).toISOString()),
-}).refine(({ startDate, endDate }) => endDate >= startDate, 'endDate must be before startDate');
+}).refine(({ startTime, endTime }) => endTime >= startTime, 'endDate cannot be before startDate');
 
 /**
  * schema for selecting pagination options,
@@ -94,7 +94,7 @@ export const zLocation = z.object({
 
 /* MEASUREMENT SCHEMA */
 export const zCreateMeasurement = z.object({
-  timestamp: z.string()
+  time: z.string()
     // maximize compatibility and validate the inputted date
     .transform((str: string) => ISOStringToSQLTimestamp(str)),
   location: z.object({
