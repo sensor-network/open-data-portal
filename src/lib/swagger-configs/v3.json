@@ -22,7 +22,7 @@
           "Measurements"
         ],
         "summary": "Gets a collection of measurements",
-        "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `data`-property is an array of datapoints. Data can be filtered in multiple ways, e.g. by location. A location can be selected either by its name or its geoinformation (lat, long, rad). If no location filter is provided, data is selected from all over the archipelago.",
+        "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `measurements`-property is an array of datapoints. Location filters applies in the following order: `locationName` -> `lat/long`.",
         "operationId": "getData",
         "parameters": [
           {
@@ -59,7 +59,6 @@
             "schema": {
               "type": "string",
               "format": "date-time",
-              "example": "2022-01-25T12:00:00Z",
               "default": "2022-01-01Z"
             }
           },
@@ -117,10 +116,20 @@
             }
           },
           {
+            "name": "useExactPosition",
+            "in": "query",
+            "description": "Optional. `THIS OPTION IS A POTENTIAL PERFORMANCE KILLER - TOGGLE WITH CARE.` If true, the API will run a distance formula on every measurement to find the exact measurements in range of the provided `lat/long/rad`. By default, it will use the coordinates to lookup known locations in the database and match to these which is less accurate but a lot more performance efficient.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
-            "description": "Optional. Select pagination options.",
+            "description": "Optional. Select pagination options. Falls back to last available page if the page provided does not exist.",
             "schema": {
               "type": "number",
               "format": "integer",
@@ -132,7 +141,7 @@
             "name": "pageSize",
             "in": "query",
             "required": false,
-            "description": "Optional. Select pagination options.",
+            "description": "Optional. Select pagination options. Defines how many measurements should be included per page.",
             "schema": {
               "type": "number",
               "format": "integer",
@@ -143,47 +152,101 @@
         ],
         "responses": {
           "200": {
-            "description": "The data is successfully returned. The data is provided in the selected units, and the time in UTC time.",
+            "description": "Successful operation.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
-                    },
-                    "units": {
-                      "$ref": "#/components/schemas/Units"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Measurement"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "If any of the request parameters are invalid, e.g. `temperature_unit` is not supported, or `end_date` is set as a date in the future.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "formErrors": {
-                      "type": "array"
-                    },
-                    "fieldErrors": {
                       "type": "object",
                       "properties": {
-                        "temperature_unit": {
-                          "type": "array",
-                          "items": {
+                        "page": {
+                          "type": "number",
+                          "format": "integer",
+                          "example": 5
+                        },
+                        "pageSize": {
+                          "type": "number",
+                          "format": "integer",
+                          "example": 50
+                        },
+                        "lastPage": {
+                          "type": "number",
+                          "format": "integer",
+                          "example": 5
+                        },
+                        "totalRows": {
+                          "type": "number",
+                          "format": "integer",
+                          "example": 500
+                        },
+                        "hasPreviousPage": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "hasNextPage": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    },
+                    "units": {
+                      "type": "object",
+                      "properties": {
+                        "time": {
+                          "type": "string",
+                          "example": "UTC"
+                        },
+                        "temperature": {
+                          "type": "string",
+                          "example": "c"
+                        },
+                        "conductivity": {
+                          "type": "string",
+                          "example": "spm"
+                        }
+                      }
+                    },
+                    "measurements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
                             "type": "string",
-                            "example": "Unexpected unit g. Expected k, c, f."
+                            "format": "date-time",
+                            "example": "2022-04-23T12:00:00Z"
+                          },
+                          "locationName": {
+                            "type": "string",
+                            "example": "Trossö"
+                          },
+                          "position": {
+                            "type": "object",
+                            "properties": {
+                              "lat": {
+                                "type": "number",
+                                "example": 56.12354
+                              },
+                              "long": {
+                                "type": "number",
+                                "example": 15.76543
+                              }
+                            }
+                          },
+                          "sensors": {
+                            "type": "object",
+                            "properties": {
+                              "temperature": {
+                                "type": "number",
+                                "example": 30.5
+                              },
+                              "conductivity": {
+                                "type": "number",
+                                "example": 5.8
+                              }
+                            }
                           }
                         }
                       }
@@ -193,8 +256,62 @@
               }
             }
           },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "lat and long must be provided together"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "startTime": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Unable to parse string as Date"
+                          }
+                        },
+                        "long": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "should be greater than or equal to -180"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No measurements found between 2022-01-25T12:00:00Z and 2022-03-06T16:34:12Z for location Trossö"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
-            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
             "content": {
               "application/json": {
                 "schema": {
@@ -202,7 +319,7 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "Error fetching data from the database"
+                      "example": "Internal server error"
                     }
                   }
                 }
@@ -215,43 +332,51 @@
         "tags": [
           "Measurements"
         ],
-        "summary": "Uploads a new measurement to the database",
-        "description": "Uploads a new set of measurements to the database. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "summary": "Creates a new measurement",
+        "description": "Adds a new set of measurements to the database. The inserted measurements are returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "operationId": "uploadMeasurements",
+        "operationId": "createMeasurements",
         "parameters": [
         ],
         "requestBody": {
-          "description": "Request body has to follow this schema. The body can be an array of objects following the schema, or just a single object. Not supplying units will make them fallback to the respective SI-unit - Kelvin (`k`) for temperature and Siemens per meter (`spm`) for conductivity. See `GET: /data` for a list of the supported units.",
+          "description": "Request body has to follow this schema. Not supplying units will make them fallback to the respective SI-unit - Kelvin (`k`) for temperature and Siemens per meter (`spm`) for conductivity. See `GET: /measurements` for a list of the supported units.",
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "timestamp": {
+                  "time": {
                     "type": "string",
                     "format": "date-time",
                     "example": "2022-01-01T00:00:00+02"
                   },
-                  "location_id": {
-                    "type": "number",
-                    "format": "integer",
-                    "example": 1
+                  "position": {
+                    "type": "object",
+                    "properties": {
+                      "lat": {
+                        "type": "number",
+                        "example": 59.3
+                      },
+                      "long": {
+                        "type": "number",
+                        "example": 18.0
+                      }
+                    }
                   },
                   "sensors": {
                     "type": "array",
                     "items": {
                       "type": "object",
                       "required": [
-                        "sensor_id",
+                        "sensorId",
                         "value"
                       ],
                       "properties": {
-                        "sensor_id": {
+                        "sensorId": {
                           "type": "number",
                           "format": "integer",
                           "example": 1
@@ -275,28 +400,55 @@
         },
         "responses": {
           "201": {
-            "description": "The Measurement was successfully uploaded to the database",
+            "description": "At least one of the sensors sent a valid measurement and it was successfully created. The created measurement is returned to the client. If any of the sensors sent a faulty measurement, this is indicated in the `errors` array as well as the `/health/sensors` endpoint.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "sensor_id": {
-                        "type": "number",
-                        "format": "integer",
-                        "example": 1
-                      },
-                      "value": {
-                        "type": "number",
-                        "format": "float",
-                        "example": 29.6
-                      },
-                      "time": {
-                        "type": "string",
-                        "format": "date-time",
-                        "example": "2021-12-31T22:00:00.000Z"
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sensorId": {
+                            "type": "number",
+                            "format": "integer",
+                            "example": 1
+                          },
+                          "status": {
+                            "type": "string",
+                            "example": "TOO_SMALL"
+                          }
+                        }
+                      }
+                    },
+                    "insertedMeasurements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "sensorId": {
+                            "type": "number",
+                            "format": "integer",
+                            "example": 1
+                          },
+                          "value": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 302.75
+                          },
+                          "time": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2021-12-31T22:00:00Z"
+                          },
+                          "locationId": {
+                            "type": "number",
+                            "format": "integer",
+                            "example": 1
+                          }
+                        }
                       }
                     }
                   }
@@ -335,8 +487,8 @@
               }
             }
           },
-          "403": {
-            "description": "Your request could not be verified. You either didn't supply an API key or it was invalid.",
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
             "content": {
               "application/json": {
                 "schema": {
@@ -344,23 +496,7 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "The provided API key could not be verified."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "405": {
-            "description": "Method not allowed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Method PUT is not allowed for this endpoint."
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
                     }
                   }
                 }

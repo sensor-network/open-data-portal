@@ -82,15 +82,23 @@ export const zLocation = z.object({
   }, z.number().int().positive().nullable()),
   name: z.optional(z.string()),
   locationName: z.optional(z.string()),
+  useExactPosition: z.enum(['true', 'false']).default('false').transform(str => str === 'true'),
 })
-  .refine(({ lat, long }) => {
+  .refine(({ lat, long, useExactPosition, rad }) => {
     /* if one of them are specified, both have to be specified */
     if (lat !== undefined || long !== undefined) {
       return lat !== undefined && long !== undefined;
     }
     /* but they can both be left out */
     return true;
-  }, 'lat and long must be provided together');
+  }, 'lat and long must be provided together')
+  .refine(({ lat, long, useExactPosition, rad }) => {
+    /* if useExactPosition is true, then lat and long must be specified */
+    if (useExactPosition) {
+      return lat !== undefined && long !== undefined && rad !== null;
+    }
+    return true;
+  }, 'lat, long and rad must be provided if using useExactPosition');
 
 
 /* MEASUREMENT SCHEMA */
@@ -98,7 +106,7 @@ export const zCreateMeasurement = z.object({
   time: z.string()
     // maximize compatibility and validate the inputted date
     .transform((str: string) => ISOStringToSQLTimestamp(str)),
-  location: z.object({
+  position: z.object({
     lat: z.string()
       .transform(str => Number(str))
       .refine((num) => num >= -90, 'should be greater than or equal to -90')

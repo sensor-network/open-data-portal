@@ -2,6 +2,7 @@ import { OkPacket, RowDataPacket } from 'mysql2/promise';
 import { getConnectionPool } from 'src/lib//database/connection';
 import type { CombinedFormat } from 'src/lib/database/history';
 import mysql from 'mysql2/promise';
+import { SRID } from 'src/lib/constants';
 
 export type Measurement = {
   locationName: string,
@@ -109,6 +110,37 @@ export const findByLocationIds = async (
   `, [
     startTime, endTime,
     locationIds,
+  ]);
+  return result.map(row => ({
+    ...row,
+    sensors: JSON.parse(row.sensors),
+  })) as Measurement[];
+};
+
+export const findByLatLong = async (
+  { lat, long, rad, startTime, endTime }:
+    { lat: number, long: number, rad: number, startTime: Date | string, endTime: Date | string },
+) => {
+  const connection = await getConnectionPool();
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+      SELECT JSON_OBJECT(
+                     'lat', ST_X(m.position),
+                     'long', ST_Y(m.position)
+                 )      AS position,
+             m.time,
+             CONCAT('{',
+                    GROUP_CONCAT(CONCAT(JSON_QUOTE(m.type), ':', m.value) SEPARATOR ',')
+                 , '}') AS sensors
+      FROM measurement m
+               INNER JOIN location l
+                          ON l.id = m.location_id
+      WHERE m.time BETWEEN ? AND ?
+        AND ST_Distance_Sphere(m.position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
+      GROUP BY m.time, m.position
+      ORDER BY m.time;
+  `, [
+    startTime, endTime,
+    lat, long, SRID, rad,
   ]);
   return result.map(row => ({
     ...row,
