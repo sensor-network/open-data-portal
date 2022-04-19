@@ -106,7 +106,7 @@ export const zCreateMeasurement = z.object({
   time: z.string()
     // maximize compatibility and validate the inputted date
     .transform((str: string) => ISOStringToSQLTimestamp(str)),
-  location: z.object({
+  position: z.object({
     lat: z.string()
       .transform(str => Number(str))
       .refine((num) => num >= -90, 'should be greater than or equal to -90')

@@ -11,6 +11,7 @@ import { PH } from "src/lib/units/ph";
 import { round } from "src/lib/utilityFunctions";
 
 import { zCreateMeasurement, zTime, zPage, zLocation } from 'src/lib/types/ZodSchemas';
+import { OkPacket } from 'mysql2/promise';
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
@@ -143,8 +144,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           },
           units: {
             time: "UTC",
-            temperatureUnit: temperatureUnit.symbol,
-            conductivityUnit: conductivityUnit.symbols[0]
+            temperature: temperatureUnit.symbol,
+            conductivity: conductivityUnit.symbols[0]
           },
           measurements,
         });
@@ -187,10 +188,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     try {
       /* parse request body */
-      const { time, location, sensors } = zCreateMeasurement.parse(req.body);
+      const { time, position, sensors } = zCreateMeasurement.parse(req.body);
 
       /* find location in the db from the lat,long specified */
-      const [closestLocation] = await Location.findByLatLong({ long: location.long, lat: location.lat, rad: null });
+      const [closestLocation] = await Location.findByLatLong({ long: position.long, lat: position.lat, rad: null });
       let locationId: number;
       if (closestLocation) {
         locationId = closestLocation.id;
@@ -200,8 +201,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const DEFAULT_RADIUS = 200;
         locationId = await Location.createOne({
           name: 'unknown',
-          long: location.long,
-          lat: location.lat,
+          long: position.long,
+          lat: position.lat,
           rad: DEFAULT_RADIUS
         });
       }
@@ -238,11 +239,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             time,
             sensorType: sensor.type,
             locationId,
-            position: location
+            position
           });
 
           /* push to response array */
-          insertedMeasurements.push({ sensorId, value, time });
+          insertedMeasurements.push({ sensorId, value: convertedValue, time, locationId });
         }
         catch (e) {
           if (e instanceof ZodError) {
@@ -260,11 +261,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       /* update sensor health status */
-      for (const { sensorId, status } of errors) {
-        await Sensor.updateStatus({ id: sensorId, status: status.toUpperCase() });
-      }
-      for (const { sensorId } of insertedMeasurements) {
-        await Sensor.updateStatus({ id: sensorId, status: 'OK' });
+      const updateStatuses: Promise<OkPacket>[] = [];
+      errors.forEach(({ sensorId, status }) => {
+        updateStatuses.push(Sensor.updateStatus({ id: sensorId, status: status.toUpperCase() }));
+      });
+      insertedMeasurements.forEach(({ sensorId }) => {
+        updateStatuses.push(Sensor.updateStatus({ id: sensorId, status: 'OK' }));
+      });
+      await Promise.all(updateStatuses);
+
+      if (!insertedMeasurements.length) {
+        res.status(STATUS.BAD_REQUEST)
+          .json({ message: "No inserted measurements", errors });
+        return;
       }
 
       /* Returning the location with STATUS.CREATED response code */
