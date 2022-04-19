@@ -37,6 +37,7 @@ export function laggy(useSWRNext) {
     // Also add a `isLagging` field to SWR.
     return Object.assign({}, swr, {
       data: dataOrLaggyData,
+      error: swr.error,
       isLagging,
       resetLaggy,
     });
@@ -46,21 +47,22 @@ export function laggy(useSWRNext) {
 
 /* Wrapper for SWR using 'laggy' data */
 export const useMeasurements = (url, fetcher = defaultFetcher) => {
-  const { data, isLagging } = useSWR(url, {
+  const { data, isLagging, error } = useSWR(url, {
     fetcher: () => fetcher(url),
     use: [laggy],
   });
   return {
-    measurements: data?.data,
+    measurements: data?.measurements,
     pagination: data?.pagination,
     isLoading: !data,
     isLagging: isLagging,
+    error: error,
   };
 };
 
 
 export const useSummarizedData = (url, fetcher = defaultFetcher) => {
-  const { data, isLagging } = useSWR(url, {
+  const { data, isLagging, error } = useSWR(url, {
     fetcher: () => fetcher(url),
     use: [laggy],
   });
@@ -68,13 +70,14 @@ export const useSummarizedData = (url, fetcher = defaultFetcher) => {
   return {
     summarizedData: data?.summary,
     isLoading: !data,
-    isLagging: isLagging,
+    isLagging,
+    error,
   };
 };
 
 
 export const useSummarizedMeasurements = (url, fetcher = defaultFetcher) => {
-  const { data, isLagging } = useSWR(url, {
+  const { data, isLagging, error } = useSWR(url, {
     fetcher: () => fetcher(url),
     use: [laggy],
   });
@@ -82,6 +85,7 @@ export const useSummarizedMeasurements = (url, fetcher = defaultFetcher) => {
   return {
     summarizedMeasurements: data?.measurements,
     isLoading: !data,
-    isLagging: isLagging,
+    isLagging,
+    error,
   };
 };

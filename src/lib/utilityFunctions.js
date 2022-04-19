@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { DECIMAL_PLACES } from "src/lib/constants";
 import { UNITS as TEMP_UNITS } from "lib/units/temperature";
 import { UNITS as COND_UNITS } from "lib/units/conductivity";
 
@@ -11,8 +12,8 @@ export const loadPreferences = (prefCookieString) => {
   }
   return {
     location: json?.location || { name: "Karlskrona", symbol: "" },
-    temperature_unit: json?.temperature_unit || { name: TEMP_UNITS.CELSIUS.name, symbol: TEMP_UNITS.CELSIUS.symbol },
-    conductivity_unit: json?.conductivity_unit || {
+    temperatureUnit: json?.temperatureUnit || { name: TEMP_UNITS.CELSIUS.name, symbol: TEMP_UNITS.CELSIUS.symbol },
+    conductivityUnit: json?.conductivityUnit || {
       name: COND_UNITS.SIEMENS_PER_METER.name,
       symbol: COND_UNITS.SIEMENS_PER_METER.symbols[0],
     },
@@ -21,6 +22,12 @@ export const loadPreferences = (prefCookieString) => {
 
 export const fetcher = async (url) => {
   const response = await fetch(url);
+  if (!response.ok) {
+    const error = new Error(response.statusText);
+    error.info = await response.json();
+    error.status = response.status;
+    throw error;
+  }
   return await response.json();
 };
 
@@ -46,33 +53,13 @@ export const dateFormatter = (date, startDate, endDate) => {
 };
 
 /* round given value to specified precision */
-export const round = (value, decimals) => {
+export const round = (value, decimals = DECIMAL_PLACES) => {
   const roundFactor = Math.pow(10, decimals);
   return Math.round(value * roundFactor) / roundFactor;
 };
 
 /* capitalize given string using RegEx */
 export const capitalize = (string) => string?.replace(/^\w/, ch => ch.toUpperCase());
-
-/* take in an array of values and return the min, max and avg */
-export const summarizeValues = (values, decimals = 2) => {
-  let [minIndex, maxIndex, sum] = [0, 0, 0];
-  for (let i = 0; i < values.length; i++) {
-    const value = values[i];
-    if (value < values[minIndex]) {
-      minIndex = i;
-    }
-    if (value > values[maxIndex]) {
-      maxIndex = i;
-    }
-    sum += value;
-  }
-  return {
-    min: round(values[minIndex], decimals),
-    max: round(values[maxIndex], decimals),
-    avg: round(sum / values.length, decimals),
-  };
-};
 
 /* calculate average from an array of values that may contain null */
 export const getAverage = (values) => {

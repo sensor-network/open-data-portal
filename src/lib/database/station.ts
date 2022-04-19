@@ -1,153 +1,206 @@
 import { getConnectionPool } from 'lib/database/connection';
 import { OkPacket, RowDataPacket } from 'mysql2/promise';
 import type { Sensor } from 'src/lib/database/sensor';
+import type { Location } from 'src/lib/database/location';
 
 export type Station = {
   id: number,
-  location_id: number,
-}
-export type ExtendedStation = Station & {
-  location_name: string,
-  location_id: number,
-  sensors: Sensor[],
+  location: number | Location,
+  sensors: number[] | Sensor[],
 }
 
-export const createOne = async (
-  { sensor_id, location_id }: { sensor_id: number, location_id: number },
-) => {
-  const connection = await getConnectionPool();
-  const [result] = await connection.query(`
-      INSERT INTO station (sensor_id, location_id)
-      VALUES (?, ?)
-  `, [sensor_id, location_id]);
-  return (<OkPacket>result).insertId;
+const reformatSQLResult = (result: RowDataPacket[], expandLocation: boolean, expandSensors: boolean): Station[] => {
+  /* Reformats the RowDataPacket[] => Station[]*/
+  let stations: Array<Station> = [];
+  /* use map between station_id and index in stations for instant lookup */
+  const stationIdsMap: Map<number, number> = new Map();
+  result.forEach(row => {
+    if (!stationIdsMap.has(row.station_id)) {
+      /* initialize station if we haven't already */
+      const newLength = stations.push({
+        id: row.station_id,
+        location: expandLocation ?
+          {
+            id: row.location_id,
+            name: row.location_name,
+            position: {
+              lat: row.position.y,
+              lng: row.position.x,
+            },
+          } :
+          row.location_id,
+        sensors: [],
+      });
+      stationIdsMap.set(row.station_id, newLength - 1);
+    }
+    /* add sensor to the correct station */
+    const stationIdx = stationIdsMap.get(row.station_id);
+    // @ts-ignore - by here we know station_id is in the map hence we can ignore the ts-warning
+    stations[stationIdx].sensors.push(
+      expandSensors ?
+        {
+          id: row.sensor_id,
+          name: row.sensor_name,
+          firmware: row.firmware,
+          type: row.type,
+        } :
+        row.sensor_id
+    );
+  });
+  return stations;
 };
 
-export const findMany = async () => {
+export const getNextId = async (): Promise<number> => {
   const connection = await getConnectionPool();
-  const [result] = await connection.query(`
-      SELECT min(st.id) AS id,
-             min(l.id)  AS location_id,
-             l.name     AS location_name,
-             CONCAT('[',
-                    GROUP_CONCAT('{',
-                                 CONCAT(
-                                         '"id":', sn.id,
-                                         ', "name":', JSON_QUOTE(sn.name),
-                                         ', "firmware":', JSON_QUOTE(sn.firmware),
-                                         ', "type":', JSON_QUOTE(sn.type)
-                                     ),
-                                 '}')
-                 , ']')
-                        AS sensors
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+      SELECT max(id + 1) AS next_id
+      FROM station
+  `);
+  /* 1 if empty, else next id */
+  return result[0].next_id ?? 1;
+};
+
+export const createOne = async (
+  { stationId, sensorId, locationId }: { stationId: number, sensorId: number, locationId: number },
+) => {
+  const connection = await getConnectionPool();
+  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
+      INSERT INTO station (id, sensor_id, location_id)
+      VALUES (?, ?, ?)
+  `, [stationId, sensorId, locationId]);
+  return result.insertId;
+};
+
+export const findMany = async (
+  { expandLocation, expandSensors }: { expandLocation: boolean, expandSensors: boolean }
+) => {
+  const connection = await getConnectionPool();
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+      SELECT st.id AS station_id,
+             ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
-      GROUP BY l.name
   `);
-  return (<RowDataPacket[]>result).map(row => ({
-    ...row, sensors: JSON.parse(row.sensors)
-  })) as Array<ExtendedStation>;
+  return reformatSQLResult(result, expandLocation, expandSensors);
 };
 
 export const findByStationId = async (
-  { station_id }: { station_id: number },
+  {
+    stationId,
+    expandSensors,
+    expandLocation
+  }: { stationId: number, expandSensors: boolean, expandLocation: boolean },
 ) => {
   const connection = await getConnectionPool();
-
-  const [result] = await connection.query(`
-      SELECT min(st.id) AS id,
-             min(l.id)  AS location_id,
-             l.name     AS location_name,
-             CONCAT('[',
-                    GROUP_CONCAT('{',
-                                 CONCAT(
-                                         '"id":', sn.id,
-                                         ', "name":', JSON_QUOTE(sn.name),
-                                         ', "firmware":', JSON_QUOTE(sn.firmware),
-                                         ', "type":', JSON_QUOTE(sn.type)
-                                     ),
-                                 '}')
-                 , ']')
-                        AS sensors
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+      SELECT st.id AS station_id,
+             ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
       WHERE st.id = ?
-  `, [station_id]);
-  console.log(result);
-  return (<RowDataPacket[]>result).map(row => ({
-    ...row, sensors: JSON.parse(row.sensors)
-  })) as Array<ExtendedStation>;
+  `, [stationId]);
+
+  const stations = reformatSQLResult(result, expandLocation, expandSensors);
+  return stations.length > 0 ? stations[0] : null;
 };
 
 export const findByLocationName = async (
-  { location_name }: { location_name: string },
+  {
+    locationName,
+    expandLocation,
+    expandSensors
+  }: { locationName: string, expandLocation: boolean, expandSensors: boolean }
 ) => {
   const connection = await getConnectionPool();
-
-  const [result] = await connection.query(`
-      SELECT min(st.id) AS id,
-             min(l.id)  AS location_id,
-             l.name     AS location_name,
-             CONCAT('[',
-                    GROUP_CONCAT('{',
-                                 CONCAT(
-                                         '"id":', sn.id,
-                                         ', "name":', JSON_QUOTE(sn.name),
-                                         ', "firmware":', JSON_QUOTE(sn.firmware),
-                                         ', "type":', JSON_QUOTE(sn.type)
-                                     ),
-                                 '}')
-                 , ']')
-                        AS sensors
+  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+      SELECT st.id AS station_id,
+             ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
       WHERE l.name = ?
-  `, [location_name]);
-  return (<RowDataPacket[]>result).map(row => ({
-    ...row, sensors: JSON.parse(row.sensors)
-  })) as Array<ExtendedStation>;
+  `, [locationName]);
+  return reformatSQLResult(result, expandLocation, expandSensors);
 };
 
 export const findBySensorId = async (
-  { sensor_id }: { sensor_id: number }
+  {
+    sensorId,
+    expandLocation,
+    expandSensors
+  }: { sensorId: number, expandLocation: boolean, expandSensors: boolean }
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.execute(`
-      SELECT min(st.id)  AS id,
-             min(l.id)   AS location_id,
-             min(l.name) AS location_name,
-             CONCAT('[',
-                    GROUP_CONCAT('{',
-                                 CONCAT(
-                                         '"id":', sn.id,
-                                         ', "name":', JSON_QUOTE(sn.name),
-                                         ', "firmware":', JSON_QUOTE(sn.firmware),
-                                         ', "type":', JSON_QUOTE(sn.type)
-                                     ),
-                                 '}')
-                 , ']')
-                         AS sensors
+  /* find the station id of the station containing the sensor */
+  const [stationId, _]: [stationId: RowDataPacket[], _: any] = await connection.query(`
+      SELECT id
+      FROM station
+      WHERE sensor_id = ?
+  `, [sensorId]);
+  if (stationId.length === 0) {
+    return null;
+  }
+
+  /* then get the data for that station */
+  const [result, __]: [result: RowDataPacket[], __: any] = await connection.query(`
+      SELECT st.id AS station_id,
+             ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
       FROM station st
                JOIN sensor sn ON st.sensor_id = sn.id
                JOIN location l ON st.location_id = l.id
-      WHERE sn.id = ?
-  `, [sensor_id]);
-  return (<RowDataPacket[]>result).map(row => ({
-    ...row, sensors: JSON.parse(row.sensors)
-  })) as Array<ExtendedStation>;
+      WHERE st.id = ?
+  `, [stationId[0].id]);
+
+  /* and return the result after reformatting */
+  const stations = reformatSQLResult(result, expandLocation, expandSensors);
+  return stations.length > 0 ? stations[0] : null;
+};
+
+export const findBySensorType = async (
+  {
+    sensorType,
+    expandLocation,
+    expandSensors
+  }: { sensorType: string, expandLocation: boolean, expandSensors: boolean }
+) => {
+  const connection = await getConnectionPool();
+  /* find the station id of the station containing sensors of given type */
+  const [stationIds, _]: [stationIds: RowDataPacket[], _: any] = await connection.query(`
+      SELECT st.id
+      FROM station st
+               JOIN sensor sn on st.sensor_id = sn.id
+      WHERE sn.type = ?
+  `, [sensorType]);
+
+  /* then get the data for that station */
+  const [result, __]: [result: RowDataPacket[], __: any] = await connection.query(`
+      SELECT st.id AS station_id,
+             ${expandLocation ? 'l.id AS location_id, l.name AS location_name, l.position' : 'l.id AS location_id'},
+             ${expandSensors ? 'sn.id AS sensor_id, sn.name AS sensor_name, sn.firmware, sn.type' : 'sn.id AS sensor_id'}
+      FROM station st
+               JOIN sensor sn ON st.sensor_id = sn.id
+               JOIN location l ON st.location_id = l.id
+      WHERE st.id IN (?)
+  `, [stationIds.map(row => row.id)]);
+
+  /* and return the result after reformatting */
+  return reformatSQLResult(result, expandLocation, expandSensors);
 };
 
 export const updateLocation = async (
-  { id, location_id }: { id: number, location_id: number },
+  { id, locationId }: { id: number, locationId: number },
 ) => {
   const connection = await getConnectionPool();
-  const [result] = await connection.query(`
+  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
       UPDATE station
       SET location_id = ?
       WHERE id = ?
-  `, [location_id, id]);
-  return <OkPacket>result;
+  `, [locationId, id]);
+  return result;
 };

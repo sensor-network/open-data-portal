@@ -1,0 +1,2576 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sensor Network - Open Data Portal API",
+    "description": "The API for data about the Karlskrona Archipelago's water quality. Documentation is a work in progress. This documentation lists specified documentation for every endpoint. For more general information, see the official [github docs](https://github.com/sensor-network/open-data-portal/tree/main/docs).",
+    "version": "3.0"
+  },
+  "servers": [
+    {
+      "url": "http://sensornetwork.diptsrv003.bth.se/api/v3",
+      "description": "Production Server"
+    },
+    {
+      "url": "http://localhost:3000/api/v3",
+      "description": "Development Server"
+    }
+  ],
+  "paths": {
+    "/measurements": {
+      "get": {
+        "tags": [
+          "Measurements"
+        ],
+        "summary": "Gets a collection of measurements",
+        "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `data`-property is an array of datapoints. Data can be filtered in multiple ways, e.g. by location. A location can be selected either by its name or its geoinformation (lat, long, rad). If no location filter is provided, data is selected from all over the archipelago.",
+        "operationId": "getData",
+        "parameters": [
+          {
+            "name": "temperatureUnit",
+            "in": "query",
+            "description": "Optional. Select the temperature in a selected unit. Available units are `k`, `c` and `f` (case insensitive).",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "c",
+              "default": "k"
+            }
+          },
+          {
+            "name": "conductivityUnit",
+            "in": "query",
+            "description": "Optional. Select the temperature in a selected unit. Available units are `spm`, `mhopm`, `mspm` (milli), `uspm` (micro), `spcm`, `mhopcm`, `mspcm`, `uspcm`, and `ppm` (case insensitive). The `p` (per) in e.g. s`p`m can also be `/`.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "ppm",
+              "default": "spm"
+            }
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "Optional. Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be prior to 2022-01-01.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-01-25T12:00:00Z",
+              "default": "2022-01-01Z"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "Optional. Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be a future timestamp.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-03-06T16:34:12Z",
+              "default": "'current time'"
+            }
+          },
+          {
+            "name": "locationName",
+            "in": "query",
+            "description": "Optional. Select data from a selected location by the locations name. Each location has a corresponding radius which is used to select nearby measurements. A list of available locations can be retrieved by fetching `GET: /locations`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Trossö"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Optional. Select data by a selected location's geoinformation. Has to be provided in combination with `long`.",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 56.12354
+            }
+          },
+          {
+            "name": "long",
+            "in": "query",
+            "description": "Optional. Select data by a selected location's geoinformation. Has to be provided in combination with `lat`.",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 15.76543
+            }
+          },
+          {
+            "name": "rad",
+            "in": "query",
+            "description": "Optional. Select data by a selected location's geoinformation. Has to be provided in combination with `lat` and `long`. NOTE: This radius does not modify the radius used when selecting a location by `location_name`.",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "example": 1000,
+              "default": 200
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Optional. Select pagination options.",
+            "schema": {
+              "type": "number",
+              "format": "integer",
+              "example": 5,
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "description": "Optional. Select pagination options.",
+            "schema": {
+              "type": "number",
+              "format": "integer",
+              "example": 50,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The data is successfully returned. The data is provided in the selected units, and the time in UTC time.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pagination": {
+                      "$ref": "#/components/schemas/Pagination"
+                    },
+                    "units": {
+                      "$ref": "#/components/schemas/Units"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Measurement"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "If any of the request parameters are invalid, e.g. `temperature_unit` is not supported, or `end_date` is set as a date in the future.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array"
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "temperature_unit": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Unexpected unit g. Expected k, c, f."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error fetching data from the database"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Measurements"
+        ],
+        "summary": "Uploads a new measurement to the database",
+        "description": "Uploads a new set of measurements to the database. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "uploadMeasurements",
+        "parameters": [
+        ],
+        "requestBody": {
+          "description": "Request body has to follow this schema. The body can be an array of objects following the schema, or just a single object. Not supplying units will make them fallback to the respective SI-unit - Kelvin (`k`) for temperature and Siemens per meter (`spm`) for conductivity. See `GET: /data` for a list of the supported units.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2022-01-01T00:00:00+02"
+                  },
+                  "location_id": {
+                    "type": "number",
+                    "format": "integer",
+                    "example": 1
+                  },
+                  "sensors": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "sensor_id",
+                        "value"
+                      ],
+                      "properties": {
+                        "sensor_id": {
+                          "type": "number",
+                          "format": "integer",
+                          "example": 1
+                        },
+                        "value": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 29.6
+                        },
+                        "unit": {
+                          "type": "string",
+                          "example": "c"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The Measurement was successfully uploaded to the database",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sensor_id": {
+                        "type": "number",
+                        "format": "integer",
+                        "example": 1
+                      },
+                      "value": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 29.6
+                      },
+                      "time": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2021-12-31T22:00:00.000Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The provided JSON-body could not be parsed correctly. Response JSON contains information what could not be parsed, either the entire form - eg. a required field is missing or an unknown field is specified (specified in field `formErrors`) or a specific field - eg. supplied unit is not supported (specified in `fieldErrors`).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'position'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "longitude": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Number must be less than or equal to 180"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Your request could not be verified. You either didn't supply an API key or it was invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "The provided API key could not be verified."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Method not allowed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Method PUT is not allowed for this endpoint."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error prevented the data from being uploaded successfully. Please submit an Issue at the official Github repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Error uploading data"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/measurements/history": {
+      "get": {
+        "tags": [
+          "Measurements"
+        ],
+        "summary": "Get summary of history data",
+        "description": "Retrieves a summary of the data for a selected time period. The data is selected more sparse than if querying `/measurements`. For example, the default density for querying a years worth of data is 1 measurement per week.",
+        "operationId": "getMeasurementsHistory",
+        "parameters": [
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "Optional. The start time of the data to be retrieved. The time is specified in ISO-8601 format. The time must be in the past. The default value is `2022-01-01T00:00:00Z`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-04-23T12:00:00Z"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "Optional. The end time of the data to be retrieved. The time is specified in ISO-8601 format. The time must be in the past. The default value is the of the current day.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-04-18T23:59:59Z"
+            }
+          },
+          {
+            "name": "density",
+            "in": "query",
+            "description": "Optional. `SPECIFY WITH CARE: OVERRIDING DEFAULT COULD RESULT IN LONG QUERY TIMES`. Defines how big the timechunks should be. Available densities are: `5min`, `30min`, `1h`, `12h`, `1d`, `1w`, `2w`, `1mon`, `1y`",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "1w"
+            }
+          },
+          {
+            "name": "includeMeasurements",
+            "in": "query",
+            "description": "Optional. Defines whether the measurements should be included in the response or just a the summary. The default value is `true`.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "example": true
+            }
+          },
+          {
+            "name": "locationName",
+            "in": "query",
+            "description": "Optional. The name of the location to use.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Gräsvik"
+            }
+          },
+          {
+            "name": "temperatureUnit",
+            "in": "query",
+            "description": "Optional. Define what unit the temperature values should be returned in. Default is `k`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "c"
+            }
+          },
+          {
+            "name": "conductivityUnit",
+            "in": "query",
+            "description": "Optional. Define what unit the conductivity values should be returned in. Default is `spm`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "ppm"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "locationName": {
+                          "type": "string",
+                          "example": "Gräsvik"
+                        },
+                        "startTime": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2022-04-23T12:00:00Z"
+                        },
+                        "endTime": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2022-04-18T23:59:59Z"
+                        },
+                        "sensors": {
+                          "type": "object",
+                          "properties": {
+                            "temperature": {
+                              "type": "object",
+                              "properties": {
+                                "min": {
+                                  "type": "number",
+                                  "example": 10
+                                },
+                                "max": {
+                                  "type": "number",
+                                  "example": 30
+                                },
+                                "avg": {
+                                  "type": "number",
+                                  "example": 25
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "measurements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2022-04-23T12:00:00Z"
+                          },
+                          "sensors": {
+                            "type": "object",
+                            "properties": {
+                              "temperature": {
+                                "type": "object",
+                                "properties": {
+                                  "min": {
+                                    "type": "number",
+                                    "example": 10
+                                  },
+                                  "avg": {
+                                    "type": "number",
+                                    "example": 25
+                                  },
+                                  "max": {
+                                    "type": "number",
+                                    "example": 30
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "endTime cannot be before startTime"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "endTime": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Unable to parse string as Date"
+                          }
+                        },
+                        "temperatureUnit": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Unexpected unit celsius. Expected k, c, f."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No measurements found for location 'Everywhere' between 2022-04-04T00:00:00.000Z and 2022-04-10T00:00:00.000Z."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Gets the available locations",
+        "description": "Retrieves a JSON array with all the available locations. Filter options are taken in the following order: `name` -> `lat/long`.",
+        "operationId": "getLocation",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Optional. Name of location.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "Gräsvik"
+            }
+          },
+          {
+            "name": "lat",
+            "in": "query",
+            "description": "Optional. Latitude of location. Must be specified together with `long`.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": 56.183016
+            }
+          },
+          {
+            "name": "long",
+            "in": "query",
+            "description": "Optional. Longitude of location. Must be specified together with `lat`.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": 15.58817
+            }
+          },
+          {
+            "name": "rad",
+            "in": "query",
+            "description": "Optional. Radius of search area (in meters). If not provided, the radius is inherited from the `location`-entries from the database.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Gräsvik"
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "lat": {
+                            "type": "number",
+                            "example": 56.183016,
+                            "format": "float"
+                          },
+                          "lng": {
+                            "type": "number",
+                            "example": 15.58817,
+                            "format": "float"
+                          }
+                        }
+                      },
+                      "radiusMeters": {
+                        "type": "number",
+                        "example": 100,
+                        "format": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "lat and long must be provided together"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "rad": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Number must be greater than 0"
+                          }
+                        },
+                        "long": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "should be greater than or equal to -180"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No location with name 'Trossö' found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Locations"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "summary": "Creates a new location",
+        "description": "Adds a new location to the database. The inserted location is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "operationId": "createLocation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Gräsvik"
+                  },
+                  "lat": {
+                    "type": "number",
+                    "example": 56.183016
+                  },
+                  "long": {
+                    "type": "number",
+                    "example": 15.588170
+                  },
+                  "rad": {
+                    "type": "number",
+                    "example": 320
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The location was successfully created. The created location is returned to the client.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Gräsvik"
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "example": 56.183016
+                        },
+                        "long": {
+                          "type": "number",
+                          "example": 15.588170
+                        }
+                      }
+                    },
+                    "radiusMeters": {
+                      "type": "number",
+                      "example": 320
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `lat/long` was not provided correctly.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'locationName'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "long": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Number must be less than or equal to 180"
+                          }
+                        },
+                        "rad": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{id}": {
+      "get": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Gets a single location with a given id",
+        "description": "Gets a single location with a given id. The id is passed in the url-parameter.",
+        "operationId": "getLocationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the location to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Gräsvik"
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "example": 56.183016,
+                          "format": "float"
+                        },
+                        "lng": {
+                          "type": "number",
+                          "example": 15.58817,
+                          "format": "float"
+                        }
+                      }
+                    },
+                    "radiusMeters": {
+                      "type": "number",
+                      "example": 100,
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Location with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Locations"
+        ],
+        "summary": "Update a location",
+        "description": "Update a location. The locationId must be given in the URL. Updated values should be given in the request body. Currently, its only possible to update the `name` of a location, which is useful if your locations have been generated for you. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "updateLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the location to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Hästö"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The location was updated successfully. The updated value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "totalChanges": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "updatedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Hästö"
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "example": 56.183016
+                            },
+                            "lng": {
+                              "type": "number",
+                              "example": 15.58817
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Expected object, received string"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Location with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stations": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Gets the available stations",
+        "description": "Retrieves a JSON array with all the available stations. Filter options are taken in the following order: `stationId` -> `locationName` -> `sensorId` -> `sensorType`.",
+        "operationId": "getStations",
+        "parameters": [
+          {
+            "name": "locationName",
+            "in": "query",
+            "description": "Optional. Get available stations for a specific location.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "Gräsvik"
+            }
+          },
+          {
+            "name": "sensorId",
+            "in": "query",
+            "description": "Optional. Get the station associated with a specific sensor.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          },
+          {
+            "name": "sensorType",
+            "in": "query",
+            "description": "Optional. Get all stations that has a sensor with the specified type.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "temperature"
+            }
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Optional. Specify what columns you would like to expand. If not specified, only the `id`'s are returned. Available expand options are: `sensors`, `location`. Specify one option per parameter. You can give the parameter multiple times like: `?expand=sensors&expand=location`.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "sensors"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation. The fields `location` and `sensors` are shown as if they were expanded using the `expand` parameter. If not, only the id is returned instead of the object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "location": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number",
+                            "example": 1
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "Gräsvik"
+                          },
+                          "position": {
+                            "type": "object",
+                            "properties": {
+                              "lat": {
+                                "type": "number",
+                                "example": 56.183016,
+                                "format": "float"
+                              },
+                              "lng": {
+                                "type": "number",
+                                "example": 15.58817,
+                                "format": "float"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "sensors": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "temperature-sensor-1"
+                            },
+                            "firmware": {
+                              "type": "string",
+                              "example": "1.0.0"
+                            },
+                            "type": {
+                              "type": "string",
+                              "example": "temperature"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'sensor_id'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "stationId": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "id has to be positive"
+                          }
+                        },
+                        "expand": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Invalid input."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No stations found containing a sensor with id '1'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Creates a new station",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "description": "Adds a new station to the database. When creating a station, you link a group of sensors together and places them at a selected location. The inserted station is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "operationId": "createStation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "locationId": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "sensorIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "number",
+                      "example": 1
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The station was successfully created. The created station is returned to the client.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "stationId": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "locationId": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "sensorIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "number",
+                        "example": 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body failed to parse correctly. Response JSON contains information what could not be parsed. Most likely an id was not a positive integer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Invalid input"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "locationId": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Expected integer, received float"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Any of the provided `sensorIds` or `locationId` was not found in the database.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Sensor with id '10' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/stations/{id}": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Gets a single station with a given id",
+        "description": "Gets a single station with a given id. The id is passed in the url-parameter.",
+        "operationId": "getStationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the station to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "description": "Optional. Specify what columns you would like to expand. If not specified, only the `id`'s are returned. Available expand options are: `sensors`, `location`. Specify one option per parameter. You can give the parameter multiple times like: `?expand=sensors&expand=location`.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "sensors"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation. The fields `location` and `sensors` are shown as if they were expanded using the `expand` parameter. If not, only the id is returned instead of the object.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Gräsvik"
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "example": 56.183016,
+                              "format": "float"
+                            },
+                            "lng": {
+                              "type": "number",
+                              "example": 15.58817,
+                              "format": "float"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "sensors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "number",
+                            "example": 1
+                          },
+                          "name": {
+                            "type": "string",
+                            "example": "temperature-sensor-1"
+                          },
+                          "firmware": {
+                            "type": "string",
+                            "example": "1.0.0"
+                          },
+                          "type": {
+                            "type": "string",
+                            "example": "temperature"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `expand` parameter was given an invalid value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Invalid input"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Station with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "Update a station",
+        "description": "Update a station. The stationId must be given in the URL. Updated values should be given in the request body. Currently, its only possible to update the `locationId` of a station. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "updateStation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the station to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "locationId": {
+                    "type": "number",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The station was updated successfully. The updated value is returned, with the `location`-property expanded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "totalChanges": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "updatedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Gräsvik"
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "lat": {
+                                  "type": "number",
+                                  "example": 56.183016,
+                                  "format": "float"
+                                },
+                                "lng": {
+                                  "type": "number",
+                                  "example": 15.58817,
+                                  "format": "float"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "sensors": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `locationId` parameter was not valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Invalid input"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Station with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sensors": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets all available sensors.",
+        "description": "Retrieves a JSON array with all the available sensors. Filter options are taken in the following order: `name` -> `type`",
+        "operationId": "getSensors",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Optional. Get available sensors matching a specific name.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "rkz1000"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Optional. Get available sensors with the specified type.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "temperature"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "rkz1000"
+                      },
+                      "type": {
+                        "type": "string",
+                        "example": "temperature"
+                      },
+                      "firmware": {
+                        "type": "string",
+                        "example": "1.0.0"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'sensor_id'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Expected string, received array"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No sensors with type 'bacteria' found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Adds a new sensor",
+        "description": "Adds a new sensor to the database. The inserted sensor is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "addSensor",
+        "requestBody": {
+          "description": "The sensor to add to the database. Only `type` is required. Other fields defaults to `null`.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "required": true,
+                    "example": "conductivity"
+                  },
+                  "name": {
+                    "type": "string",
+                    "required": false,
+                    "example": "tds-sensor"
+                  },
+                  "firmware": {
+                    "type": "string",
+                    "required": true,
+                    "example": "1.0.0"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The sensor was successfully created. The created sensor is returned to the client.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "tds-sensor"
+                    },
+                    "firmware": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "conductivity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `type` was not specified.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'sensorType'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Required"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sensors/{id}": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets a single sensor with a given id",
+        "description": "Gets a single sensor with a given id. The id is passed in the url-parameter.",
+        "operationId": "getSensorById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the sensor to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "tds-sensor"
+                    },
+                    "firmware": {
+                      "type": "string",
+                      "example": "1.0.0"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "conductivity"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `id` was not a positive integer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Sensor with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Update a sensor",
+        "description": "Update a sensor. The sensorId must be given in the URL. Updated values should be given in the request body. You can not change the sensors `type` after its creation since it may have relations to `Measurements`. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "updateSensor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the sensor to update",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "tds-sensor-2"
+                  },
+                  "firmware": {
+                    "type": "string",
+                    "example": "2.0.0"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The sensor was updated successfully. The updated value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "totalChanges": {
+                      "type": "number",
+                      "example": 2
+                    },
+                    "updatedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "tds-sensor-2"
+                        },
+                        "firmware": {
+                          "type": "string",
+                          "example": "2.0.0"
+                        },
+                        "type": {
+                          "type": "string",
+                          "example": "conductivity"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Most likely the `locationId` parameter was not valid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "Unrecognized key(s) in object: 'type'"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Sensor with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sensors/types": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets all different sensor types used throughout the application",
+        "description": "Retrieves a JSON array with all the sensor types used throughout the application.",
+        "operationId": "getSensorTypes",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "example": "temperature"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No sensor types found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sensors/status": {
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Gets a collection of sensors including the last known status of each sensor",
+        "description": "When a sensor tries to post a measurement, we record the result of the request. If it is successful, the sensor's status is updated to `OK`, else the status is set to the appropriate error message that occured during the failed request, for example `too_big` (i.e. the measurement wasn't in the valid range), `ER_DUP_ENTRY` (i.e. the sensor had already posted a measurement with the same time). With this endpoint, you can get a list of all sensors with their last known status, so that you could easily see if all the sensors are sending correct measurements.",
+        "operationId": "getSensorStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The list of all the sensors and their last known status.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "type": {
+                        "type": "string",
+                        "example": "temperature"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "OK"
+                      },
+                      "last_active": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2022-04-11T22:30:49.000Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "default"
+      }
+    }
+  }
+}

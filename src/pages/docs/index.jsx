@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 
-const LATEST_VERSION = "/docs/v2";
+const LATEST_VERSION = "/docs/v3";
 
 /* This page is just a redirect to the latest documentation version */
 const RedirectDocsPage = () => {
