@@ -80,7 +80,6 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
   };
 
   const CustomXAxisTick = ({ payload, x, y }) => {
-    console.log("payload", payload);
     const date = new Date(payload.value);
     const formatted = dateFormatter(date);
     return (
