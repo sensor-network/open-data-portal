@@ -22,7 +22,7 @@
           "Measurements"
         ],
         "summary": "Gets a collection of measurements",
-        "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `data`-property is an array of datapoints. Data can be filtered in multiple ways, e.g. by location. A location can be selected either by its name or its geoinformation (lat, long, rad). If no location filter is provided, data is selected from all over the archipelago.",
+        "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `measurements`-property is an array of datapoints. Location filters applies in the following order: `locationName` -> `lat/long`.",
         "operationId": "getData",
         "parameters": [
           {
@@ -59,7 +59,6 @@
             "schema": {
               "type": "string",
               "format": "date-time",
-              "example": "2022-01-25T12:00:00Z",
               "default": "2022-01-01Z"
             }
           },
@@ -117,10 +116,20 @@
             }
           },
           {
+            "name": "useExactPosition",
+            "in": "query",
+            "description": "Optional. `THIS OPTION IS A POTENTIAL PERFORMANCE KILLER - TOGGLE WITH CARE.` If true, the API will run a distance formula on every measurement to find the exact measurements in range of the provided `lat/long/rad`. By default, it will use the coordinates to lookup known locations in the database and match to these which is less accurate but a lot more performance efficient.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
-            "description": "Optional. Select pagination options.",
+            "description": "Optional. Select pagination options. Falls back to last available page if the page provided does not exist.",
             "schema": {
               "type": "number",
               "format": "integer",
@@ -132,7 +141,7 @@
             "name": "pageSize",
             "in": "query",
             "required": false,
-            "description": "Optional. Select pagination options.",
+            "description": "Optional. Select pagination options. Defines how many measurements should be included per page.",
             "schema": {
               "type": "number",
               "format": "integer",
@@ -143,22 +152,41 @@
         ],
         "responses": {
           "200": {
-            "description": "The data is successfully returned. The data is provided in the selected units, and the time in UTC time.",
+            "description": "Successful operation.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "pagination": {
-                      "$ref": "#/components/schemas/Pagination"
-                    },
-                    "units": {
-                      "$ref": "#/components/schemas/Units"
-                    },
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Measurement"
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Gräsvik"
+                      },
+                      "position": {
+                        "type": "object",
+                        "properties": {
+                          "lat": {
+                            "type": "number",
+                            "example": 56.183016,
+                            "format": "float"
+                          },
+                          "lng": {
+                            "type": "number",
+                            "example": 15.58817,
+                            "format": "float"
+                          }
+                        }
+                      },
+                      "radiusMeters": {
+                        "type": "number",
+                        "example": 100,
+                        "format": "float"
                       }
                     }
                   }
@@ -167,23 +195,34 @@
             }
           },
           "400": {
-            "description": "If any of the request parameters are invalid, e.g. `temperature_unit` is not supported, or `end_date` is set as a date in the future.",
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
                     "formErrors": {
-                      "type": "array"
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "lat and long must be provided together"
+                      }
                     },
                     "fieldErrors": {
                       "type": "object",
                       "properties": {
-                        "temperature_unit": {
+                        "startTime": {
                           "type": "array",
                           "items": {
                             "type": "string",
-                            "example": "Unexpected unit g. Expected k, c, f."
+                            "example": "Unable to parse string as Date"
+                          }
+                        },
+                        "long": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "should be greater than or equal to -180"
                           }
                         }
                       }
@@ -193,8 +232,24 @@
               }
             }
           },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No measurements found between 2022-01-25T12:00:00Z and 2022-03-06T16:34:12Z for location Trossö"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
-            "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
             "content": {
               "application/json": {
                 "schema": {
@@ -202,7 +257,7 @@
                   "properties": {
                     "error": {
                       "type": "string",
-                      "example": "Error fetching data from the database"
+                      "example": "Internal server error"
                     }
                   }
                 }

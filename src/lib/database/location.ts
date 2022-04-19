@@ -1,7 +1,6 @@
 import { getConnectionPool } from "./connection";
 import mysql, { RowDataPacket, OkPacket } from 'mysql2/promise';
-
-const SRID = 4326;
+import { SRID } from 'src/lib/constants';
 
 export type Location = {
   id: number,
