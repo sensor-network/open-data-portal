@@ -26,7 +26,7 @@ export const zTime = z.object({
     .refine(str => new Date(str).getTime() > 0, 'Unable to parse string as Date')
     //.refine(str => new Date(str) <= endOfToday(), "can't be a future date")
     .transform(str => new Date(str).toISOString()),
-}).refine(({ startTime, endTime }) => endTime >= startTime, 'endDate cannot be before startDate');
+}).refine(({ startTime, endTime }) => endTime >= startTime, 'endTime cannot be before startTime');
 
 /**
  * schema for selecting pagination options,

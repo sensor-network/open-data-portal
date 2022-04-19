@@ -26,9 +26,9 @@
         "operationId": "getData",
         "parameters": [
           {
-            "name": "temperature_unit",
+            "name": "temperatureUnit",
             "in": "query",
-            "description": "Select the temperature in a selected unit. Available units are `k`, `c` and `f` (case insensitive).",
+            "description": "Optional. Select the temperature in a selected unit. Available units are `k`, `c` and `f` (case insensitive).",
             "required": false,
             "style": "form",
             "explode": true,
@@ -39,9 +39,9 @@
             }
           },
           {
-            "name": "conductivity_unit",
+            "name": "conductivityUnit",
             "in": "query",
-            "description": "Select the temperature in a selected unit. Available units are `spm`, `mhopm`, `mspm` (milli), `uspm` (micro), `spcm`, `mhopcm`, `mspcm`, `uspcm`, and `ppm` (case insensitive). The `p` (per) in e.g. s`p`m can also be `/`.",
+            "description": "Optional. Select the temperature in a selected unit. Available units are `spm`, `mhopm`, `mspm` (milli), `uspm` (micro), `spcm`, `mhopcm`, `mspcm`, `uspcm`, and `ppm` (case insensitive). The `p` (per) in e.g. s`p`m can also be `/`.",
             "required": false,
             "style": "form",
             "explode": true,
@@ -52,33 +52,33 @@
             }
           },
           {
-            "name": "start_date",
+            "name": "startTime",
             "in": "query",
-            "description": "Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be prior to 2022-01-01.",
+            "description": "Optional. Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be prior to 2022-01-01.",
             "required": false,
             "schema": {
               "type": "string",
               "format": "date-time",
-              "example": "2022-01-25",
+              "example": "2022-01-25T12:00:00Z",
               "default": "2022-01-01Z"
             }
           },
           {
-            "name": "end_date",
+            "name": "endTime",
             "in": "query",
-            "description": "Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be a future timestamp.",
+            "description": "Optional. Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be a future timestamp.",
             "required": false,
             "schema": {
               "type": "string",
               "format": "date-time",
-              "example": "2022-03-06",
+              "example": "2022-03-06T16:34:12Z",
               "default": "'current time'"
             }
           },
           {
-            "name": "location_name",
+            "name": "locationName",
             "in": "query",
-            "description": "Select data from a selected location by the locations name. Each location has a corresponding radius which is used to select nearby measurements. A list of available locations can be retrieved by fetching `GET: /locations`.",
+            "description": "Optional. Select data from a selected location by the locations name. Each location has a corresponding radius which is used to select nearby measurements. A list of available locations can be retrieved by fetching `GET: /locations`.",
             "required": false,
             "schema": {
               "type": "string",
@@ -88,7 +88,7 @@
           {
             "name": "lat",
             "in": "query",
-            "description": "Select data by a selected location's geoinformation. Has to be provided in combination with `long`.",
+            "description": "Optional. Select data by a selected location's geoinformation. Has to be provided in combination with `long`.",
             "required": false,
             "schema": {
               "type": "number",
@@ -98,7 +98,7 @@
           {
             "name": "long",
             "in": "query",
-            "description": "Select data by a selected location's geoinformation. Has to be provided in combination with `lat`.",
+            "description": "Optional. Select data by a selected location's geoinformation. Has to be provided in combination with `lat`.",
             "required": false,
             "schema": {
               "type": "number",
@@ -108,7 +108,7 @@
           {
             "name": "rad",
             "in": "query",
-            "description": "Select data by a selected location's geoinformation. Has to be provided in combination with `lat` and `long`. NOTE: This radius does not modify the radius used when selecting a location by `location_name`.",
+            "description": "Optional. Select data by a selected location's geoinformation. Has to be provided in combination with `lat` and `long`. NOTE: This radius does not modify the radius used when selecting a location by `location_name`.",
             "required": false,
             "schema": {
               "type": "number",
@@ -120,7 +120,7 @@
             "name": "page",
             "in": "query",
             "required": false,
-            "description": "Select pagination options.",
+            "description": "Optional. Select pagination options.",
             "schema": {
               "type": "number",
               "format": "integer",
@@ -129,10 +129,10 @@
             }
           },
           {
-            "name": "page_size",
+            "name": "pageSize",
             "in": "query",
             "required": false,
-            "description": "Select pagination options.",
+            "description": "Optional. Select pagination options.",
             "schema": {
               "type": "number",
               "format": "integer",
@@ -193,22 +193,6 @@
               }
             }
           },
-          "405": {
-            "description": "Method not allowed.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "Method PUT is not allowed for this endpoint"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "500": {
             "description": "An internal server error prevented the data from being fetched successfully. Please submit an Issue at the official Github repo.",
             "content": {
@@ -232,21 +216,14 @@
           "Measurements"
         ],
         "summary": "Uploads a new measurement to the database",
-        "description": "Uploads a new set of measurements to the database",
+        "description": "Uploads a new set of measurements to the database. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
         "operationId": "uploadMeasurements",
         "parameters": [
-          {
-            "name": "api_key",
-            "in": "query",
-            "description": "An API key is required in order to post data. These are not available to the public. If you feel like you are entitled one, please contact us and we'll look into it.",
-            "required": true,
-            "style": "form",
-            "explode": true,
-            "schema": {
-              "type": "string",
-              "example": "default"
-            }
-          }
         ],
         "requestBody": {
           "description": "Request body has to follow this schema. The body can be an array of objects following the schema, or just a single object. Not supplying units will make them fallback to the respective SI-unit - Kelvin (`k`) for temperature and Siemens per meter (`spm`) for conductivity. See `GET: /data` for a list of the supported units.",
@@ -417,8 +394,239 @@
         "summary": "Get summary of history data",
         "description": "Retrieves a summary of the data for a selected time period. The data is selected more sparse than if querying `/measurements`. For example, the default density for querying a years worth of data is 1 measurement per week.",
         "operationId": "getMeasurementsHistory",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "Optional. The start time of the data to be retrieved. The time is specified in ISO-8601 format. The time must be in the past. The default value is `2022-01-01T00:00:00Z`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-04-23T12:00:00Z"
+            }
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "Optional. The end time of the data to be retrieved. The time is specified in ISO-8601 format. The time must be in the past. The default value is the of the current day.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2022-04-18T23:59:59Z"
+            }
+          },
+          {
+            "name": "density",
+            "in": "query",
+            "description": "Optional. `SPECIFY WITH CARE: OVERRIDING DEFAULT COULD RESULT IN LONG QUERY TIMES`. Defines how big the timechunks should be. Available densities are: `5min`, `30min`, `1h`, `12h`, `1d`, `1w`, `2w`, `1mon`, `1y`",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "1w"
+            }
+          },
+          {
+            "name": "includeMeasurements",
+            "in": "query",
+            "description": "Optional. Defines whether the measurements should be included in the response or just a the summary. The default value is `true`.",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "example": true
+            }
+          },
+          {
+            "name": "locationName",
+            "in": "query",
+            "description": "Optional. The name of the location to use.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "Gräsvik"
+            }
+          },
+          {
+            "name": "temperatureUnit",
+            "in": "query",
+            "description": "Optional. Define what unit the temperature values should be returned in. Default is `k`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "c"
+            }
+          },
+          {
+            "name": "conductivityUnit",
+            "in": "query",
+            "description": "Optional. Define what unit the conductivity values should be returned in. Default is `spm`.",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "example": "ppm"
+            }
+          }
+        ],
         "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "locationName": {
+                          "type": "string",
+                          "example": "Gräsvik"
+                        },
+                        "startTime": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2022-04-23T12:00:00Z"
+                        },
+                        "endTime": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2022-04-18T23:59:59Z"
+                        },
+                        "sensors": {
+                          "type": "object",
+                          "properties": {
+                            "temperature": {
+                              "type": "object",
+                              "properties": {
+                                "min": {
+                                  "type": "number",
+                                  "example": 10
+                                },
+                                "max": {
+                                  "type": "number",
+                                  "example": 30
+                                },
+                                "avg": {
+                                  "type": "number",
+                                  "example": 25
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "measurements": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "time": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2022-04-23T12:00:00Z"
+                          },
+                          "sensors": {
+                            "type": "object",
+                            "properties": {
+                              "temperature": {
+                                "type": "object",
+                                "properties": {
+                                  "min": {
+                                    "type": "number",
+                                    "example": 10
+                                  },
+                                  "avg": {
+                                    "type": "number",
+                                    "example": 25
+                                  },
+                                  "max": {
+                                    "type": "number",
+                                    "example": 30
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body failed to parse correctly. Response JSON contains information what could not be parsed. Some examples are shown below:",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "endTime cannot be before startTime"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object",
+                      "properties": {
+                        "endTime": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Unable to parse string as Date"
+                          }
+                        },
+                        "temperatureUnit": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "example": "Unexpected unit celsius. Expected k, c, f."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No measurements found for location 'Everywhere' between 2022-04-04T00:00:00.000Z and 2022-04-10T00:00:00.000Z."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },

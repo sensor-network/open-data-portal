@@ -40,15 +40,15 @@ const DENSITY_OPTIONS = {
 
 
 type SummarizedMeasurement = {
-  date: string,
+  time: string,
   sensors: {
     [key: string]: { min: number, avg: number, max: number },
   },
 };
 type Summary = {
   locationName: string,
-  startDate: string,
-  endDate: string,
+  startTime: string,
+  endTime: string,
   sensors: {
     [key: string]: {
       min: number,
@@ -115,8 +115,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const summary: Summary = {
       locationName: location.name,
-      startDate: format(new Date(startTime), 'yyyy-MM-dd'),
-      endDate: format(new Date(endTime), 'yyyy-MM-dd'),
+      startTime: format(new Date(startTime), 'yyyy-MM-dd'),
+      endTime: format(new Date(endTime), 'yyyy-MM-dd'),
       sensors: {},
     };
     let measurements: SummarizedMeasurement[] = [];
@@ -183,10 +183,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const sensorTypes = await Sensor.findAllTypes();
     if (converted.length) {
       sensorTypes.forEach(type => {
+        const first = converted.find((row: CombinedFormat) => row.type === type)?.avg;
+        const last = findLast(converted, (row: CombinedFormat) => row.type === type)?.avg;
         Object.assign(summary.sensors, {
           [type]: {
-            start: converted.find((row: CombinedFormat) => row.type === type)?.avg,
-            end: findLast(converted, (row: CombinedFormat) => row.type === type)?.avg,
+            start: first ? round(first) : null,
+            end: last ? round(last) : null,
           },
         });
       });
@@ -205,7 +207,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       const measurement: SummarizedMeasurement = {
-        date: format(currentTime, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+        time: format(currentTime, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
         sensors: {},
       };
 
@@ -229,9 +231,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
       if (summary.sensors.hasOwnProperty(type)) {
         Object.assign(summary.sensors[type], {
-          min: round(getMin(measurements.map(m => m.sensors[type].min)), 1),
-          avg: round(getAverage(measurements.map(m => m.sensors[type].avg)), 1),
-          max: round(getMax(measurements.map(m => m.sensors[type].max)), 1),
+          min: round(getMin(measurements.map(m => m.sensors[type].min))),
+          avg: round(getAverage(measurements.map(m => m.sensors[type].avg))),
+          max: round(getMax(measurements.map(m => m.sensors[type].max))),
         });
       }
     });
