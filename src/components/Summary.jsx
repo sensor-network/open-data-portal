@@ -11,7 +11,7 @@ import { useSummarizedData } from "src/lib/hooks/swr-extensions";
 import { round, capitalize, urlWithParams } from "src/lib/utilityFunctions";
 import styles from "src/styles/Summary.module.css";
 
-const ENDPOINT = "http://localhost:3000/api/v2/measurements/history?";
+const ENDPOINT = "/api/v3/measurements/history?";
 
 const Summary = () => {
   const { preferences } = useContext(PreferenceContext);
@@ -20,15 +20,15 @@ const Summary = () => {
 
   const urls = useMemo(() => {
     const base = {
-      temperature_unit: preferences.temperature_unit.symbol,
-      conductivity_unit: preferences.conductivity_unit.symbol,
-      include_measurements: false,
+      temperatureUnit: preferences.temperatureUnit.symbol,
+      conductivityUnit: preferences.conductivityUnit.symbol,
+      includeMeasurements: false,
     };
     return {
       current: urlWithParams(ENDPOINT, {
         ...base,
-        start_date: formatISO(startDate),
-        end_date: formatISO(endDate),
+        startTime: formatISO(startDate),
+        endTime: formatISO(endDate),
         location_name: preferences.location.symbol,
       }),
       allTime: urlWithParams(ENDPOINT, {
@@ -37,14 +37,14 @@ const Summary = () => {
       }),
       lastYears: urlWithParams(ENDPOINT, {
         ...base,
-        start_date: formatISO(sub(startDate, { years: 1 })),
-        end_date: formatISO(sub(endDate, { years: 1 })),
+        startTime: formatISO(sub(startDate, { years: 1 })),
+        endTime: formatISO(sub(endDate, { years: 1 })),
         location_name: preferences.location.symbol,
       }),
       archipelago: urlWithParams(ENDPOINT, {
         ...base,
-        start_date: formatISO(startDate),
-        end_date: formatISO(endDate),
+        startTime: formatISO(startDate),
+        endTime: formatISO(endDate),
       }),
     };
   }, [preferences, startDate, endDate]);
@@ -132,7 +132,7 @@ const Summary = () => {
 
         <Grid item xs={Math.floor(columnCount / 2)} sm={8} md={9} className={styles.gridValues}>
           {!isAnyLoading && Object.entries(summarizedData.sensors).map(([sensor, sensorData], index) => {
-            const unit = preferences[`${sensor.toLowerCase()}_unit`]?.symbol;
+            const unit = preferences[`${sensor.toLowerCase()}Unit`]?.symbol;
             const capitalizedUnit = capitalize(unit);
 
             const periodDelta = round(sensorData.end - sensorData.start, 1);

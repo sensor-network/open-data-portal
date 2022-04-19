@@ -35,7 +35,7 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
           <div className={style.dataPayload}>
             {payload.map(row => {
               /* use optional chaining for sensors without units, e.g. ph */
-              const unit = preferences[`${row.dataKey}_unit`]?.symbol;
+              const unit = preferences[`${row.dataKey}Unit`]?.symbol;
               const capitalized = capitalize(unit);
               return (
                 <p key={row.name} style={{ color: row.stroke }}>
@@ -80,6 +80,7 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
   };
 
   const CustomXAxisTick = ({ payload, x, y }) => {
+    console.log("payload", payload);
     const date = new Date(payload.value);
     const formatted = dateFormatter(date);
     return (
@@ -116,11 +117,11 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
           </linearGradient>
         </defs>
         <XAxis
-          dataKey="date" height={60}
+          dataKey="time" height={60}
           tick={CustomXAxisTick} tickSize={12} interval={xAxisInterval}
         />
         <Brush
-          dataKey={"date"} stroke={mainValue.color} height={30} y={460}
+          dataKey={"time"} stroke={mainValue.color} height={30} y={460}
           tickFormatter={date => dateFormatter(date)}
         />
         <YAxis

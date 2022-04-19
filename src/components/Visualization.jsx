@@ -13,7 +13,7 @@ import { urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
 import { useSummarizedMeasurements } from "src/lib/hooks/swr-extensions";
 import { formatISO } from "date-fns";
 
-const ENDPOINT = "http://localhost:3000/api/v2/measurements/history?";
+const ENDPOINT = "/api/v3/measurements/history?";
 
 const valueOptions = [
   { key: "temperature", name: "Temperature", color: "#1565c0" },
@@ -37,11 +37,11 @@ const Visualization = () => {
 
   /* Get correct url for fetching the filtered data */
   const url = useMemo(() => urlWithParams(ENDPOINT, {
-    temperature_unit: preferences.temperature_unit.symbol,
-    conductivity_unit: preferences.conductivity_unit.symbol,
-    location_name: preferences.location.symbol,
-    start_date: formatISO(startDate),
-    end_date: formatISO(endDate),
+    temperatureUnit: preferences.temperatureUnit.symbol,
+    conductivityUnit: preferences.conductivityUnit.symbol,
+    locationName: preferences.location.symbol,
+    startTime: formatISO(startDate),
+    endTime: formatISO(endDate),
   }), [preferences, startDate, endDate]);
 
   const { summarizedMeasurements: measurements } = useSummarizedMeasurements(url);

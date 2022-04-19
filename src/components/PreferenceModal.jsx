@@ -8,8 +8,8 @@ import { useContext, useMemo, useState } from "react";
 
 import Cookies from "js-cookie";
 
-import { UNITS as TEMP_UNITS } from "src/lib/units/temperature";
-import { UNITS as COND_UNITS } from "src/lib/units/conductivity";
+import { UNITS as TEMPUNITS } from "src/lib/units/temperature";
+import { UNITS as CONDUNITS } from "src/lib/units/conductivity";
 import { PreferenceContext } from "src/pages/_app";
 import style from "src/styles/PreferenceModal.module.css";
 
@@ -26,15 +26,15 @@ const PreferenceModal = ({ setPreferences, closeModal, isOpen }) => {
       },
       {
         name: "Temperature",
-        key: "temperature_unit",
-        options: Object.values(TEMP_UNITS).map(u => ({ name: u.name, symbol: u.symbol })),
-        default: preferences.temperature_unit,
+        key: "temperatureUnit",
+        options: Object.values(TEMPUNITS).map(u => ({ name: u.name, symbol: u.symbol })),
+        default: preferences.temperatureUnit,
       },
       {
         name: "Conductivity",
-        key: "conductivity_unit",
-        options: Object.values(COND_UNITS).map(u => ({ name: u.name, symbol: u.symbols[0] })),
-        default: preferences.conductivity_unit,
+        key: "conductivityUnit",
+        options: Object.values(CONDUNITS).map(u => ({ name: u.name, symbol: u.symbols[0] })),
+        default: preferences.conductivityUnit,
       },
     ];
   }, [locations, preferences]);

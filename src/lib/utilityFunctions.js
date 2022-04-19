@@ -22,6 +22,12 @@ export const loadPreferences = (prefCookieString) => {
 
 export const fetcher = async (url) => {
   const response = await fetch(url);
+  if (!response.ok) {
+    const error = new Error(response.statusText);
+    error.info = await response.json();
+    error.status = response.status;
+    throw error;
+  }
   return await response.json();
 };
 
