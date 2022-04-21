@@ -1,4 +1,4 @@
-import { dateFormatter } from "../../src/lib/utilityFunctions";
+import { dateFormatter } from "../../../src/lib/utilityFunctions";
 
 describe("TEST dateFormatter", () => {
   it("test 1", () => {
