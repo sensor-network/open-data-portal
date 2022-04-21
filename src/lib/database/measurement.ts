@@ -18,8 +18,9 @@ export const findInCombinedFormat = async (
   {
     startTime,
     endTime,
-    locationId
-  }: { startTime: Date | string, endTime: Date | string, locationId: number },
+    locationId,
+    sortOrder = "ASC"
+  }: { startTime: Date | string, endTime: Date | string, locationId: number, sortOrder?: string }
 ) => {
   /* if locationId = -1 we select all, else select with id */
   const query = locationId > 0 ? mysql.format(`
@@ -27,11 +28,13 @@ export const findInCombinedFormat = async (
               FROM measurement
               WHERE time BETWEEN ? AND ?
                 AND location_id = ?
+              ORDER BY time ${sortOrder};
     `, [startTime, endTime, locationId]) :
     mysql.format(`
         SELECT type, value as avg, time, value as min, value as max
         FROM measurement
         WHERE time BETWEEN ? AND ?
+        ORDER BY time ${sortOrder};
     `, [startTime, endTime]);
   const connection = await getConnectionPool();
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(query);
@@ -45,8 +48,8 @@ export const createOne = async (
     time,
     sensorType,
     locationId,
-    position
-  }: { sensorId: number, value: number, time: Date | string, sensorType: string, locationId: number, position: { lat: number, long: number } },
+    position,
+  }: { sensorId: number, value: number, time: Date | string, sensorType: string, locationId: number, position: { lat: number, long: number }, sortOrder?: string },
 ) => {
   const connection = await getConnectionPool();
   const [result, _]: [result: OkPacket, _: any] = await connection.query(`
@@ -59,7 +62,7 @@ export const createOne = async (
 };
 
 export const findMany = async (
-  { startTime, endTime }: { startTime: Date | string, endTime: Date | string },
+  { startTime, endTime, sortOrder = "ASC" }: { startTime: Date | string, endTime: Date | string, sortOrder?: string },
 ) => {
   const connection = await getConnectionPool();
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
@@ -77,7 +80,7 @@ export const findMany = async (
                           ON l.id = m.location_id
       WHERE m.time BETWEEN ? AND ?
       GROUP BY m.time, l.position, l.name, m.position
-      ORDER BY m.time
+      ORDER BY m.time ${sortOrder};
   `, [startTime, endTime]);
   return result.map(row => ({
     ...row,
@@ -86,8 +89,8 @@ export const findMany = async (
 };
 
 export const findByLocationIds = async (
-  { locationIds, startTime, endTime }:
-    { locationIds: number[], startTime: Date | string, endTime: Date | string },
+  { locationIds, startTime, endTime, sortOrder = "ASC" }:
+    { locationIds: number[], startTime: Date | string, endTime: Date | string, sortOrder?: string },
 ) => {
   const connection = await getConnectionPool();
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
@@ -106,7 +109,7 @@ export const findByLocationIds = async (
       WHERE m.time BETWEEN ? AND ?
         AND m.location_id IN (?)
       GROUP BY m.time, m.position
-      ORDER BY m.time;
+      ORDER BY m.time ${sortOrder};
   `, [
     startTime, endTime,
     locationIds,
@@ -118,8 +121,8 @@ export const findByLocationIds = async (
 };
 
 export const findByLatLong = async (
-  { lat, long, rad, startTime, endTime }:
-    { lat: number, long: number, rad: number, startTime: Date | string, endTime: Date | string },
+  { lat, long, rad, startTime, endTime, sortOrder = "ASC" }:
+    { lat: number, long: number, rad: number, startTime: Date | string, endTime: Date | string, sortOrder?: string },
 ) => {
   const connection = await getConnectionPool();
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
@@ -137,7 +140,7 @@ export const findByLatLong = async (
       WHERE m.time BETWEEN ? AND ?
         AND ST_Distance_Sphere(m.position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
       GROUP BY m.time, m.position
-      ORDER BY m.time;
+      ORDER BY m.time ${sortOrder};
   `, [
     startTime, endTime,
     lat, long, SRID, rad,

@@ -39,8 +39,9 @@ export const findInCombinedFormat = async (
   {
     startDate,
     endDate,
-    locationId
-  }: { startDate: Date | string, endDate: Date | string, locationId: number },
+    locationId,
+    sortOrder = "ASC",
+  }: { startDate: Date | string, endDate: Date | string, locationId: number, sortOrder?: string },
 ) => {
   /* if locationId = -1 we select all, else select with id */
   const query = locationId > 0
@@ -49,6 +50,7 @@ export const findInCombinedFormat = async (
               FROM history
               WHERE location_id = ?
                 AND date BETWEEN ? AND ?
+              ORDER BY date ${sortOrder}
     `, [
       locationId, startDate, endDate
     ])
@@ -56,6 +58,7 @@ export const findInCombinedFormat = async (
               SELECT type, daily_avg as avg, date as time, daily_min as min, daily_max as max
               FROM history
               WHERE date BETWEEN ? AND ?
+              ORDER BY date ${sortOrder}
     `, [
       startDate, endDate
     ]);
@@ -68,8 +71,9 @@ export const findMany = async (
   {
     startDate,
     endDate,
-    locationId
-  }: { startDate: string | Date, endDate: string | Date, locationId: number },
+    locationId,
+    sortOrder = "ASC",
+  }: { startDate: string | Date, endDate: string | Date, locationId: number, sortOrder?: string },
 ) => {
   const connection = await getConnectionPool();
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
@@ -77,6 +81,7 @@ export const findMany = async (
       FROM history
       WHERE date BETWEEN ? AND ?
         AND location_id = ?
+      ORDER BY date ${sortOrder}
   `, [startDate, endDate, locationId]);
   return result;
 };
@@ -85,8 +90,9 @@ export const findByFilter = async (
   {
     date,
     sensorType,
-    locationId
-  }: { date: string | Date, sensorType: string, locationId: number },
+    locationId,
+    sortOrder = "ASC"
+  }: { date: string | Date, sensorType: string, locationId: number, sortOrder?: string },
 ) => {
   const connection = await getConnectionPool();
   const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
@@ -95,6 +101,7 @@ export const findByFilter = async (
       WHERE date = ?
         AND location_id = ?
         AND type = ?
+      ORDER BY date ${sortOrder}
   `, [date, locationId, sensorType]);
   return result;
 };

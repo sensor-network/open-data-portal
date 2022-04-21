@@ -30,6 +30,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           .default("spm")
           .parse(req.query.conductivityUnit)
       );
+      const sortOrder = z.enum(['asc', 'desc']).default('asc')
+        .parse(req.query.sortOrder);
       const { lat, long, rad, locationName, useExactPosition } = zLocation.parse(req.query);
       const { startTime, endTime } = zTime.parse(req.query);
       let { page, pageSize } = zPage.parse(req.query);
@@ -73,10 +75,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         /* locations === null means we didn't look for any locations */
         if (lat && long && rad && useExactPosition) {
           /* run distance formula against every row. off by default since it is slow */
-          measurements = await Measurement.findByLatLong({ lat, long, rad, startTime, endTime });
+          measurements = await Measurement.findByLatLong({ lat, long, rad, startTime, endTime, sortOrder });
         }
         else {
-          measurements = await Measurement.findMany({ startTime, endTime });
+          measurements = await Measurement.findMany({ startTime, endTime, sortOrder });
         }
         if (!measurements.length) {
           status = {
@@ -90,7 +92,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         measurements = await Measurement.findByLocationIds({
           locationIds: locations.map(l => l.id),
           startTime,
-          endTime
+          endTime,
+          sortOrder
         });
         if (!measurements.length) {
           status = {

@@ -52,6 +52,19 @@
             }
           },
           {
+            "name": "sortOrder",
+            "in": "query",
+            "description": "Optional. Sort the measurements in a specific order. Available options are `asc` and `desc` (case insensitive). Sorting column is time.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "asc",
+              "default": "asc"
+            }
+          },
+          {
             "name": "startTime",
             "in": "query",
             "description": "Optional. Select data within a selected time-range. Should be provided using an ISO8601-formatted string. Cannot be prior to 2022-01-01.",
@@ -571,6 +584,19 @@
             "schema": {
               "type": "boolean",
               "example": true
+            }
+          },
+          {
+            "name": "sortOrder",
+            "in": "query",
+            "description": "Optional. Sort the measurements in a specific order. Available options are `asc` and `desc`. Sorting column is time.",
+            "required": false,
+            "style": "form",
+            "explode": true,
+            "schema": {
+              "type": "string",
+              "example": "asc",
+              "default": "asc"
             }
           },
           {

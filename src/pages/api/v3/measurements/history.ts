@@ -76,6 +76,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const includeMeasurements = z.enum(['true', 'false']).default('true')
       .transform(str => str === 'true')
       .parse(req.query.includeMeasurements);
+    const sortOrder = z.enum(['asc', 'desc']).default('asc')
+      .parse(req.query.sortOrder);
     let locationName = z.string().optional().parse(req.query.locationName);
     /* how much time between each measurement */
     const density = zDensity.parse(req.query.density) || defineDataDensity(new Date(startTime), new Date(endTime));
@@ -128,6 +130,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         locationId: location.id,
         startTime,
         endTime,
+        sortOrder,
       });
     }
     else {
@@ -135,6 +138,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         locationId: location.id,
         startDate: startTime,
         endDate: endTime,
+        sortOrder,
       });
     }
 
