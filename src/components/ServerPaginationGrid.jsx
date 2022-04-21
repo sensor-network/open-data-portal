@@ -124,10 +124,6 @@ const ServerPaginationGrid = () => {
     );
   };
 
-  console.log("lagging?", isLagging);
-  console.log("loading?", isLoading);
-  console.log("error?", error);
-
   return (
     <Card title="Explore the data on your own" margin="40px 0 0 0">
       <div style={{ height: 750, margin: "20px 0" }}>
