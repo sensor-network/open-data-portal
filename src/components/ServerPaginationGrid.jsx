@@ -124,11 +124,15 @@ const ServerPaginationGrid = () => {
     );
   };
 
+  console.log("lagging?", isLagging);
+  console.log("loading?", isLoading);
+  console.log("error?", error);
+
   return (
     <Card title="Explore the data on your own" margin="40px 0 0 0">
       <div style={{ height: 750, margin: "20px 0" }}>
-        {isLoading ? <CustomProgressBar/> : <DataGrid
-          rows={() => error ? [] : measurements}
+        {isLoading ? <CustomProgressBar/> : error ? <div>No data found</div> : <DataGrid
+          rows={measurements}
           columns={gridColumns}
           rowCount={pagination?.totalRows}
           loading={isLagging || isLoading}
