@@ -10,7 +10,7 @@ export type Measurement = {
   time: Date,
   sensors: {
     [key: string]: number,
-  }[]
+  }
 }
 
 /* query for getting data formatted the same way for history and measurement table */
