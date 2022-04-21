@@ -128,7 +128,7 @@ const ServerPaginationGrid = () => {
     <Card title="Explore the data on your own" margin="40px 0 0 0">
       <div style={{ height: 750, margin: "20px 0" }}>
         {isLoading ? <CustomProgressBar/> : <DataGrid
-          rows={measurements}
+          rows={() => error ? [] : measurements}
           columns={gridColumns}
           rowCount={pagination?.totalRows}
           loading={isLagging || isLoading}
