@@ -130,7 +130,7 @@ const ServerPaginationGrid = () => {
         {isLoading ? <CustomProgressBar/> : <DataGrid
           rows={measurements}
           columns={gridColumns}
-          rowCount={pagination?.total_rows}
+          rowCount={pagination?.totalRows}
           loading={isLagging || isLoading}
           getRowId={row => row.time}
           components={{ LoadingOverlay: CustomProgressBar, Pagination: CustomPagination }}

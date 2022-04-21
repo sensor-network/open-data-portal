@@ -29,17 +29,17 @@ const Summary = () => {
         ...base,
         startTime: formatISO(startDate),
         endTime: formatISO(endDate),
-        location_name: preferences.location.symbol,
+        locationName: preferences.location.symbol,
       }),
       allTime: urlWithParams(ENDPOINT, {
         ...base,
-        location_name: preferences.location.symbol,
+        locationName: preferences.location.symbol,
       }),
       lastYears: urlWithParams(ENDPOINT, {
         ...base,
         startTime: formatISO(sub(startDate, { years: 1 })),
         endTime: formatISO(sub(endDate, { years: 1 })),
-        location_name: preferences.location.symbol,
+        locationName: preferences.location.symbol,
       }),
       archipelago: urlWithParams(ENDPOINT, {
         ...base,
