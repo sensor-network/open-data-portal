@@ -54,7 +54,7 @@ export const useMeasurements = (url, fetcher = defaultFetcher) => {
   return {
     measurements: data?.measurements,
     pagination: data?.pagination,
-    isLoading: !data,
+    isLoading: !data && !error,
     isLagging: isLagging,
     error: error,
   };
@@ -69,7 +69,7 @@ export const useSummarizedData = (url, fetcher = defaultFetcher) => {
 
   return {
     summarizedData: data?.summary,
-    isLoading: !data,
+    isLoading: !data && !error,
     isLagging,
     error,
   };
@@ -84,7 +84,7 @@ export const useSummarizedMeasurements = (url, fetcher = defaultFetcher) => {
 
   return {
     summarizedMeasurements: data?.measurements,
-    isLoading: !data,
+    isLoading: !data && !error,
     isLagging,
     error,
   };
