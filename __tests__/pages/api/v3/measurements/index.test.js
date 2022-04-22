@@ -1,31 +1,35 @@
 import handler from "../../../../../src/pages/api/v3/measurements";
 import { createOne, findMany } from "src/lib/database/measurement";
-import { findByLatLong } from "src/lib/database/location";
-import { findById, updateStatus } from "src/lib/database/sensor";
 
 import { createMocks } from "node-mocks-http";
-import { format } from "date-fns";
+
+const mockedResponse = [
+  {
+    locationName: "test",
+    position: {
+      lat: 0,
+      long: 0,
+    },
+    time: new Date("2022-01-01T00:00:00.000Z"),
+    sensors: {
+      temperature: 278.15,
+    },
+  },
+];
 
 /* Mock the database modules. */
 jest.mock("src/lib/database/measurement", () => ({
   __esModule: true,
   createOne: jest.fn().mockImplementation(() => Promise.resolve()),
-  findMany: jest.fn().mockImplementation(() =>
-    Promise.resolve([
-      {
-        locationName: "test",
-        position: {
-          lat: 0,
-          long: 0,
-        },
-        time: new Date("2022-01-01T00:00:00.000Z"),
-        sensors: {
-          temperature: 278.15,
-        },
-      },
-    ])
-  ),
+  findMany: jest.fn().mockImplementation(() => Promise.resolve(mockedResponse)),
+  findByLocationIds: jest
+    .fn()
+    .mockImplementation(() => Promise.resolve(mockedResponse)),
+  findByLatLong: jest
+    .fn()
+    .mockImplementation(() => Promise.resolve(mockedResponse)),
 }));
+
 jest.mock("src/lib/database/location", () => ({
   __esModule: true,
   /* just return an array with a single location whose id = 1 for now */

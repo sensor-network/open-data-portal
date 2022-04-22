@@ -9,7 +9,8 @@ import DateRangeSelector from "src/components/DateRangeSelector";
 import styles from "src/styles/Visualization.module.css";
 
 import { PreferenceContext } from "src/pages/_app";
-import { urlWithParams, dateFormatter } from "src/lib/utilityFunctions";
+import { urlWithParams } from "src/lib/utilityFunctions";
+import { dateFormatter } from "src/lib/utils/date-formatter";
 import { useSummarizedMeasurements } from "src/lib/hooks/swr-extensions";
 import { formatISO } from "date-fns";
 

@@ -17,8 +17,8 @@ import {
   getMax,
   round,
   defineDataDensity,
-  findLast
 } from 'lib/utilityFunctions';
+import { findLast } from "lib/utils/find-last";
 import { parseUnit as parseTempUnit } from "lib/units/temperature";
 import { parseUnit as parseCondUnit } from "lib/units/conductivity";
 import { PH } from "src/lib/units/ph";

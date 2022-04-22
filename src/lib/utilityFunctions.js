@@ -1,4 +1,3 @@
-import { format } from "date-fns";
 import { DECIMAL_PLACES } from "src/lib/constants";
 import { UNITS as TEMP_UNITS } from "lib/units/temperature";
 import { UNITS as COND_UNITS } from "lib/units/conductivity";
@@ -32,45 +31,6 @@ export const fetcher = async (url) => {
 };
 
 export const urlWithParams = (baseUrl, params) => baseUrl + new URLSearchParams(params);
-
-/* decide a good format depending on the date-range */
-export const dateFormatter = (date, startDate, endDate) => {
-  /* date can either be a date-parsable string or a Date */
-  const parsed = new Date(date);
-  const millisBetween = endDate.getTime() - startDate.getTime();
-  const daysBetween = millisBetween / (1000 * 60 * 60 * 24);
-
-  /* if startDate and endDate are from different years, include year */
-  if (startDate.getFullYear() !== endDate.getFullYear()) {
-    return format(parsed, "d MMM yyyy");
-  }
-  /* if startDate and endDate are from the same months, include time */
-  if (startDate.getMonth() === endDate.getMonth() || daysBetween < 10) {
-    return format(parsed, "d MMM HH:mm");
-  }
-  /* otherwise, just include date */
-  return format(parsed, "d MMM");
-};
-
-/* take in an array of values and return the min, max and avg */
- export const summarizeValues = (values, decimals = 2) => {
-   let [minIndex, maxIndex, sum] = [0, 0, 0];
-   for (let i = 0; i < values.length; i++) {
-     const value = values[i];
-     if (value < values[minIndex]) {
-       minIndex = i;
-     }
-     if (value > values[maxIndex]) {
-       maxIndex = i;
-     }
-     sum += value;
-   }
-   return {
-     min: round(values[minIndex], decimals),
-     max: round(values[maxIndex], decimals),
-     avg: round(sum / values.length, decimals),
-   };
- };
 
 /* round given value to specified precision */
 export const round = (value, decimals = DECIMAL_PLACES) => {
@@ -130,17 +90,4 @@ export const defineDataDensity = (startDate, endDate) => {
           daysBetween < 370 ? "1w" :
             daysBetween < 3 * 370 ? "1w" :
               "2w";
-};
-
-/* Array.prototype.find() but starts searching at the back */
-export const findLast = (array, callback) => {
-  let last = null;
-  for (let i = array.length - 1; i >= 0; i--) {
-    const item = array[i];
-    if (callback(item)) {
-      last = item;
-      break;
-    }
-  }
-  return last;
 };
