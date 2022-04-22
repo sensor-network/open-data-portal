@@ -10,13 +10,27 @@ export type Station = {
 }
 
 const reformatSQLResult = (result: RowDataPacket[], expandLocation: boolean, expandSensors: boolean): Station[] => {
-  /* Reformats the RowDataPacket[] => Station[]*/
+  /**
+   * Reformats the RowDataPacket[] => Station[]
+   * Example input: [
+   *   {id: 1, sensorId: 1, locationId: 1}, 
+   *   {id: 1, sensorId: 2, locationId: 1},
+   *   {id: 2, sensorId: 3, locationId: 2},
+   *   {id: 2, sensorId: 4, locationId: 2},
+   * ]
+   * Converts into: [
+   *   {id: 1, sensors: [1, 2], location: 1},
+   *   {id: 2, sensors: [3, 4], location: 2},
+   * ]
+   * Note: sensors and location can be extended to include the full object:
+   * { id: 1, ... }
+   **/
   let stations: Array<Station> = [];
   /* use map between station_id and index in stations for instant lookup */
   const stationIdsMap: Map<number, number> = new Map();
   result.forEach(row => {
     if (!stationIdsMap.has(row.station_id)) {
-      /* initialize station if we haven't already */
+      /* initialize station if we haven't already (not in map) */
       const newLength = stations.push({
         id: row.station_id,
         location: expandLocation ?
@@ -31,9 +45,11 @@ const reformatSQLResult = (result: RowDataPacket[], expandLocation: boolean, exp
           row.location_id,
         sensors: [],
       });
+      /* then add the station to the map, linking the station.id to the stations-index */
       stationIdsMap.set(row.station_id, newLength - 1);
     }
-    /* add sensor to the correct station */
+    
+    /* add sensor to the correct station, either an existing one or the one we just created */
     const stationIdx = stationIdsMap.get(row.station_id);
     // @ts-ignore - by here we know station_id is in the map hence we can ignore the ts-warning
     stations[stationIdx].sensors.push(
