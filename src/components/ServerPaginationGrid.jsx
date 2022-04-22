@@ -6,6 +6,8 @@ import {
   gridPageSelector,
   useGridApiContext,
   useGridSelector,
+  GridToolbarExport,
+  GridToolbarContainer
 } from "@mui/x-data-grid";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme, CustomProgressBar } from "./CustomProgressBar";
@@ -20,6 +22,15 @@ import { urlWithParams, capitalize, round } from "../lib/utilityFunctions";
 import { formatISO } from "date-fns";
 
 const ENDPOINT = "http://localhost:3000/api/v2/measurements?";
+
+function MyExportButton() {
+  return (
+    <GridToolbarContainer>
+      <GridToolbarExport />
+    </GridToolbarContainer>
+  );
+}
+  
 
 const ServerPaginationGrid = () => {
   /* Define pagination options, which can be modified in the grid */
@@ -133,7 +144,7 @@ const ServerPaginationGrid = () => {
           rowCount={pagination?.total_rows}
           loading={isLagging || isLoading}
           getRowId={row => row.time}
-          components={{ LoadingOverlay: CustomProgressBar, Pagination: CustomPagination }}
+          components={{ LoadingOverlay: CustomProgressBar, Pagination: CustomPagination, Toolbar: MyExportButton }}
           pagination
           paginationMode={"server"}
           page={page}
