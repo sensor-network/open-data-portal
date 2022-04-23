@@ -10,14 +10,13 @@ CREATE TABLE location
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
 
-/* sensor table not needed? */
 CREATE TABLE sensor
 (
     `id`          int primary key auto_increment,
     `name`        varchar(255),
     `firmware`    varchar(255),
     `type`        varchar(255) NOT NULL,
-    `status`      varchar(255) NOT NULL DEFAULT 'ok',
+    `status`      varchar(255) NOT NULL DEFAULT 'OK',
     `last_active` timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX (`type`)
 ) ENGINE = InnoDB

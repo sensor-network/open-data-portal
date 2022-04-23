@@ -26,15 +26,15 @@ const PreferenceModal = ({ setPreferences, closeModal, isOpen }) => {
       },
       {
         name: "Temperature",
-        key: "temperature_unit",
+        key: "temperatureUnit",
         options: Object.values(TEMP_UNITS).map(u => ({ name: u.name, symbol: u.symbol })),
-        default: preferences.temperature_unit,
+        default: preferences.temperatureUnit,
       },
       {
         name: "Conductivity",
-        key: "conductivity_unit",
+        key: "conductivityUnit",
         options: Object.values(COND_UNITS).map(u => ({ name: u.name, symbol: u.symbols[0] })),
-        default: preferences.conductivity_unit,
+        default: preferences.conductivityUnit,
       },
     ];
   }, [locations, preferences]);

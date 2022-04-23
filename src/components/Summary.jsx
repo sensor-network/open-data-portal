@@ -11,7 +11,7 @@ import { useSummarizedData } from "src/lib/hooks/swr-extensions";
 import { round, capitalize, urlWithParams } from "src/lib/utilityFunctions";
 import styles from "src/styles/Summary.module.css";
 
-const ENDPOINT = "http://localhost:3000/api/v2/measurements/history?";
+const ENDPOINT = "/api/v3/measurements/history?";
 
 const Summary = () => {
   const { preferences } = useContext(PreferenceContext);
@@ -20,43 +20,44 @@ const Summary = () => {
 
   const urls = useMemo(() => {
     const base = {
-      temperature_unit: preferences.temperature_unit.symbol,
-      conductivity_unit: preferences.conductivity_unit.symbol,
-      include_measurements: false,
+      temperatureUnit: preferences.temperatureUnit.symbol,
+      conductivityUnit: preferences.conductivityUnit.symbol,
+      includeMeasurements: false,
     };
     return {
       current: urlWithParams(ENDPOINT, {
         ...base,
-        start_date: formatISO(startDate),
-        end_date: formatISO(endDate),
-        location_name: preferences.location.symbol,
+        startTime: formatISO(startDate),
+        endTime: formatISO(endDate),
+        locationName: preferences.location.symbol,
       }),
       allTime: urlWithParams(ENDPOINT, {
         ...base,
-        location_name: preferences.location.symbol,
+        locationName: preferences.location.symbol,
       }),
       lastYears: urlWithParams(ENDPOINT, {
         ...base,
-        start_date: formatISO(sub(startDate, { years: 1 })),
-        end_date: formatISO(sub(endDate, { years: 1 })),
-        location_name: preferences.location.symbol,
+        startTime: formatISO(sub(startDate, { years: 1 })),
+        endTime: formatISO(sub(endDate, { years: 1 })),
+        locationName: preferences.location.symbol,
       }),
       archipelago: urlWithParams(ENDPOINT, {
         ...base,
-        start_date: formatISO(startDate),
-        end_date: formatISO(endDate),
+        startTime: formatISO(startDate),
+        endTime: formatISO(endDate),
       }),
     };
   }, [preferences, startDate, endDate]);
 
   /* the data for the selected period */
-  const { summarizedData, isLoading, isLagging } = useSummarizedData(urls.current);
+  const { summarizedData, isLoading, isLagging, error } = useSummarizedData(urls.current);
 
   /* the data for comparing all time */
   const {
     summarizedData: allTimeData,
     isLoading: allTimeLoading,
     isLagging: allTimeLagging,
+    error: allTimeError,
   } = useSummarizedData(urls.allTime);
 
   /* the data for comparing the same period last year */
@@ -64,6 +65,7 @@ const Summary = () => {
     summarizedData: lastYearsData,
     isLoading: lastYearsLoading,
     isLagging: lastYearsLagging,
+    error: lastYearsError,
   } = useSummarizedData(urls.lastYears);
 
   /* the data for comparing the entire archipelago for this period*/
@@ -71,18 +73,19 @@ const Summary = () => {
     summarizedData: archipelagoData,
     isLoading: archipelagoLoading,
     isLagging: archipelagoLagging,
+    error: archipelagoError,
   } = useSummarizedData(urls.archipelago);
-
-  const columns = isLoading ? 0 : Object.keys(summarizedData.sensors).length;
-  const columnCount = 3 + 3 * columns.length;
 
   const isAnyLoading = isLoading || allTimeLoading || lastYearsLoading || archipelagoLoading;
   const isAnyLagging = isLagging || allTimeLagging || lastYearsLagging || archipelagoLagging;
 
+  const columns = isAnyLoading || error ? [] : Object.keys(summarizedData.sensors);
+  const columnCount = 3 + 3 * columns.length;
+
   return (
     <Card title="Summarize data over a period">
-      {(isAnyLagging || isAnyLoading) && <CustomProgressBar/>}
-      {!isLoading && columns <= 0 && <div>No data for selected timerange</div>}
+      {(isAnyLagging || isAnyLoading) && !error && <CustomProgressBar/>}
+      {!isLoading && error && <div>No data for selected timerange and location</div>}
       <Grid container columns={columnCount} spacing={0} className={styles.gridContainer}>
         <Grid item xs={Math.floor(columnCount / 2)} sm={4} md={3} sx={{ fontWeight: 600 }}>
 
@@ -131,34 +134,34 @@ const Summary = () => {
         </Grid>
 
         <Grid item xs={Math.floor(columnCount / 2)} sm={8} md={9} className={styles.gridValues}>
-          {!isAnyLoading && Object.entries(summarizedData.sensors).map(([sensor, sensorData], index) => {
-            const unit = preferences[`${sensor.toLowerCase()}_unit`]?.symbol;
+          {(!isAnyLoading && !error) && Object.entries(summarizedData.sensors).map(([sensor, sensorData], index) => {
+            const unit = preferences[`${sensor.toLowerCase()}Unit`]?.symbol;
             const capitalizedUnit = capitalize(unit);
 
-            const periodDelta = round(sensorData.end - sensorData.start, 1);
+            const periodDelta = round(sensorData?.end - sensorData?.start);
             const deltaOptions = {
-              inPercent: round(periodDelta / sensorData.start * 100, 1),
+              inPercent: round(periodDelta / sensorData?.start * 100),
               sign: periodDelta < 0 ? "" : "+",
               color: periodDelta < 0 ? "red" : "green",
             };
 
-            const comparedToAllTime = round(allTimeData.sensors[sensor]?.avg - sensorData.avg, 1);
+            const comparedToAllTime = allTimeError && !allTimeLagging ? "No data found" : round(allTimeData?.sensors[sensor]?.avg - sensorData?.avg);
             const allTimeOptions = {
-              inPercent: round(comparedToAllTime / sensorData.avg * 100, 1),
+              inPercent: round(comparedToAllTime / sensorData?.avg * 100),
               sign: comparedToAllTime < 0 ? "" : "+",
               color: comparedToAllTime < 0 ? "red" : "green",
             };
 
-            const comparedToLastYear = round(lastYearsData.sensors[sensor]?.avg - sensorData.avg, 1);
+            const comparedToLastYear = lastYearsError && !lastYearsLagging ? "No data found" : round(lastYearsData?.sensors[sensor]?.avg - sensorData?.avg);
             const lastYearsOptions = {
-              inPercent: round(comparedToLastYear / sensorData.avg * 100, 1),
+              inPercent: round(comparedToLastYear / sensorData?.avg * 100),
               sign: comparedToLastYear < 0 ? "" : "+",
               color: comparedToLastYear < 0 ? "red" : "green",
             };
 
-            const archipelagoAverage = round(archipelagoData.sensors[sensor]?.avg - sensorData.avg, 1);
+            const archipelagoAverage = archipelagoError && !archipelagoLagging ? "No data found" : round(archipelagoData?.sensors[sensor]?.avg - sensorData?.avg);
             const archipelagoOptions = {
-              inPercent: round(archipelagoAverage / sensorData.avg * 100, 1),
+              inPercent: round(archipelagoAverage / sensorData?.avg * 100),
               sign: archipelagoAverage < 0 ? "" : "+",
               color: archipelagoAverage < 0 ? "red" : "green",
             };
@@ -203,8 +206,12 @@ const Summary = () => {
 
                   {/* compared to last year */}
                   <div className={styles.row}>
-                    <span style={{ color: lastYearsOptions.color, minWidth: "max-content" }}>
-                      {lastYearsOptions.sign}{comparedToLastYear} {capitalizedUnit} ({lastYearsOptions.sign}{lastYearsOptions.inPercent} %)
+                    <span style={{ minWidth: "max-content" }}>
+                      {typeof comparedToLastYear === "string" ? comparedToLastYear :
+                        <span style={{ color: lastYearsOptions.color }}>
+                          {lastYearsOptions.sign}{comparedToLastYear} {capitalizedUnit} ({lastYearsOptions.sign}{lastYearsOptions.inPercent} %)
+                        </span>
+                      }
                     </span>
                   </div>
 
