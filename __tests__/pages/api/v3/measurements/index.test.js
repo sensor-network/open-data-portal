@@ -1,10 +1,7 @@
 import handler from "../../../../../src/pages/api/v3/measurements";
 import { createOne, findMany } from "src/lib/database/measurement";
-import { findByLatLong } from "src/lib/database/location";
-import { findById, updateStatus } from "src/lib/database/sensor";
 
 import { createMocks } from "node-mocks-http";
-import { format } from "date-fns";
 
 /* Mock the database modules. */
 jest.mock("src/lib/database/measurement", () => ({
@@ -23,7 +20,7 @@ jest.mock("src/lib/database/measurement", () => ({
           temperature: 278.15,
         },
       },
-    ])
+    ]),
   ),
 }));
 jest.mock("src/lib/database/location", () => ({
@@ -53,16 +50,16 @@ describe("POST: /measurements", () => {
   };
 
   it("should call the database once using the mock function", async () => {
-    /* setup req, res object */
+    /* setup req, res object (arrange) */
     const { req, res } = mockReqRes({
       time: "2022-01-01Z",
       position: { lat: 0, long: 0 },
       sensors: [{ sensorId: 1, value: 5, unit: "c" }],
     });
-    /* call the api endpoint */
+    /* call the api endpoint (act) */
     await handler(req, res);
 
-    /* there should only have been a single call to the database */
+    /* there should only have been a single call to the database (assert)*/
     expect(createOne.mock.calls.length).toEqual(1);
     /* mock.calls[0][0] is the first argument the mock was called with the first time */
     expect(createOne.mock.calls[0][0]).toEqual(
@@ -78,7 +75,7 @@ describe("POST: /measurements", () => {
         sensorId: 1,
         sensorType: "temperature",
         value: 278.15, // 5 'C
-      })
+      }),
     );
     /* if the database called returned with 1, the id of the returned object should also be 1 */
     expect(res._getJSONData()).toEqual(
@@ -90,7 +87,7 @@ describe("POST: /measurements", () => {
             time: "2022-01-01T00:00:00.000",
           }),
         ]),
-      })
+      }),
     );
     expect(res._getStatusCode()).toEqual(201);
   });
@@ -129,7 +126,7 @@ describe("GET: /measurements", () => {
             temperature: 278.15,
           },
         }),
-      ])
+      ]),
     );
     /* if the database returned correctly, the api should respond accordingly */
     expect(res._getJSONData()).toEqual(
@@ -160,7 +157,7 @@ describe("GET: /measurements", () => {
             },
           }),
         ]),
-      })
+      }),
     );
   });
 });
