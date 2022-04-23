@@ -1,13 +1,19 @@
 import { useEffect, useState } from 'react';
+import { fetcher } from "src/lib/utilityFunctions";
 
 export const useSensorTypes = (url: string) => {
   const [sensorTypes, setSensorTypes] = useState<Array<string> | undefined>(undefined);
 
   useEffect(() => {
     const fetchSensorTypes = async () => {
-      const res = await fetch(url);
-      const sensorTypes: Array<string> = await res.json();
-      setSensorTypes(sensorTypes);
+      try {
+        const types: string[] = await fetcher(url);
+        setSensorTypes(types);
+      }
+      catch (e) {
+        console.error(`useSensorTypes::`, e);
+        setSensorTypes([]);
+      }
     };
     fetchSensorTypes();
   }, [url]);

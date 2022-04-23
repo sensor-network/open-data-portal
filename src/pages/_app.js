@@ -17,7 +17,7 @@ function MyApp({ Component, pageProps }) {
   const [preferences, setPreferences] = useState(() => (
     loadPreferences(Cookies.get("preferences"))
   ));
-  const locations = useLocations("/api/v2/locations");
+  const locations = useLocations("/api/v3/locations");
   const width = useWidth();
   const isMobile = width < MOBILE_BREAKPOINT;
 

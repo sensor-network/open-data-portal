@@ -35,7 +35,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
-    /* parse and validate date from query, use yesterday if not specified (request is coming in at 00:00) */
+    /* parse and validate date from query */
     const date = z.string()
       .refine(str => isValid(new Date(str)), 'Unable to parse string as Date')
       .transform(str => format(new Date(str), 'yyyy-MM-dd'))
@@ -43,36 +43,35 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     /* get all locations from database, as well as the available sensors */
     const locations = await Location.findMany();
-    const sensor_types = await Sensor.findAllTypes();
+    const sensorTypes = await Sensor.findAllTypes();
 
     /* now aggregate the data for all locations and sensor-types */
-    let insertedIds: Array<number> = [];
-    for (const { id: location_id } of locations) {
-      for (const type of sensor_types) {
+    let insertedIds: number[] = [];
+    for (const { id: locationId } of locations) {
+      for (const type of sensorTypes) {
         /* see if data for such date and sensor has already been aggregated */
-        const history = await History.findByFilter({ date, sensor_type: type, location_id });
+        const history = await History.findByFilter({ date, sensorType: type, locationId });
         if (history.length === 0) {
           const insertId = await History.createOne({
             date,
-            sensor_type: type,
-            location_id,
+            sensorType: type,
+            locationId,
           });
           insertedIds.push(insertId);
         }
       }
     }
-    res.status(STATUS.OK).json({
-      inserted_ids: insertedIds,
-    });
+    res.status(STATUS.OK)
+      .json({ insertedIds });
   }
   catch (e) {
     if (e instanceof ZodError) {
-      console.log(e.flatten());
+      console.log(`${req.method}: /api/private/aggregate-daily::`, e.flatten());
       res.status(STATUS.BAD_REQUEST)
         .json(e.flatten());
     }
     else {
-      console.error(e);
+      console.error(`${req.method}: /api/private/aggregate-daily::`, e);
       res.status(STATUS.SERVER_ERROR)
         .json({
           error: 'There was an error when executing the cron job.'

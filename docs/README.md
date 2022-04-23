@@ -62,7 +62,7 @@ endpoint. In this example, I will create a new location for `Gräsvik`.
 POST: /api/<api_version>/locations
 JSON BODY:
 {
-	"location_name": "Gräsvik",
+	"locationName": "Gräsvik",
 	"lat": 56.182421,
 	"long": 15.589274,
 	"rad": 1000
@@ -73,7 +73,7 @@ $ curl --request POST \
   --url http://localhost:3000/api/<api_version>/locations \
   --header 'Content-Type: application/json' \
   --data '{
-	"location_name": "Gräsvik",
+	"locationName": "Gräsvik",
 	"lat": 56.182421,
 	"long": 15.589274,
 	"rad": 1000
@@ -95,9 +95,9 @@ station with the sensor we just created. I will also place the station in the lo
 POST: /api/<api_version>/stations
 JSON BODY:
 {
-    "station_name": "rkz1000",
-    "location_id": 1,
-    "sensor_ids": [1]
+    "stationName": "rkz1000",
+    "locationId": 1,
+    "sensorIds": [1]
 }
 
 Using curl (again, assuming running the application locally):
@@ -105,9 +105,9 @@ $ curl --request POST \
   --url http://localhost:3000/api/<api_version>/stations \
   --header 'Content-Type: application/json' \
   --data '{
-    "station_name": "rkz1000",
-    "location_id": 1,
-    "sensor_ids": [1]
+    "stationName": "rkz1000",
+    "locationId": 1,
+    "sensorIds": [1]
 }'
 ```
 
@@ -137,13 +137,13 @@ than the radius we provided, 1000m.
 POST: /api/<api_version>/measurements
 JSON BODY:
 {
-    "timestamp": "2022-04-08T14:08:54+02",
-    "location": {
+    "time": "2022-04-08T14:08:54+02",
+    "position": {
       "lat": 56.182421,
       "long": 15.589274
     },
     "sensors": [
-        { "sensor_id": 1, "value": 23.5, "unit": "c" }
+        { "sensorId": 1, "value": 23.5, "unit": "c" }
     ]
 }
 
@@ -152,13 +152,13 @@ $ curl --request POST \
   --url http://localhost:3000/api/<api_version>/measurements \
   --header 'Content-Type: application/json' \
   --data '{
-	"timestamp": "2022-04-08T14:08:54+02",
-	"location": {
+	"time": "2022-04-08T14:08:54+02",
+	"position": {
       "lat": 56.182421,
       "long": 15.589274
     },
 	"sensors": [
-		{"sensor_id": 1, "value": 23.5, "unit": "c"}
+		{"sensorId": 1, "value": 23.5, "unit": "c"}
 	]
 }'
 ```
@@ -169,19 +169,19 @@ solids, just specify multiple sensors in the `sensors` field:
 
 ```json
 {
-  "timestamp": "2022-04-08T14:08:54+02",
-  "location": {
+  "time": "2022-04-08T14:08:54+02",
+  "position": {
     "lat": 56.182421,
     "long": 15.589274
   },
   "sensors": [
     {
-      "sensor_id": 1,
+      "sensorId": 1,
       "value": 23.5,
       "unit": "c"
     },
     {
-      "sensor_id": 2,
+      "sensorId": 2,
       "value": 40000,
       "unit": "ppm"
     }
@@ -200,13 +200,13 @@ the API would return something like this:
 GET: /api/<api_version>/sensors/status
 
 Response: [
-  {"id": 1, "type": "temperature", "status": "too_low", "last_active": "2022-04-08T12:08:54.000Z"},
-  {"id": 2, "type": "conductivity", "status": "ok", "last_active": "2022-04-08T12:08:54.000Z"}
+  {"id": 1, "type": "temperature", "status": "TOO_LOW", "last_active": "2022-04-08T12:08:54.000Z"},
+  {"id": 2, "type": "conductivity", "status": "OK", "last_active": "2022-04-08T12:08:54.000Z"}
 ]
 ```
 
-If the status is ``ok``, the sensor is operating normally in the sense that its measurements are being accepted by the
+If the status is `OK`, the sensor is operating normally in the sense that its measurements are being accepted by the
 API. If the measurements are being declined, an appropriate status is displayed, e.g:
 
-- `too_low`, `too_high` - the sensor is sending measurements out of the accepted range.
+- `TOO_LOW`, `TOO_HIGH` - the sensor is sending measurements out of the accepted range.
 - `ER_DUP_ENTRY` - the sensor is sending a measurement with a timestamp that is already in the database
