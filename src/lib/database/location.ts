@@ -16,17 +16,18 @@ export const createOne = async (
   { name, lat, long, rad }: { name: string; lat: number; long: number; rad: number },
 ) => {
   const connection = await getConnectionPool();
-  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
+  const result = await connection.query(`
       INSERT INTO location
           (name, radius_meters, position)
       VALUES (?, ?, ST_GeomFromText('POINT(? ?)', ?))
   `, [name, rad, lat, long, SRID]);
-  return result.insertId;
+  const okPacket = result[0] as OkPacket;
+  return okPacket.insertId;
 };
 
 export const findMany = async () => {
   const connection = await getConnectionPool();
-  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+  const result = await connection.query(`
       SELECT id,
              name,
              radius_meters AS radiusMeters,
@@ -36,13 +37,12 @@ export const findMany = async () => {
                  )         AS position
       FROM location
   `);
-
-  return result as Location[];
+  return result[0] as Location[];
 };
 
 export const findById = async ({ id }: { id: number }) => {
   const connection = await getConnectionPool();
-  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+  const result = await connection.query(`
       SELECT id,
              name,
              radius_meters AS radiusMeters,
@@ -53,12 +53,13 @@ export const findById = async ({ id }: { id: number }) => {
       FROM location
       WHERE id = ?
   `, [id]);
-  return result[0] as Location;
+  const rows = result[0] as RowDataPacket[];
+  return rows[0] as Location;
 };
 
 export const findByName = async ({ name }: { name: string }) => {
   const connection = await getConnectionPool();
-  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(`
+  const result = await connection.query(`
       SELECT id,
              name,
              radius_meters AS radiusMeters,
@@ -69,7 +70,7 @@ export const findByName = async ({ name }: { name: string }) => {
       FROM location
       WHERE name = ?
   `, [name]);
-  return result as Location[];
+  return result[0] as Location[];
 };
 
 
@@ -78,50 +79,53 @@ export const findByLatLong = async (
 ) => {
   const connection = await getConnectionPool();
   // if rad is provided, use the provided radius, else inherit from db entry
-  const query = rad
-    ? mysql.format(`
-              SELECT id,
-                     name,
-                     radius_meters AS radiusMeters,
-                     JSON_OBJECT(
-                             'lat', ST_X(position),
-                             'long', ST_Y(position)
-                         )         AS position
-              FROM location
-              WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
-              ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
+  let query: string;
+  if (rad !== null) {
+    query = mysql.format(`
+        SELECT id,
+               name,
+               radius_meters AS radiusMeters,
+               JSON_OBJECT(
+                       'lat', ST_X(position),
+                       'long', ST_Y(position)
+                   )         AS position
+        FROM location
+        WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
+        ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
     `, [
       lat, long, SRID, rad,
       lat, long, SRID,
-    ])
-    : mysql.format(`
-              SELECT id,
-                     name,
-                     radius_meters AS radiusMeters,
-                     JSON_OBJECT(
-                             'lat', ST_X(position),
-                             'long', ST_Y(position)
-                         )         AS position
-              FROM location
-              WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= radius_meters
-              ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
+    ]);
+  }
+  else {
+    query = mysql.format(`
+        SELECT id,
+               name,
+               radius_meters AS radiusMeters,
+               JSON_OBJECT(
+                       'lat', ST_X(position),
+                       'long', ST_Y(position)
+                   )         AS position
+        FROM location
+        WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= radius_meters
+        ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
     `, [
       lat, long, SRID,
       lat, long, SRID,
     ]);
-  const [result, _]: [result: RowDataPacket[], _: any] = await connection.query(query);
-
-  return result as Location[];
+  }
+  const result = await connection.query(query);
+  return result[0] as Location[];
 };
 
 export const updateName = async (
   { id, name }: { id: number, name: string },
 ) => {
   const connection = await getConnectionPool();
-  const [result, _]: [result: OkPacket, _: any] = await connection.query(`
+  const result = await connection.query(`
       UPDATE location
       SET name = ?
       WHERE id = ?
   `, [name, id]);
-  return result;
+  return result[0];
 };
