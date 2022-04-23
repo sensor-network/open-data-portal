@@ -1,6 +1,6 @@
 import { useContext, useState, useMemo } from "react";
 import { PreferenceContext } from "src/pages/_app";
-import { formatISO, startOfToday, sub } from "date-fns";
+import { formatISO, startOfToday, endOfDay, sub } from "date-fns";
 
 import { Grid } from "@mui/material";
 import { CustomProgressBar } from "./CustomProgressBar";
@@ -24,11 +24,12 @@ const Summary = () => {
       conductivityUnit: preferences.conductivityUnit.symbol,
       includeMeasurements: false,
     };
+    const endOfEndDate = endOfDay(endDate);
     return {
       current: urlWithParams(ENDPOINT, {
         ...base,
         startTime: formatISO(startDate),
-        endTime: formatISO(endDate),
+        endTime: formatISO(endOfEndDate),
         locationName: preferences.location.symbol,
       }),
       allTime: urlWithParams(ENDPOINT, {
@@ -38,13 +39,13 @@ const Summary = () => {
       lastYears: urlWithParams(ENDPOINT, {
         ...base,
         startTime: formatISO(sub(startDate, { years: 1 })),
-        endTime: formatISO(sub(endDate, { years: 1 })),
+        endTime: formatISO(sub(endOfEndDate, { years: 1 })),
         locationName: preferences.location.symbol,
       }),
       archipelago: urlWithParams(ENDPOINT, {
         ...base,
         startTime: formatISO(startDate),
-        endTime: formatISO(endDate),
+        endTime: formatISO(endOfEndDate),
       }),
     };
   }, [preferences, startDate, endDate]);

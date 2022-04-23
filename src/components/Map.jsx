@@ -22,15 +22,20 @@ var greenIcon = new Icon({
 
 const PopupContent = ({ locationName }) => {
   const { preferences } = useContext(PreferenceContext);
-  const url = useMemo(() => urlWithParams("http://localhost:3000/api/v2/measurements/history?", {
+  const url = useMemo(() => urlWithParams("/api/v3/measurements/history?", {
     locationName,
     temperatureUnit: preferences.temperatureUnit.symbol,
   }), [locationName, preferences]);
-  const { summarizedData: summary, isLoading } = useSummarizedData(url);
+  const { summarizedData: summary, isLoading, error } = useSummarizedData(url);
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!isLoading && error) {
+    return <div style={{ minWidth: 150 }}><p>No data found</p></div>;
+  }
   return (
     <div style={{ minWidth: 150 }}>
-      {!isLoading && !Object.entries(summary.sensors).length && <p>No data available</p>}
       {!isLoading && Object.entries(summary.sensors).map(([sensor, sensorData], idx) => (
         <p key={idx} style={{ margin: "0.25em 0" }}>
           <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>
@@ -42,7 +47,7 @@ const PopupContent = ({ locationName }) => {
 };
 
 const Map = () => {
-  const locations = useLocations("/api/v2/locations");
+  const locations = useLocations("/api/v3/locations");
   const mapCenter = [56.178516, 15.602610];
 
   const formatted = locations?.map(l => ({
