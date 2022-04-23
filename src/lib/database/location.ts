@@ -127,5 +127,5 @@ export const updateName = async (
       SET name = ?
       WHERE id = ?
   `, [name, id]);
-  return result[0];
+  return result[0] as OkPacket;
 };
