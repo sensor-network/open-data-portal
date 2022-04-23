@@ -22,7 +22,7 @@ var greenIcon = new Icon({
 
 const PopupContent = ({ locationName }) => {
   const { preferences } = useContext(PreferenceContext);
-  const url = useMemo(() => urlWithParams("http://localhost:3000/api/v2/measurements/history?", {
+  const url = useMemo(() => urlWithParams("/api/v3/measurements/history?", {
     locationName,
     temperatureUnit: preferences.temperatureUnit.symbol,
   }), [locationName, preferences]);
@@ -42,7 +42,7 @@ const PopupContent = ({ locationName }) => {
 };
 
 const Map = () => {
-  const locations = useLocations("/api/v2/locations");
+  const locations = useLocations("/api/v3/locations");
   const mapCenter = [56.178516, 15.602610];
 
   const formatted = locations?.map(l => ({
