@@ -26,11 +26,14 @@ const PopupContent = ({ locationName }) => {
     locationName,
     temperatureUnit: preferences.temperatureUnit.symbol,
   }), [locationName, preferences]);
-  const { summarizedData: summary, isLoading } = useSummarizedData(url);
+  const { summarizedData: summary, isLoading, error } = useSummarizedData(url);
+
+  if (!isLoading && error) {
+    return <div style={{ minWidth: 150 }}><p>No data found</p></div>;
+  }
 
   return (
     <div style={{ minWidth: 150 }}>
-      {!isLoading && !Object.entries(summary.sensors).length && <p>No data available</p>}
       {!isLoading && Object.entries(summary.sensors).map(([sensor, sensorData], idx) => (
         <p key={idx} style={{ margin: "0.25em 0" }}>
           <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>
