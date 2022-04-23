@@ -28,10 +28,12 @@ const PopupContent = ({ locationName }) => {
   }), [locationName, preferences]);
   const { summarizedData: summary, isLoading, error } = useSummarizedData(url);
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
   if (!isLoading && error) {
     return <div style={{ minWidth: 150 }}><p>No data found</p></div>;
   }
-
   return (
     <div style={{ minWidth: 150 }}>
       {!isLoading && Object.entries(summary.sensors).map(([sensor, sensorData], idx) => (
