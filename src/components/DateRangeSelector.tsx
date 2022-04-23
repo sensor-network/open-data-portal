@@ -29,7 +29,7 @@ const DATE_RANGES = [
 
 type DateSelectorProps = {
   label: string, minDate: Date, maxDate: Date,
-  date: Date, setDate: (date: Date) => void,
+  date: Date, setDate: Dispatch<SetStateAction<Date>>,
 }
 /* This is a wrapper-component for MUI-DatePicker */
 const DateSelector = ({ label, date, setDate, minDate, maxDate }: DateSelectorProps) => {
