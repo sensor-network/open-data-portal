@@ -18,7 +18,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const expandSensors = expand.includes('sensors');
       const expandLocation = expand.includes('location');
 
-      let stations: Array<Station.Station> | Station.Station | null;
+      let stations: Station.Station[] | Station.Station | null;
       let status: { found: boolean, message: string } = { found: true, message: '' };
       if (locationName) {
         stations = await Station.findByLocationName({ locationName, expandLocation, expandSensors });
