@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Welcome from "/src/components/Welcome";
-
+import Dashboard from "src/components/Dashboard"
 export default function Home() {
   return (
     <div>
@@ -11,7 +11,8 @@ export default function Home() {
       </Head>
 
       <main>
-        <Welcome/>
+        {/*<Welcome/>*/}
+        <Dashboard/>
       </main>
     </div>
   );
