@@ -15,7 +15,9 @@ const locationDb = [
 
 jest.mock("~/lib/database/location", () => ({
   __esModule: true,
-  // createOne:
+  createOne: jest
+    .fn()
+    .mockImplementation(async ({ name, lat, long, rad }) => 1),
   findMany: jest.fn().mockImplementation(async () => locationDb),
   findByName: jest
     .fn()
@@ -127,5 +129,81 @@ describe("GET: /api/v3/locations", () => {
         message: expect.stringContaining("No location"),
       });
     });
+  });
+});
+
+describe("POST: /api/v3/locations", () => {
+  const apiKey = process.env.NEXT_PUBLIC_API_KEY || "default";
+
+  const mockReqRes = ({
+    method = "POST",
+    body = {},
+    headers = { Authorization: `Bearer ${apiKey}` },
+  }) => {
+    return createMocks({
+      method,
+      body,
+      headers,
+    });
+  };
+
+  describe("invalid requests", () => {
+    it("should return 400 if provided with an invalid body", async () => {
+      const { req, res } = mockReqRes({
+        body: { name: "foo", position: { lat: 0, long: 0 }, radius: 100 },
+      });
+
+      await handler(req, res);
+
+      expect(createOne.mock.calls.length).toEqual(0);
+      expect(res._getStatusCode()).toEqual(400);
+    });
+
+    it("should return 401 if called without valid authorization-header", async () => {
+      const { req, res } = mockReqRes({
+        headers: { Authorization: "Bearer wrong" },
+      });
+
+      await handler(req, res);
+
+      expect(createOne.mock.calls.length).toEqual(0);
+      expect(res._getStatusCode()).toEqual(401);
+      expect(res.hasHeader("WWW-Authenticate")).toEqual(true);
+    });
+  });
+
+  describe("valid requests", () => {
+    it("should create a location", async () => {
+      const { req, res } = mockReqRes({
+        body: {
+          name: "foo",
+          lat: 0,
+          long: 0,
+          rad: 100,
+        },
+      });
+
+      await handler(req, res);
+
+      expect(createOne.mock.calls.length).toEqual(1);
+      expect(res._getStatusCode()).toEqual(201);
+      expect(res._getJSONData()).toEqual({
+        id: 1,
+        name: "foo",
+        position: { lat: 0, long: 0 },
+        radiusMeters: 100,
+      });
+    });
+  });
+});
+
+describe("PATCH /api/v3/locations", () => {
+  it("should return with 405 if called with unsupported method", async () => {
+    const { req, res } = createMocks({ method: "PATCH" });
+
+    await handler(req, res);
+
+    expect(res._getStatusCode()).toEqual(405);
+    expect(res.hasHeader("Allow")).toEqual(true);
   });
 });
