@@ -57,6 +57,21 @@ describe("GET: /api/v3/locations", () => {
     expect(res.statusCode).toBe(400);
   });
 
+  it("should return 500 if there were errors in the db", async () => {
+    const { req, res } = mockReqRes({});
+
+    /* override the mock to throw during this test*/
+    findMany.mockImplementationOnce(async () => {
+      throw new Error("db error");
+    });
+
+    await handler(req, res);
+
+    expect(findMany.mock.calls.length).toEqual(1);
+    expect(res._getStatusCode()).toEqual(500);
+    expect(res._getJSONData()).toEqual({ error: "Internal server error" });
+  });
+
   describe("no filters", () => {
     it("should return a list of locations", async () => {
       const { req, res } = mockReqRes({});
@@ -71,14 +86,15 @@ describe("GET: /api/v3/locations", () => {
     it("should return 404 if no location is found", async () => {
       const { req, res } = mockReqRes({});
 
-      findMany.mockImplementation(async () => []);
+      /* override the mock to simulate empty db */
+      findMany.mockImplementationOnce(async () => []);
 
       await handler(req, res);
 
       expect(findMany.mock.calls.length).toEqual(1);
       expect(res._getStatusCode()).toEqual(404);
       expect(res._getJSONData()).toEqual({
-        message: expect.stringContaining("No location"),
+        message: "No locations found.",
       });
     });
   });
@@ -147,52 +163,60 @@ describe("POST: /api/v3/locations", () => {
     });
   };
 
-  describe("invalid requests", () => {
-    it("should return 400 if provided with an invalid body", async () => {
-      const { req, res } = mockReqRes({
-        body: { name: "foo", position: { lat: 0, long: 0 }, radius: 100 },
-      });
-
-      await handler(req, res);
-
-      expect(createOne.mock.calls.length).toEqual(0);
-      expect(res._getStatusCode()).toEqual(400);
+  it("should return 400 if provided with an invalid body", async () => {
+    const { req, res } = mockReqRes({
+      body: { name: "foo", position: { lat: 0, long: 0 }, radius: 100 },
     });
 
-    it("should return 401 if called without valid authorization-header", async () => {
-      const { req, res } = mockReqRes({
-        headers: { Authorization: "Bearer wrong" },
-      });
+    await handler(req, res);
 
-      await handler(req, res);
-
-      expect(createOne.mock.calls.length).toEqual(0);
-      expect(res._getStatusCode()).toEqual(401);
-      expect(res.hasHeader("WWW-Authenticate")).toEqual(true);
-    });
+    expect(createOne.mock.calls.length).toEqual(0);
+    expect(res._getStatusCode()).toEqual(400);
   });
 
-  describe("valid requests", () => {
-    it("should create a location", async () => {
-      const { req, res } = mockReqRes({
-        body: {
-          name: "foo",
-          lat: 0,
-          long: 0,
-          rad: 100,
-        },
-      });
+  it("should return 401 if called without valid authorization-header", async () => {
+    const { req, res } = mockReqRes({
+      headers: { Authorization: "Bearer wrong" },
+    });
 
-      await handler(req, res);
+    await handler(req, res);
 
-      expect(createOne.mock.calls.length).toEqual(1);
-      expect(res._getStatusCode()).toEqual(201);
-      expect(res._getJSONData()).toEqual({
-        id: 1,
-        name: "foo",
-        position: { lat: 0, long: 0 },
-        radiusMeters: 100,
-      });
+    expect(createOne.mock.calls.length).toEqual(0);
+    expect(res._getStatusCode()).toEqual(401);
+    expect(res.hasHeader("WWW-Authenticate")).toEqual(true);
+  });
+
+  it("should return 500 if there were errors in the db", async () => {
+    const { req, res } = mockReqRes({
+      body: { name: "foo", lat: 0, long: 0, rad: 100 },
+    });
+
+    /* override the mock to throw during this test*/
+    createOne.mockImplementationOnce(async () => {
+      throw new Error("db error");
+    });
+
+    await handler(req, res);
+
+    expect(createOne.mock.calls.length).toEqual(1);
+    expect(res._getStatusCode()).toEqual(500);
+    expect(res._getJSONData()).toEqual({ error: "Internal server error" });
+  });
+
+  it("should create a location", async () => {
+    const { req, res } = mockReqRes({
+      body: { name: "foo", lat: 0, long: 0, rad: 100 },
+    });
+
+    await handler(req, res);
+
+    expect(createOne.mock.calls.length).toEqual(1);
+    expect(res._getStatusCode()).toEqual(201);
+    expect(res._getJSONData()).toEqual({
+      id: 1,
+      name: "foo",
+      position: { lat: 0, long: 0 },
+      radiusMeters: 100,
     });
   });
 });
