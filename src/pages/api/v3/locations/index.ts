@@ -14,10 +14,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       /* parse parameters */
       const { lat, long, rad, name } = zLocation.parse(req.query);
 
-      console.log(
-        `GET /api/v3/locations?name=${name}&lat=${lat}&long=${long}&rad=${rad}`
-      );
-
       let locations: Location.Location[] | Location.Location;
       let status: { found: boolean; message: string } = {
         found: true,
