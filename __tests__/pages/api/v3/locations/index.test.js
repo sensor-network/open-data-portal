@@ -54,7 +54,11 @@ describe("GET: /api/v3/locations", () => {
     expect(findMany.mock.calls.length).toEqual(0);
     expect(findByName.mock.calls.length).toEqual(0);
     expect(findByLatLong.mock.calls.length).toEqual(0);
-    expect(res.statusCode).toBe(400);
+    expect(res._getStatusCode()).toBe(400);
+    expect(res._getJSONData()).toEqual({
+      formErrors: [],
+      fieldErrors: { name: ["Expected string, received number"] },
+    });
   });
 
   it("should return 500 if there were errors in the db", async () => {
@@ -118,7 +122,7 @@ describe("GET: /api/v3/locations", () => {
       expect(findByName.mock.calls.length).toEqual(1);
       expect(res._getStatusCode()).toEqual(404);
       expect(res._getJSONData()).toEqual({
-        message: expect.stringContaining("No location"),
+        message: "No location named 'foobar' found.",
       });
     });
   });
@@ -142,7 +146,7 @@ describe("GET: /api/v3/locations", () => {
       expect(findByLatLong.mock.calls.length).toEqual(1);
       expect(res._getStatusCode()).toEqual(404);
       expect(res._getJSONData()).toEqual({
-        message: expect.stringContaining("No location"),
+        message: "No location found matching { lat: -10, long: -10 }.",
       });
     });
   });
@@ -172,6 +176,14 @@ describe("POST: /api/v3/locations", () => {
 
     expect(createOne.mock.calls.length).toEqual(0);
     expect(res._getStatusCode()).toEqual(400);
+    expect(res._getJSONData()).toEqual({
+      formErrors: ["Unrecognized key(s) in object: 'position', 'radius'"],
+      fieldErrors: {
+        lat: ["Required"],
+        long: ["Required"],
+        rad: ["Required"],
+      },
+    });
   });
 
   it("should return 401 if called without valid authorization-header", async () => {
@@ -184,6 +196,10 @@ describe("POST: /api/v3/locations", () => {
     expect(createOne.mock.calls.length).toEqual(0);
     expect(res._getStatusCode()).toEqual(401);
     expect(res.hasHeader("WWW-Authenticate")).toEqual(true);
+    expect(res._getJSONData()).toEqual({
+      error:
+        "Failed to authenticate the request with the provided authorization-header: 'Bearer wrong'",
+    });
   });
 
   it("should return 500 if there were errors in the db", async () => {
@@ -229,5 +245,8 @@ describe("PATCH /api/v3/locations", () => {
 
     expect(res._getStatusCode()).toEqual(405);
     expect(res.hasHeader("Allow")).toEqual(true);
+    expect(res._getJSONData()).toEqual({
+      error: "Method 'PATCH' not allowed.",
+    });
   });
 });
