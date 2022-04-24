@@ -1,9 +1,9 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from "next";
 
 import * as Location from "lib/database/location";
 import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
 import { ZodError } from "zod";
-import { zIdFromString, zUpdateLocation } from 'lib/types/ZodSchemas';
+import { zIdFromString, zUpdateLocation } from "lib/types/ZodSchemas";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
@@ -20,37 +20,33 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const message = `Location with id '${locationId}' does not exist`;
         console.log(`${req.method} /api/v3/locations/[id]:: ${message}`);
 
-        res.status(STATUS.NOT_FOUND)
-          .json({ message });
+        res.status(STATUS.NOT_FOUND).json({ message });
         return;
       }
 
-      res.status(STATUS.OK)
-        .json(location);
-    }
-
-    catch (e) {
+      res.status(STATUS.OK).json(location);
+    } catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/location/[id]:: Error parsing request:\n`, e.flatten());
-        res.status(STATUS.BAD_REQUEST)
-          .json(e.flatten());
-      }
-      else {
+        console.log(
+          `${req.method}: /api/v3/location/[id]:: Error parsing request:\n`,
+          e.flatten()
+        );
+        res.status(STATUS.BAD_REQUEST).json(e.flatten());
+      } else {
         console.error(`${req.method}: /api/v3/locations/[id]::`, e);
-        res.status(STATUS.SERVER_ERROR)
+        res
+          .status(STATUS.SERVER_ERROR)
           .json({ message: "Internal server error" });
       }
     }
-  }
-
-  /**
-   * PATCH /api/v3/locations/[id]
-   **/
-  else if (req.method === 'PATCH') {
+  } else if (req.method === "PATCH") {
+    /**
+     * PATCH /api/v3/locations/[id]
+     **/
     /**
      * TODO: Implement more sophisticated authentication
      */
-    const AUTHENTICATION_SCHEMA = 'Bearer';
+    const AUTHENTICATION_SCHEMA = "Bearer";
     const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
     const { authorization } = req.headers;
 
@@ -58,9 +54,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
       console.log(`${req.method} /api/v3/location/[id]:: ${errorMessage}`);
 
-      res.setHeader('WWW-Authenticate', AUTHENTICATION_SCHEMA)
-        .status(STATUS.UNAUTHORIZED)
-        .json({ error: errorMessage });
+      res.setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA);
+      res.status(STATUS.UNAUTHORIZED).json({ error: errorMessage });
       return;
     }
 
@@ -74,43 +69,45 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const message = `Location with id '${locationId}' does not exist`;
         console.log(`${req.method} /api/v3/locations/[id]:: ${message}`);
 
-        res.status(STATUS.NOT_FOUND)
-          .json({ message });
+        res.status(STATUS.NOT_FOUND).json({ message });
         return;
       }
 
       let totalChanges = 0;
       if (name) {
-        const { changedRows } = await Location.updateName({ id: locationId, name });
+        const { changedRows } = await Location.updateName({
+          id: locationId,
+          name,
+        });
         totalChanges += changedRows;
       }
 
       location = await Location.findById({ id: locationId });
 
-      res.status(STATUS.OK)
+      res
+        .status(STATUS.OK)
         .json({ status: "Success", totalChanges, updatedValue: location });
-    }
-
-    catch (e) {
+    } catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/locations/[id]:: Error parsing request body:\n`, e.flatten());
-        res.status(STATUS.BAD_REQUEST)
-          .json(e.flatten());
-      }
-      else {
+        console.log(
+          `${req.method}: /api/v3/locations/[id]:: Error parsing request body:\n`,
+          e.flatten()
+        );
+        res.status(STATUS.BAD_REQUEST).json(e.flatten());
+      } else {
         console.error(`${req.method}: /api/v3/locations/[id]::`, e);
-        res.status(STATUS.SERVER_ERROR)
+        res
+          .status(STATUS.SERVER_ERROR)
           .json({ error: "Internal server error" });
       }
     }
-  }
-
-  /**
-   * {unknown} /api/v3/locations/[id]
-   **/
-  else {
+  } else {
+    /**
+     * {unknown} /api/v3/locations/[id]
+     **/
     console.log(`${req.method}: /api/v3/locations/[id]:: Method not allowed`);
-    res.setHeader('Allow', 'GET, PATCH')
+    res.setHeader("Allow", "GET, PATCH");
+    res
       .status(STATUS.NOT_ALLOWED)
       .json({ error: `Method '${req.method}' not allowed.` });
     return;

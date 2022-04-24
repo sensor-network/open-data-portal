@@ -1,9 +1,9 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from "next";
 
 import * as Sensor from "lib/database/sensor";
 import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
 import { ZodError } from "zod";
-import { zIdFromString, zUpdateSensor } from 'lib/types/ZodSchemas';
+import { zIdFromString, zUpdateSensor } from "lib/types/ZodSchemas";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
@@ -20,37 +20,33 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const message = `Sensor with id '${sensorId}' does not exist`;
         console.log(`${req.method} /api/v3/sensors/[id]:: ${message}`);
 
-        res.status(STATUS.NOT_FOUND)
-          .json({ message });
+        res.status(STATUS.NOT_FOUND).json({ message });
         return;
       }
 
-      res.status(STATUS.OK)
-        .json(sensor);
-    }
-
-    catch (e) {
+      res.status(STATUS.OK).json(sensor);
+    } catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/sensors/[id]:: Error parsing request:\n`, e.flatten());
-        res.status(STATUS.BAD_REQUEST)
-          .json(e.flatten());
-      }
-      else {
+        console.log(
+          `${req.method}: /api/v3/sensors/[id]:: Error parsing request:\n`,
+          e.flatten()
+        );
+        res.status(STATUS.BAD_REQUEST).json(e.flatten());
+      } else {
         console.error(`${req.method}: /api/v3/sensors/[id]::`, e);
-        res.status(STATUS.SERVER_ERROR)
+        res
+          .status(STATUS.SERVER_ERROR)
           .json({ message: "Internal server error" });
       }
     }
-  }
-
-  /**
-   * PATCH /api/v3/sensors/[id]
-   **/
-  else if (req.method === 'PATCH') {
+  } else if (req.method === "PATCH") {
+    /**
+     * PATCH /api/v3/sensors/[id]
+     **/
     /**
      * TODO: Implement more sophisticated authentication
      */
-    const AUTHENTICATION_SCHEMA = 'Bearer';
+    const AUTHENTICATION_SCHEMA = "Bearer";
     const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
     const { authorization } = req.headers;
 
@@ -58,9 +54,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
       console.log(`${req.method} /api/v3/sensors/[id]:: ${errorMessage}`);
 
-      res.setHeader('WWW-Authenticate', AUTHENTICATION_SCHEMA)
-        .status(STATUS.UNAUTHORIZED)
-        .json({ error: errorMessage });
+      res.setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA);
+      res.status(STATUS.UNAUTHORIZED).json({ error: errorMessage });
       return;
     }
 
@@ -74,8 +69,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const message = `Sensor with id '${sensorId}' does not exist`;
         console.log(`${req.method} /api/v3/sensors/[id]:: ${message}`);
 
-        res.status(STATUS.NOT_FOUND)
-          .json({ message });
+        res.status(STATUS.NOT_FOUND).json({ message });
         return;
       }
 
@@ -85,36 +79,39 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         totalChanges += changedRows;
       }
       if (firmware) {
-        const { changedRows } = await Sensor.updateFirmware({ id: sensorId, firmware });
+        const { changedRows } = await Sensor.updateFirmware({
+          id: sensorId,
+          firmware,
+        });
         totalChanges += changedRows;
       }
 
       sensor = await Sensor.findById({ id: sensorId });
 
-      res.status(STATUS.OK)
+      res
+        .status(STATUS.OK)
         .json({ status: "Success", totalChanges, updatedValue: sensor });
-    }
-
-    catch (e) {
+    } catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/sensors/[id]:: Error parsing request body:\n`, e.flatten());
-        res.status(STATUS.BAD_REQUEST)
-          .json(e.flatten());
-      }
-      else {
+        console.log(
+          `${req.method}: /api/v3/sensors/[id]:: Error parsing request body:\n`,
+          e.flatten()
+        );
+        res.status(STATUS.BAD_REQUEST).json(e.flatten());
+      } else {
         console.error(`${req.method}: /api/v3/sensors/[id]::`, e);
-        res.status(STATUS.SERVER_ERROR)
+        res
+          .status(STATUS.SERVER_ERROR)
           .json({ error: "Internal server error" });
       }
     }
-  }
-
-  /**
-   * {unknown} /api/v3/sensors/[id]
-   **/
-  else {
+  } else {
+    /**
+     * {unknown} /api/v3/sensors/[id]
+     **/
     console.log(`${req.method}: /api/v3/sensors/[id]:: Method not allowed`);
-    res.setHeader('Allow', 'GET, PATCH')
+    res.setHeader("Allow", "GET, PATCH");
+    res
       .status(STATUS.NOT_ALLOWED)
       .json({ error: `Method '${req.method}' not allowed.` });
     return;
