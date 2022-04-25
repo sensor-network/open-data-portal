@@ -66,22 +66,14 @@ const PopupContent = ({ locationName }) => {
   );
 };
 
-const Map = () => {
+const Map = ({locations, selectedLocation}) => {
   const locations = useLocations("/api/v3/locations");
   const mapCenter = [56.178516, 15.60261];
-
-  const [selectedIdx, setSelectedIdx] = useState(null);
-  useEffect(() => {
-    setInterval(() => {
-      const randomIndex = Math.floor(Math.random() * locations?.length) || 0;
-      setSelectedIdx(randomIndex);
-    }, 5000);
-  }, []);
 
   const formatted = locations?.map((l, idx) => ({
     ...l,
     position: [l.position.lat, l.position?.long],
-    selected: idx === selectedIdx,
+    selected: idx === selectedLocation,
   }));
 
   return (

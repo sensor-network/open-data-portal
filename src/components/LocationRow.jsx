@@ -28,12 +28,12 @@ export default function LocationRow({locName, selected}){
     const borderColor = selected ? "red" : "black";
    
     return (
-            <div style={{display: "flex", padding: 10, border: `1px solid ${borderColor}`, borderRadius: "0.75em"}}>
-                {locName}Hi
-                {Object.keys(sensors).map(sensor =>(
-                    <div>{sensors[sensor]}</div>
-                ))}
-            </div>
-        );
+        <div style={{display: "flex", padding: 10, border: `1px solid ${borderColor}`, borderRadius: "0.75em"}}>
+            {locName}
+            {Object.keys(sensors).map((sensor, idx) =>(
+                <div key={idx}>{sensors[sensor]}</div>
+            ))}
+        </div>
+    );
 }
 
