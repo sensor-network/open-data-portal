@@ -32,12 +32,6 @@ const DashboardMap: React.FC<{
   selectedLocation: number;
   mapCenter: PointTuple;
 }> = ({ locations, selectedLocation, mapCenter }) => {
-  const formatted = locations.map((l, idx) => ({
-    ...l,
-    position: [l.position.lat, l.position?.long] as PointTuple,
-    selected: idx === selectedLocation,
-  }));
-
   return (
     <MapContainer
       center={mapCenter}
@@ -49,11 +43,11 @@ const DashboardMap: React.FC<{
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {formatted?.map((l) => (
+      {locations.map((l, idx) => (
         <Marker
           key={l.id}
-          position={l.position}
-          icon={l.selected ? redIcon : blueIcon}
+          position={[l.position.lat, l.position.long]}
+          icon={idx === selectedLocation ? redIcon : blueIcon}
         />
       ))}
     </MapContainer>
