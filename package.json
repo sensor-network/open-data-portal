@@ -29,6 +29,7 @@
     "node-mocks-http": "^1.11.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-health-dashboard": "^1.0.1",
     "react-leaflet": "^3.2.5",
     "react-modal": "^3.14.4",
     "recharts": "^2.1.9",
