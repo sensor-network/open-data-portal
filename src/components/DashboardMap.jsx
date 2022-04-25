@@ -14,14 +14,15 @@ const iconConfig = {
 };
 
 const blueIcon = new Icon({
-  ...iconConfig,
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
+  ...iconConfig,
 });
 
 const redIcon = new Icon({
   iconUrl:
     "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+  ...iconConfig,
 });
 
 const DashboardMap = ({ locations, selectedLocation, mapCenter }) => {
