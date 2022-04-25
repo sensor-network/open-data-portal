@@ -7,15 +7,20 @@ import Summary from "src/components/Summary";
 
 export default function App() {
   return (
-    <Container style={{ display: "flex", flexDirection: "column", gap: 50, marginBottom: 50 }} maxWidth={"xl"}>
+    <Container
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 50,
+        marginBottom: 50,
+      }}
+      maxWidth={"xl"}
+    >
+      <ServerPaginationGrid />
 
-      <Dashboard/>
-      <ServerPaginationGrid/>
+      <Summary />
 
-      <Summary/>
-
-      <Visualization/>
+      <Visualization />
     </Container>
   );
 }
-
