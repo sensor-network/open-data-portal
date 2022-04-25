@@ -1,10 +1,11 @@
 import Card from "src/components/Card";
 import Left from "src/components/DashboardLeft";
 import { useLocations } from "src/lib/hooks/useLocations";
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import React, { ReactChild, useEffect, useState } from "react";
+import type { PointTuple } from "leaflet";
 
 /* load map without ssr due to lack of support with Leaflet */
+import dynamic from "next/dynamic";
 const MapWithNoSSR = dynamic(() => import("../components/DashboardMap"), {
   ssr: false,
 });
@@ -17,7 +18,7 @@ const paneStyle = {
   justifyContent: "center",
 };
 
-const mapCenter = [56.178516, 15.60261];
+const mapCenter: PointTuple = [56.178516, 15.60261];
 
 const Dashboard: React.FC = () => {
   const locations = useLocations("/api/v3/locations");

@@ -3,14 +3,16 @@ import "leaflet/dist/leaflet.css";
 import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon.png";
 import { Icon } from "leaflet";
+import type { Location } from "src/lib/database/location";
+import type { PointTuple } from "leaflet";
 
 const iconConfig = {
   shadowUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+  iconSize: [25, 41] as PointTuple,
+  iconAnchor: [12, 41] as PointTuple,
+  popupAnchor: [1, -34] as PointTuple,
+  shadowSize: [41, 41] as PointTuple,
 };
 
 const blueIcon = new Icon({
@@ -25,10 +27,14 @@ const redIcon = new Icon({
   ...iconConfig,
 });
 
-const DashboardMap = ({ locations, selectedLocation, mapCenter }) => {
+const DashboardMap: React.FC<{
+  locations: Location[];
+  selectedLocation: number;
+  mapCenter: PointTuple;
+}> = ({ locations, selectedLocation, mapCenter }) => {
   const formatted = locations.map((l, idx) => ({
     ...l,
-    position: [l.position.lat, l.position?.long],
+    position: [l.position.lat, l.position?.long] as PointTuple,
     selected: idx === selectedLocation,
   }));
 
