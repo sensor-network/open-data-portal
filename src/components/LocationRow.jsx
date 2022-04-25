@@ -1,7 +1,7 @@
 import { urlWithParams } from "../lib/utilityFunctions";
 import { useMeasurements } from "../lib/hooks/swr-extensions";
 
-export default function LocationRow(locName = "Hästö"){
+export default function LocationRow({locName}){
     
     const ENDPOINT = "/api/v3/measurements?";
 
@@ -10,10 +10,11 @@ export default function LocationRow(locName = "Hästö"){
         sortOrder: "desc",
         locationName: locName
     });
-
-    const measurement = useMeasurements(url);
-    if(!measurement)
-        return <div>Loading again...</div>
-    return <div>{locName}</div>
+    
+    const { measurements, pagination, isLoading, isLagging, error } = useMeasurements(url);
+    if(isLoading)
+        return <div>Loading again...</div>;
+    console.log(measurements);
+    return <div>{url}</div>
 }
 
