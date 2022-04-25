@@ -9,6 +9,7 @@ export default function App() {
   return (
     <Container style={{ display: "flex", flexDirection: "column", gap: 50, marginBottom: 50 }} maxWidth={"xl"}>
 
+      <Dashboard/>
       <ServerPaginationGrid/>
 
       <Summary/>
