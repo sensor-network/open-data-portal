@@ -7,13 +7,13 @@ import type { Location } from "src/lib/database/location";
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
-const MapWithNoSSR = dynamic<{
+const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
+  ssr: false,
+}) as React.FC<{
   locations: Location[];
   selectedLocation: number;
   mapCenter: PointTuple;
-}>(() => import("./DashboardMap"), {
-  ssr: false,
-});
+}>;
 
 const paneStyle = {
   width: "50%",
