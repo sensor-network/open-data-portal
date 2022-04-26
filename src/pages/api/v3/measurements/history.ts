@@ -106,7 +106,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       radiusMeters: 0,
     };
     /* if a specific name was provided, override the dummy and use an actual position */
-    if (locationName) {
+    if (locationName !== undefined && locationName !== "Everywhere") {
       const locations = await Location.findByName({ name: locationName });
       /* return 404 if no matching location was found */
       if (!locations.length) {

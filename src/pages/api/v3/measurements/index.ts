@@ -64,7 +64,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* first find matching locations */
       let locations: Location.Location[] | null = null;
-      if (locationName && locationName !== "Karlskrona") {
+      if (locationName !== undefined && locationName !== "") {
         locations = await Location.findByName({ name: locationName });
         if (!locations.length) {
           status = {
@@ -104,6 +104,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             sortOrder,
           });
         } else {
+          console.log("SEARCHING ALL LOCATIONS");
           measurements = await Measurement.findMany({
             startTime,
             endTime,
