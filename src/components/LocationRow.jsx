@@ -1,16 +1,21 @@
 import { urlWithParams } from "../lib/utilityFunctions";
 import { useMeasurements } from "../lib/hooks/swr-extensions";
-import { Grid } from '@mui/material';
+import { PreferenceContext } from "../pages/_app";
+import {useMemo, useContext} from "react";
 
 export default function LocationRow({locName, selected}){
     
     const ENDPOINT = "/api/v3/measurements?";
 
-    const url = urlWithParams(ENDPOINT,{
+    const { preferences } = useContext(PreferenceContext);
+
+    const url = useMemo(() => urlWithParams(ENDPOINT, {
         pageSize: 1,
         sortOrder: "desc",
-        locationName: locName
-    });
+        locationName: locName,
+        temperatureUnit: preferences.temperatureUnit.symbol,
+        conductivityUnit: preferences.conductivityUnit.symbol,
+    }), [preferences]);
     
     const { measurements, pagination, isLoading, isLagging, error } = useMeasurements(url);
     
