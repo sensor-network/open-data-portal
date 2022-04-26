@@ -1,12 +1,16 @@
 import Card from "src/components/Card";
 import Left from "src/components/DashboardLeft";
 import { useLocations } from "src/lib/hooks/useLocations";
-import React, { ReactChild, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { PointTuple } from "leaflet";
-
+import type { Location } from "src/lib/database/location";
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
-const MapWithNoSSR = dynamic(async () => await import("./DashboardMap"), {
+const MapWithNoSSR = dynamic<{
+  locations: Location[];
+  selectedLocation: number;
+  mapCenter: PointTuple;
+}>(() => import("./DashboardMap").then((mod) => mod.default), {
   ssr: false,
 });
 
