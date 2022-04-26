@@ -33,24 +33,26 @@ const DashboardMap: React.FC<{
   mapCenter: PointTuple;
 }> = ({ locations, selectedLocation, mapCenter }) => {
   return (
-    <MapContainer
-      center={mapCenter}
-      zoom={13}
-      tap={false}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {locations.map((l, idx) => (
-        <Marker
-          key={l.id}
-          position={[l.position.lat, l.position.long]}
-          icon={idx === selectedLocation ? redIcon : blueIcon}
+    <div style={{ height: "100%", width: "100%" }}>
+      <MapContainer
+        center={mapCenter}
+        zoom={13}
+        tap={false}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-      ))}
-    </MapContainer>
+        {locations.map((l, idx) => (
+          <Marker
+            key={l.id}
+            position={[l.position.lat, l.position.long]}
+            icon={idx === selectedLocation ? redIcon : blueIcon}
+          />
+        ))}
+      </MapContainer>
+    </div>
   );
 };
 
