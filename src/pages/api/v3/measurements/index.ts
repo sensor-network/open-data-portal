@@ -64,7 +64,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* first find matching locations */
       let locations: Location.Location[] | null = null;
-      if (locationName !== undefined && locationName !== "") {
+      if (locationName !== undefined && locationName !== "Everywhere") {
         locations = await Location.findByName({ name: locationName });
         if (!locations.length) {
           status = {
