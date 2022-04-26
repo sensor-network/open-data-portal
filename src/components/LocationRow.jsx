@@ -2,6 +2,7 @@ import { urlWithParams } from "../lib/utilityFunctions";
 import { useMeasurements } from "../lib/hooks/swr-extensions";
 import { PreferenceContext } from "../pages/_app";
 import {useMemo, useContext} from "react";
+import styles from "src/styles/LocationRow.module.css"
 
 export default function LocationRow({locName, selected}){
     
@@ -27,17 +28,29 @@ export default function LocationRow({locName, selected}){
     return <div>Loading again...</div>;
 
     const sensors = measurements[0].sensors;
-    console.log(measurements);
+    console.log(url);
     console.log(sensors);
 
-    const borderColor = selected ? "red" : "black";
+    const borderColor = selected ? "red" : "";
    
     return (
-        <div style={{display: "flex", padding: 10, border: `1px solid ${borderColor}`, borderRadius: "0.75em"}}>
-            {locName}
-            {Object.keys(sensors).map((sensor, idx) =>(
-                <div key={idx}>{sensors[sensor]}</div>
-            ))}
+        <div style={{border: `1px solid ${borderColor}`}} className={styles.entireSection}>
+            <div style={{ marginRight: 15 }}>{locName}</div>
+            <div className={styles.sensors}>
+                {Object.entries(sensors).map(([sensor, value], idx) => (
+                <div
+                    key={idx}
+                    style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minWidth: "max-content",
+                    padding: 10,
+                    }}
+                >
+                    <b>{sensor}</b> <p>{value}</p>
+                </div>
+                ))}
+            </div>
         </div>
     );
 }

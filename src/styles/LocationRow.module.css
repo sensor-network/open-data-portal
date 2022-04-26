@@ -1,0 +1,26 @@
+.row{
+    border: 1px solid black;
+    border-radius: 0.75em;
+    display: "flex";
+    padding: 50px;
+    flex-direction: row;
+}
+
+.locName{
+    display: flex;
+    flex-direction: row;
+}
+
+.entireSection{
+    display: "flex";
+    align-items: "center";
+    justify-content: "center";
+    padding: 15px;
+    border-radius: 0.75em;
+}
+
+.sensors{
+    display: "flex";
+    align-items: "center";
+    justify-content: "center";
+}

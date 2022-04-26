@@ -3,7 +3,6 @@ import { Grid } from '@mui/material';
 
 
 const Left = ({locations, selectedLocation}) => {
-      
     return (
       <div>        
         {locations.map((location, index) =>(
