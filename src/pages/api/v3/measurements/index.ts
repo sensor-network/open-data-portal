@@ -24,6 +24,15 @@ import {
 } from "src/lib/types/ZodSchemas";
 import { OkPacket } from "mysql2/promise";
 
+export type Pagination = {
+  page: number;
+  pageSize: number;
+  lastPage: number;
+  totalRows: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+};
+
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
    * GET /api/v3/measurements
@@ -55,7 +64,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* first find matching locations */
       let locations: Location.Location[] | null = null;
-      if (locationName && locationName !== "Karlskrona") {
+      if (locationName !== undefined && locationName !== "Everywhere") {
         locations = await Location.findByName({ name: locationName });
         if (!locations.length) {
           status = {
@@ -95,6 +104,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             sortOrder,
           });
         } else {
+          console.log("SEARCHING ALL LOCATIONS");
           measurements = await Measurement.findMany({
             startTime,
             endTime,
@@ -236,12 +246,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       let insertedMeasurements = [];
       let errors: { sensorId: number; status: string }[] = [];
-      for (const { sensorId, value, unit } of sensors) {
+      for (const { id, value, unit } of sensors) {
         try {
           /* find associated sensor by the id to get its type */
-          const sensor = await Sensor.findById({ id: sensorId });
+          const sensor = await Sensor.findById({ id });
           if (!sensor) {
-            errors.push({ sensorId, status: "SENSOR_NOT_FOUND" });
+            errors.push({ sensorId: id, status: "SENSOR_NOT_FOUND" });
           }
 
           /* convert the value to SI-unit if there is one */
@@ -261,7 +271,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
           /* insert measurement into db */
           await Measurement.createOne({
-            sensorId,
+            sensorId: id,
             value: convertedValue,
             time,
             sensorType: sensor.type,
@@ -271,20 +281,20 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
           /* push to response array */
           insertedMeasurements.push({
-            sensorId,
+            id,
             value: convertedValue,
             time,
             locationId,
           });
         } catch (e) {
           if (e instanceof ZodError) {
-            errors.push({ sensorId, status: e.issues[0].code });
+            errors.push({ sensorId: id, status: e.issues[0].code });
           } else if (e instanceof Object && e.hasOwnProperty("code")) {
             // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-            errors.push({ sensorId, status: e.code });
+            errors.push({ sensorId: id, status: e.code });
           } else {
             console.error(`${req.method}: /api/v3/measurements::`, e);
-            errors.push({ sensorId, status: "UNKNOWN_ERROR" });
+            errors.push({ sensorId: id, status: "UNKNOWN_ERROR" });
           }
         }
       }
@@ -296,10 +306,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           Sensor.updateStatus({ id: sensorId, status: status.toUpperCase() })
         );
       });
-      insertedMeasurements.forEach(({ sensorId }) => {
-        updateStatuses.push(
-          Sensor.updateStatus({ id: sensorId, status: "OK" })
-        );
+      insertedMeasurements.forEach(({ id }) => {
+        updateStatuses.push(Sensor.updateStatus({ id, status: "OK" }));
       });
       await Promise.all(updateStatuses);
 

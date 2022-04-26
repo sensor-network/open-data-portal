@@ -59,7 +59,7 @@ describe("POST: /api/v3/measurements", () => {
       body: {
         time: "2022-01-01Z",
         position: { lat: 0, long: 0 },
-        sensors: [{ sensorId: 1, value: 5, unit: "c" }],
+        sensors: [{ id: 1, value: 5, unit: "c" }],
       },
     });
     /* call the api endpoint (act) */
@@ -88,7 +88,7 @@ describe("POST: /api/v3/measurements", () => {
       expect.objectContaining({
         insertedMeasurements: expect.arrayContaining([
           expect.objectContaining({
-            sensorId: 1,
+            id: 1,
             value: 278.15,
             time: "2022-01-01T00:00:00.000",
           }),
@@ -103,7 +103,7 @@ describe("POST: /api/v3/measurements", () => {
       body: {
         time: "2022-01-01Z",
         position: { lat: 0, long: 0 },
-        sensors: [{ sensorId: 1, value: 5, unit: "k" }],
+        sensors: [{ id: 1, value: 5, unit: "k" }],
       },
     });
 
