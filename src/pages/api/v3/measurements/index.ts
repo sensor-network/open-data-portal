@@ -24,6 +24,15 @@ import {
 } from "src/lib/types/ZodSchemas";
 import { OkPacket } from "mysql2/promise";
 
+export type Pagination = {
+  page: number;
+  pageSize: number;
+  lastPage: number;
+  totalRows: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+};
+
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
    * GET /api/v3/measurements

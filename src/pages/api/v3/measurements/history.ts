@@ -38,13 +38,13 @@ const DENSITY_OPTIONS = {
   "1y": { years: 1 },
 };
 
-type SummarizedMeasurement = {
+export type SummarizedMeasurement = {
   time: string;
   sensors: {
     [key: string]: { min: number; avg: number; max: number };
   };
 };
-type Summary = {
+export type Summary = {
   locationName: string;
   startTime: string;
   endTime: string;
