@@ -1,26 +1,37 @@
 import { getConnectionPool } from "./connection";
-import mysql, { RowDataPacket, OkPacket } from 'mysql2/promise';
-import { SRID } from 'src/lib/constants';
+import mysql, { RowDataPacket, OkPacket } from "mysql2/promise";
+import { SRID } from "src/lib/constants";
 
 export type Location = {
-  id: number,
-  name: string,
+  id: number;
+  name: string;
   position: {
-    lat: number,
-    long: number
-  },
-  radiusMeters: number,
-}
+    lat: number;
+    long: number;
+  };
+  radiusMeters: number;
+};
 
-export const createOne = async (
-  { name, lat, long, rad }: { name: string; lat: number; long: number; rad: number },
-) => {
+export const createOne = async ({
+  name,
+  lat,
+  long,
+  rad,
+}: {
+  name: string;
+  lat: number;
+  long: number;
+  rad: number;
+}) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       INSERT INTO location
           (name, radius_meters, position)
       VALUES (?, ?, ST_GeomFromText('POINT(? ?)', ?))
-  `, [name, rad, lat, long, SRID]);
+  `,
+    [name, rad, lat, long, SRID]
+  );
   const okPacket = result[0] as OkPacket;
   return okPacket.insertId;
 };
@@ -42,7 +53,8 @@ export const findMany = async () => {
 
 export const findById = async ({ id }: { id: number }) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       SELECT id,
              name,
              radius_meters AS radiusMeters,
@@ -52,14 +64,17 @@ export const findById = async ({ id }: { id: number }) => {
                  )         AS position
       FROM location
       WHERE id = ?
-  `, [id]);
+  `,
+    [id]
+  );
   const rows = result[0] as RowDataPacket[];
   return rows[0] as Location;
 };
 
 export const findByName = async ({ name }: { name: string }) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       SELECT id,
              name,
              radius_meters AS radiusMeters,
@@ -69,19 +84,27 @@ export const findByName = async ({ name }: { name: string }) => {
                  )         AS position
       FROM location
       WHERE name = ?
-  `, [name]);
+  `,
+    [name]
+  );
   return result[0] as Location[];
 };
 
-
-export const findByLatLong = async (
-  { lat, long, rad }: { lat: number; long: number, rad: number | null }
-) => {
+export const findByLatLong = async ({
+  lat,
+  long,
+  rad,
+}: {
+  lat: number;
+  long: number;
+  rad: number | null;
+}) => {
   const connection = await getConnectionPool();
   // if rad is provided, use the provided radius, else inherit from db entry
   let query: string;
   if (rad !== null) {
-    query = mysql.format(`
+    query = mysql.format(
+      `
         SELECT id,
                name,
                radius_meters AS radiusMeters,
@@ -92,13 +115,12 @@ export const findByLatLong = async (
         FROM location
         WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= ?
         ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
-    `, [
-      lat, long, SRID, rad,
-      lat, long, SRID,
-    ]);
-  }
-  else {
-    query = mysql.format(`
+    `,
+      [lat, long, SRID, rad, lat, long, SRID]
+    );
+  } else {
+    query = mysql.format(
+      `
         SELECT id,
                name,
                radius_meters AS radiusMeters,
@@ -109,23 +131,41 @@ export const findByLatLong = async (
         FROM location
         WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= radius_meters
         ORDER BY ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?))
-    `, [
-      lat, long, SRID,
-      lat, long, SRID,
-    ]);
+    `,
+      [lat, long, SRID, lat, long, SRID]
+    );
   }
   const result = await connection.query(query);
   return result[0] as Location[];
 };
 
-export const updateName = async (
-  { id, name }: { id: number, name: string },
-) => {
+export const updateName = async ({
+  id,
+  name,
+}: {
+  id: number;
+  name: string;
+}) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       UPDATE location
       SET name = ?
       WHERE id = ?
-  `, [name, id]);
+  `,
+    [name, id]
+  );
+  return result[0] as OkPacket;
+};
+
+export const deleteById = async ({ id }: { id: number }) => {
+  const connection = await getConnectionPool();
+  const result = await connection.query(
+    `
+      DELETE FROM location
+      WHERE id = ?
+  `,
+    [id]
+  );
   return result[0] as OkPacket;
 };
