@@ -1,5 +1,6 @@
 import { createPool, Pool } from 'mysql2/promise';
 
+
 let pool: Pool | undefined = undefined;
 
 export async function getConnectionPool(): Promise<Pool> {
@@ -26,3 +27,8 @@ export async function endConnection() : Promise<void> {
     /* closes down the pool connection if one exists */
     if (pool) await pool.end();
 }
+
+export const status = async ({}: {}) => {
+    const connection = await getConnectionPool();
+    const result = await connection.query(`DESCRIBE station;`);
+  };

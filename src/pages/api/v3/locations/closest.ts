@@ -1,6 +1,6 @@
 import { HTTP_STATUS as STATUS } from "~/lib/httpStatusCodes";
 import { NextApiRequest, NextApiResponse } from "next";
-import * as Station from "~/lib/database/location";
+import * as Location from "~/lib/database/location";
 import {zLatLong} from "~/lib/types/ZodSchemas";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
@@ -9,7 +9,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const {lat, long} = zLatLong.parse(req.query);
 
     /* call db (separat funktion för att det ska vara testbart) */
-    const closest = await Station.findClosest({lat, long});
+    const closest = await Location.findClosest({lat, long});
   
     /* error checks etc.*/
     if (!closest) {
@@ -26,7 +26,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   else {
-    console.log(`${req.method}: /api/v3/stations:: Method not allowed`);
+    console.log(`${req.method}: /api/v3/js:: Method not allowed`);
     res.setHeader("Allow", "GET");
     res
       .status(STATUS.NOT_ALLOWED)
