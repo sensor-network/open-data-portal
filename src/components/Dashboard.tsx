@@ -6,7 +6,7 @@ import type { PointTuple } from "leaflet";
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
-const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
+const MapWithNoSSR = dynamic(async () => await import("./DashboardMap"), {
   ssr: false,
 });
 
