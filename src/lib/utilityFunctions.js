@@ -1,24 +1,5 @@
 import { format } from "date-fns";
 import { DECIMAL_PLACES } from "src/lib/constants";
-import { UNITS as TEMP_UNITS } from "lib/units/temperature";
-import { UNITS as COND_UNITS } from "lib/units/conductivity";
-
-export const loadPreferences = (prefCookieString) => {
-  /* load preferences from cookies, or fallback to default values */
-  let json;
-  try {
-    json = JSON.parse(prefCookieString);
-  } catch (e) {
-  }
-  return {
-    location: json?.location || { name: "Karlskrona", symbol: "" },
-    temperatureUnit: json?.temperatureUnit || { name: TEMP_UNITS.CELSIUS.name, symbol: TEMP_UNITS.CELSIUS.symbol },
-    conductivityUnit: json?.conductivityUnit || {
-      name: COND_UNITS.SIEMENS_PER_METER.name,
-      symbol: COND_UNITS.SIEMENS_PER_METER.symbols[0],
-    },
-  };
-};
 
 export const fetcher = async (url) => {
   const response = await fetch(url);
@@ -31,7 +12,8 @@ export const fetcher = async (url) => {
   return await response.json();
 };
 
-export const urlWithParams = (baseUrl, params) => baseUrl + new URLSearchParams(params);
+export const urlWithParams = (baseUrl, params) =>
+  baseUrl + new URLSearchParams(params);
 
 /* decide a good format depending on the date-range */
 export const dateFormatter = (date, startDate, endDate) => {
@@ -53,24 +35,24 @@ export const dateFormatter = (date, startDate, endDate) => {
 };
 
 /* take in an array of values and return the min, max and avg */
- export const summarizeValues = (values, decimals = 2) => {
-   let [minIndex, maxIndex, sum] = [0, 0, 0];
-   for (let i = 0; i < values.length; i++) {
-     const value = values[i];
-     if (value < values[minIndex]) {
-       minIndex = i;
-     }
-     if (value > values[maxIndex]) {
-       maxIndex = i;
-     }
-     sum += value;
-   }
-   return {
-     min: round(values[minIndex], decimals),
-     max: round(values[maxIndex], decimals),
-     avg: round(sum / values.length, decimals),
-   };
- };
+export const summarizeValues = (values, decimals = 2) => {
+  let [minIndex, maxIndex, sum] = [0, 0, 0];
+  for (let i = 0; i < values.length; i++) {
+    const value = values[i];
+    if (value < values[minIndex]) {
+      minIndex = i;
+    }
+    if (value > values[maxIndex]) {
+      maxIndex = i;
+    }
+    sum += value;
+  }
+  return {
+    min: round(values[minIndex], decimals),
+    max: round(values[maxIndex], decimals),
+    avg: round(sum / values.length, decimals),
+  };
+};
 
 /* round given value to specified precision */
 export const round = (value, decimals = DECIMAL_PLACES) => {
@@ -79,7 +61,8 @@ export const round = (value, decimals = DECIMAL_PLACES) => {
 };
 
 /* capitalize given string using RegEx */
-export const capitalize = (string) => string?.replace(/^\w/, ch => ch.toUpperCase());
+export const capitalize = (string) =>
+  string?.replace(/^\w/, (ch) => ch.toUpperCase());
 
 /* calculate average from an array of values that may contain null */
 export const getAverage = (values) => {
@@ -123,13 +106,19 @@ export const defineDataDensity = (startDate, endDate) => {
   const millisBetween = endDate.getTime() - startDate.getTime();
   const daysBetween = Math.round(millisBetween / (1000 * 60 * 60 * 24));
 
-  return daysBetween < 2 ? "5min" :
-    daysBetween < 10 ? "30min" :
-      daysBetween < 35 ? "12h" :
-        daysBetween < 95 ? "1d" :
-          daysBetween < 370 ? "1w" :
-            daysBetween < 3 * 370 ? "1w" :
-              "2w";
+  return daysBetween < 2
+    ? "5min"
+    : daysBetween < 10
+    ? "30min"
+    : daysBetween < 35
+    ? "12h"
+    : daysBetween < 95
+    ? "1d"
+    : daysBetween < 370
+    ? "1w"
+    : daysBetween < 3 * 370
+    ? "1w"
+    : "2w";
 };
 
 /* Array.prototype.find() but starts searching at the back */

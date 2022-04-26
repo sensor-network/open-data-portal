@@ -20,7 +20,7 @@ jest.mock("src/lib/database/measurement", () => ({
           temperature: 278.15,
         },
       },
-    ]),
+    ])
   ),
 }));
 jest.mock("src/lib/database/location", () => ({
@@ -38,12 +38,16 @@ jest.mock("src/lib/database/sensor", () => ({
   updateStatus: jest.fn().mockImplementation(() => Promise.resolve()),
 }));
 
-describe("POST: /measurements", () => {
+describe("POST: /api/v3/measurements", () => {
   const apiKey = process.env.NEXT_PUBLIC_API_KEY || "default";
-  /* wrapper for 'node-mocks-http' createMocks() */
-  const mockReqRes = (body = [], method = "POST") => {
+  /* wrapper for 'node-mocks-http' createMocks() with some default values */
+  const mockReqRes = ({
+    body = {},
+    method = "POST",
+    headers = { Authorization: `Bearer ${apiKey}` },
+  }) => {
     return createMocks({
-      headers: { Authorization: `Bearer ${apiKey}` },
+      headers,
       method,
       body,
     });
@@ -52,9 +56,11 @@ describe("POST: /measurements", () => {
   it("should call the database once using the mock function", async () => {
     /* setup req, res object (arrange) */
     const { req, res } = mockReqRes({
-      time: "2022-01-01Z",
-      position: { lat: 0, long: 0 },
-      sensors: [{ sensorId: 1, value: 5, unit: "c" }],
+      body: {
+        time: "2022-01-01Z",
+        position: { lat: 0, long: 0 },
+        sensors: [{ id: 1, value: 5, unit: "c" }],
+      },
     });
     /* call the api endpoint (act) */
     await handler(req, res);
@@ -75,27 +81,52 @@ describe("POST: /measurements", () => {
         sensorId: 1,
         sensorType: "temperature",
         value: 278.15, // 5 'C
-      }),
+      })
     );
     /* if the database called returned with 1, the id of the returned object should also be 1 */
     expect(res._getJSONData()).toEqual(
       expect.objectContaining({
         insertedMeasurements: expect.arrayContaining([
           expect.objectContaining({
-            sensorId: 1,
+            id: 1,
             value: 278.15,
             time: "2022-01-01T00:00:00.000",
           }),
         ]),
-      }),
+      })
     );
     expect(res._getStatusCode()).toEqual(201);
   });
+
+  it("should return 400 when the user enters invalid data", async () => {
+    const { req, res } = mockReqRes({
+      body: {
+        time: "2022-01-01Z",
+        position: { lat: 0, long: 0 },
+        sensors: [{ id: 1, value: 5, unit: "k" }],
+      },
+    });
+
+    await handler(req, res);
+
+    expect(res._getStatusCode()).toEqual(400);
+  });
+
+  it("should return 401 if the correct authorization is not provided", async () => {
+    const { req, res } = mockReqRes({
+      headers: { Authorization: "Bearer wrong" },
+    });
+
+    await handler(req, res);
+
+    expect(res._getStatusCode()).toEqual(401);
+    expect(res.hasHeader("WWW-Authenticate")).toEqual(true);
+  });
 });
 
-describe("GET: /measurements", () => {
+describe("GET: /api/v3/measurements", () => {
   /* wrapper for 'node-mocks-http' createMocks() */
-  const mockReqRes = (query, method = "GET") => {
+  const mockReqRes = ({ query, method = "GET" }) => {
     return createMocks({
       method,
       query,
@@ -104,7 +135,7 @@ describe("GET: /measurements", () => {
 
   it("should call the database once using the mock function", async () => {
     /* setup req, res object - (arrange) */
-    const { req, res } = mockReqRes({});
+    const { req, res } = mockReqRes({ query: {} });
     /* call the api endpoint - (act) */
     await handler(req, res);
 
@@ -112,7 +143,6 @@ describe("GET: /measurements", () => {
     /* there should only have been a single call to the database */
     expect(findMany.mock.calls.length).toEqual(1);
 
-    console.log(findMany.mock.results[0].value);
     expect(await findMany.mock.results[0].value).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -126,7 +156,7 @@ describe("GET: /measurements", () => {
             temperature: 278.15,
           },
         }),
-      ]),
+      ])
     );
     /* if the database returned correctly, the api should respond accordingly */
     expect(res._getJSONData()).toEqual(
@@ -157,7 +187,7 @@ describe("GET: /measurements", () => {
             },
           }),
         ]),
-      }),
+      })
     );
   });
 });
