@@ -7,8 +7,8 @@ on:
   # Triggers the workflow on push every push except main
   push:
     branches:
-     - '*'
-     - '!main'
+      - "*"
+      - "!main"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: 12
       - name: Install Node dependencies
-        run: npm install && npm install --save-dev typescript
+        run: npm install
       - name: Run test suite
         run: npm test
       - name: Build a production version
