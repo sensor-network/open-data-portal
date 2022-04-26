@@ -4,13 +4,14 @@ import { useLocations } from "src/lib/hooks/useLocations";
 import { useEffect, useState } from "react";
 import type { PointTuple } from "leaflet";
 import type { Location } from "src/lib/database/location";
+
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
 const MapWithNoSSR = dynamic<{
   locations: Location[];
   selectedLocation: number;
   mapCenter: PointTuple;
-}>(() => import("./DashboardMap").then((mod) => mod.default), {
+}>(() => import("./DashboardMap"), {
   ssr: false,
 });
 
