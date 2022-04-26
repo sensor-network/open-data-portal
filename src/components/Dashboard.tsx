@@ -9,7 +9,11 @@ import type { Location } from "src/lib/database/location";
 import dynamic from "next/dynamic";
 const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
   ssr: false,
-});
+}) as React.FC<{
+  locations: Location[];
+  selectedLocation: number;
+  mapCenter: PointTuple;
+}>;
 
 const paneStyle = {
   width: "50%",
