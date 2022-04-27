@@ -1,9 +1,9 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from "next";
 
 import * as Station from "lib/database/station";
 import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
 import { ZodError } from "zod";
-import { zIdFromString, zId, zStationExpandParam } from 'lib/types/ZodSchemas';
+import { zIdFromString, zId, zStationExpandParam } from "lib/types/ZodSchemas";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
@@ -20,44 +20,40 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const station = await Station.findByStationId({
         stationId,
         expandSensors,
-        expandLocation
+        expandLocation,
       });
 
       if (!station) {
         const message = `Station with id '${stationId}' does not exist`;
         console.log(`${req.method} /api/v3/stations/[id]:: ${message}`);
 
-        res.status(STATUS.NOT_FOUND)
-          .json({ message });
+        res.status(STATUS.NOT_FOUND).json({ message });
         return;
       }
 
-      res.status(STATUS.OK)
-        .json(station);
-    }
-
-    catch (e) {
+      res.status(STATUS.OK).json(station);
+    } catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/stations/[id]:: Error parsing request:\n`, e.flatten());
-        res.status(STATUS.BAD_REQUEST)
-          .json(e.flatten());
-      }
-      else {
+        console.log(
+          `${req.method}: /api/v3/stations/[id]:: Error parsing request:\n`,
+          e.flatten()
+        );
+        res.status(STATUS.BAD_REQUEST).json(e.flatten());
+      } else {
         console.error(`${req.method}: /api/v3/stations/[id]::`, e);
-        res.status(STATUS.SERVER_ERROR)
+        res
+          .status(STATUS.SERVER_ERROR)
           .json({ message: "Internal server error" });
       }
     }
-  }
-
-  /**
-   * PATCH /api/v3/stations/[id]
-   **/
-  else if (req.method === 'PATCH') {
+  } else if (req.method === "PATCH") {
+    /**
+     * PATCH /api/v3/stations/[id]
+     **/
     /**
      * TODO: Implement more sophisticated authentication
      */
-    const AUTHENTICATION_SCHEMA = 'Bearer';
+    const AUTHENTICATION_SCHEMA = "Bearer";
     const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
     const { authorization } = req.headers;
 
@@ -65,9 +61,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
       console.log(`${req.method} /api/v3/stations/[id]:: ${errorMessage}`);
 
-      res.setHeader('WWW-Authenticate', AUTHENTICATION_SCHEMA)
-        .status(STATUS.UNAUTHORIZED)
-        .json({ error: errorMessage });
+      res.setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA);
+      res.status(STATUS.UNAUTHORIZED).json({ error: errorMessage });
       return;
     }
 
@@ -79,49 +74,53 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       let station = await Station.findByStationId({
         stationId,
         expandSensors: false,
-        expandLocation: false
+        expandLocation: false,
       });
       if (!station) {
         const message = `Station with id '${stationId}' does not exist`;
         console.log(`${req.method} /api/v3/stations/[id]:: ${message}`);
 
-        res.status(STATUS.NOT_FOUND)
-          .json({ message });
+        res.status(STATUS.NOT_FOUND).json({ message });
         return;
       }
 
-      const { changedRows } = await Station.updateLocation({ id: stationId, locationId });
+      const { changedRows } = await Station.updateLocation({
+        id: stationId,
+        locationId,
+      });
 
       station = await Station.findByStationId({
         stationId,
         expandSensors: false,
-        expandLocation: true  // expand location to show detailed view of the new location
+        expandLocation: true, // expand location to show detailed view of the new location
       });
 
-      res.status(STATUS.OK)
-        .json({ status: "Success", totalChanges: changedRows, updatedValue: station });
-    }
-
-    catch (e) {
+      res.status(STATUS.OK).json({
+        status: "Success",
+        totalChanges: changedRows,
+        updatedValue: station,
+      });
+    } catch (e) {
       if (e instanceof ZodError) {
-        console.log(`${req.method}: /api/v3/stations/[id]:: Error parsing request body:\n`, e.flatten());
-        res.status(STATUS.BAD_REQUEST)
-          .json(e.flatten());
-      }
-      else {
+        console.log(
+          `${req.method}: /api/v3/stations/[id]:: Error parsing request body:\n`,
+          e.flatten()
+        );
+        res.status(STATUS.BAD_REQUEST).json(e.flatten());
+      } else {
         console.error(`${req.method}: /api/v3/stations/[id]::`, e);
-        res.status(STATUS.SERVER_ERROR)
+        res
+          .status(STATUS.SERVER_ERROR)
           .json({ error: "Internal server error" });
       }
     }
-  }
-
-  /**
-   * {unknown} /api/v3/stations/[id]
-   **/
-  else {
+  } else {
+    /**
+     * {unknown} /api/v3/stations/[id]
+     **/
     console.log(`${req.method}: /api/v3/stations/[id]:: Method not allowed`);
-    res.setHeader('Allow', 'GET, PATCH')
+    res.setHeader("Allow", "GET, PATCH");
+    res
       .status(STATUS.NOT_ALLOWED)
       .json({ error: `Method '${req.method}' not allowed.` });
     return;
