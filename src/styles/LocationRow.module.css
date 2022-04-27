@@ -5,6 +5,8 @@
     padding: 15px;
     border-radius: 0.75em;
     width: 100%;
+    font-size: xx-large;
+    background-color: rgb(250, 250, 250);
 }
 
 .sensors{
@@ -12,6 +14,7 @@
     /*align-items: center;
     justify-content: center; these two rows do nothing i think.*/
     border: 1px solid black;
+    font-size: xx-large;
 }
 .sensor{
     display: flex;
@@ -19,8 +22,12 @@
     min-width: max-content;
     padding: 10px;
     border: 1px solid black;
+    font-size: xx-large;
+    min-width: 5ch;
 }
 .loc{
     margin-right: 15px;
     border: 1px solid black;
+    min-width: 15ch;
+    font-size: xx-large;
 }
