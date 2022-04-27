@@ -50,6 +50,30 @@ describe("GET: /api/v3/locations/closest", () => {
     });
   };
 
+  it("should return 200 and the closest location if one is found within their given radius", async () => {
+    const { req, res } = mockReqRes({
+      query: { lat: "10.0005", long: "9.9995" },
+    });
+
+    await handler(req, res);
+
+    expect(findClosest.mock.calls.length).toEqual(1);
+    expect(res._getStatusCode()).toBe(200);
+    expect(res._getJSONData()).toEqual(locationDb[1]);
+  });
+
+  it("should return the closest one if two are within the radius", async () => {
+    const { req, res } = mockReqRes({
+      query: { lat: "20", long: "20" },
+    });
+
+    await handler(req, res);
+
+    expect(findClosest.mock.calls.length).toEqual(1);
+    expect(res._getStatusCode()).toBe(200);
+    expect(res._getJSONData()).toEqual(locationDb[3]);
+  });
+
   it("should return 400 if latitude is not provided", async () => {
     const { req, res } = mockReqRes({ query: { long: "1" } });
 
@@ -122,28 +146,18 @@ describe("GET: /api/v3/locations/closest", () => {
       error: "Internal server error",
     });
   });
+});
 
-  it("should return 200 and the closest location if one is found within their given radius", async () => {
-    const { req, res } = mockReqRes({
-      query: { lat: "10.0005", long: "9.9995" },
-    });
-
-    await handler(req, res);
-
-    expect(findClosest.mock.calls.length).toEqual(1);
-    expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual(locationDb[1]);
-  });
-
-  it("should return the closest one if two are within the radius", async () => {
-    const { req, res } = mockReqRes({
-      query: { lat: "20", long: "20" },
-    });
+describe("POST /api/v3/locations/closest", () => {
+  it("should return with 405 if called with unsupported method", async () => {
+    const { req, res } = createMocks({ method: "POST" });
 
     await handler(req, res);
 
-    expect(findClosest.mock.calls.length).toEqual(1);
-    expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual(locationDb[3]);
+    expect(res._getStatusCode()).toEqual(405);
+    expect(res.hasHeader("Allow")).toEqual(true);
+    expect(res._getJSONData()).toEqual({
+      error: "Method 'POST' not allowed.",
+    });
   });
 });
