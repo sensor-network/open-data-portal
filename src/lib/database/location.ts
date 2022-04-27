@@ -57,6 +57,27 @@ export const findById = async ({ id }: { id: number }) => {
   return rows[0] as Location;
 };
 
+export const findClosest = async ({ lat, long }: { lat: number, long: number }) => {
+  const connection = await getConnectionPool();
+  const result = await connection.query(`
+      SELECT id,
+             name,
+             radius_meters AS radiusMeters,
+             JSON_OBJECT(
+                     'lat', ST_X(position),
+                     'long', ST_Y(position)
+                 )         AS position
+      FROM location
+      WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= radius_meters
+      LIMIT 1
+  `, [lat, long, SRID]);
+  const rows = result[0] as RowDataPacket[];
+  if (rows.length > 0) {
+    return rows[0] as Location;
+  }
+  return null;
+};
+
 export const findByName = async ({ name }: { name: string }) => {
   const connection = await getConnectionPool();
   const result = await connection.query(`
@@ -72,7 +93,6 @@ export const findByName = async ({ name }: { name: string }) => {
   `, [name]);
   return result[0] as Location[];
 };
-
 
 export const findByLatLong = async (
   { lat, long, rad }: { lat: number; long: number, rad: number | null }

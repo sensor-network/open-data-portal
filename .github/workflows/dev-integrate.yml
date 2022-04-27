@@ -24,12 +24,10 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
-      - name: Start up the test database
-        run: docker compose -f test-db.yml up -d
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 17
       - name: Install Node dependencies
         run: npm install
       - name: Run test suite

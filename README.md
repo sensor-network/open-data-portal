@@ -41,7 +41,7 @@ $ cd open-data-portal
 2. Build a local image:
 
 ```bash
-$ docker compose build app 
+$ docker compose build app
 ```
 
 #### Run
@@ -99,15 +99,28 @@ Wait until you see that the database is ready for connections (usually < 10s). T
 
 ```bash
 $ npm test
-````
+```
 
 Tests can also be run in `watch`-mode while developing to have them re-run each compilation:
 
-````bash
+```bash
 $ npm test:watch
-````
+```
 
-***Note: This project currently does not have a significant test-base. This will be done in the future.***
+##### Mutation tests
+
+You can also run mutation tests using [Stryker](https://stryker-mutator.io/docs/stryker-js/introduction).
+
+**NOTE: Currently Stryker is not compatible with Next.js/Jest. The workaround is to use Babel by renaming [babelrc.js](babelrc.js) to `.babelrc.js`.**
+
+```sh
+$ stryker run
+
+// Mutation tests takes time. Report from last time:
+INFO MutationTestExecutor Done in 18 minutes 15 seconds.
+```
+
+**_Note: This project currently does not have a significant test-base. This will be done in the future._**
 
 #### Run
 
@@ -150,8 +163,8 @@ that) by changing the configuration object in [fill-db.ts](./scripts/fill-db.ts)
 ```js
 const c = {
   /* define time range of when to insert measurements */
-  START_TIME: new Date('2021-01-01Z'),
-  END_TIME: new Date('2024Z'),
+  START_TIME: new Date("2021-01-01Z"),
+  END_TIME: new Date("2024Z"),
 
   /* select time interval between measurements (seconds) */
   DATA_DENSITY: 5 * 60,

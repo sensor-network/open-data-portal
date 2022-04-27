@@ -1,26 +1,26 @@
-.row{
-    border: 1px solid black;
-    border-radius: 0.75em;
-    display: "flex";
-    padding: 50px;
-    flex-direction: row;
-}
-
-.locName{
-    display: flex;
-    flex-direction: row;
-}
-
 .entireSection{
-    display: "flex";
-    align-items: "center";
-    justify-content: "center";
+    display: flex;
+    align-items: center;
+    /*justify-content: center;*/
     padding: 15px;
     border-radius: 0.75em;
+    width: 100%;
 }
 
 .sensors{
-    display: "flex";
-    align-items: "center";
-    justify-content: "center";
+    display: flex;
+    /*align-items: center;
+    justify-content: center; these two rows do nothing i think.*/
+    border: 1px solid black;
+}
+.sensor{
+    display: flex;
+    flex-direction: column;
+    min-width: max-content;
+    padding: 10px;
+    border: 1px solid black;
+}
+.loc{
+    margin-right: 15px;
+    border: 1px solid black;
 }

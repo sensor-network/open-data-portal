@@ -1,17 +1,23 @@
+import useSWR, { Middleware, SWRHook } from "swr";
 import { useRef, useEffect, useCallback } from "react";
-import useSWR from "swr";
 
-import { fetcher as defaultFetcher } from "src/lib/utilityFunctions";
+import { fetcher } from "src/lib/utilityFunctions";
+import type { Measurement } from "~/lib/database/measurement";
+import type { Pagination } from "~/pages/api/v3/measurements";
+import type {
+  SummarizedMeasurement,
+  Summary,
+} from "pages/api/v3/measurements/history";
 
 /**
  * Taken from the official docs at:
  * https://swr.vercel.app/docs/middleware#keep-previous-result
  * This is an SWR middleware for keeping the data even if key changes.
  **/
-export function laggy(useSWRNext) {
+export const laggy: Middleware = (useSWRNext: SWRHook) => {
   return (key, fetcher, config) => {
     // Use a ref to store previous returned data.
-    const laggyDataRef = useRef();
+    const laggyDataRef = useRef<any>();
 
     // Actual SWR hook.
     const swr = useSWRNext(key, fetcher, config);
@@ -29,10 +35,12 @@ export function laggy(useSWRNext) {
     }, []);
 
     // Fallback to previous data if the current data is undefined.
-    const dataOrLaggyData = swr.data === undefined ? laggyDataRef.current : swr.data;
+    const dataOrLaggyData =
+      swr.data === undefined ? laggyDataRef.current : swr.data;
 
     // Is it showing previous data?
-    const isLagging = swr.data === undefined && laggyDataRef.current !== undefined;
+    const isLagging =
+      swr.data === undefined && laggyDataRef.current !== undefined;
 
     // Also add a `isLagging` field to SWR.
     return Object.assign({}, swr, {
@@ -42,13 +50,20 @@ export function laggy(useSWRNext) {
       resetLaggy,
     });
   };
-}
-
+};
 
 /* Wrapper for SWR using 'laggy' data */
-export const useMeasurements = (url, fetcher = defaultFetcher) => {
-  const { data, isLagging, error } = useSWR(url, {
+export const useMeasurements = (
+  url: string,
+  swrOptions?: { [key: string]: any }
+) => {
+  // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
+  const { data, isLagging, error } = useSWR<{
+    measurements: Measurement;
+    pagination: Pagination;
+  }>(url, {
     fetcher: () => fetcher(url),
+    ...swrOptions,
     use: [laggy],
   });
   return {
@@ -60,10 +75,17 @@ export const useMeasurements = (url, fetcher = defaultFetcher) => {
   };
 };
 
-
-export const useSummarizedData = (url, fetcher = defaultFetcher) => {
-  const { data, isLagging, error } = useSWR(url, {
+export const useSummarizedData = (
+  url: string,
+  swrOptions?: { [key: string]: any }
+) => {
+  // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
+  const { data, isLagging, error } = useSWR<{
+    summary: Summary;
+    measurements: SummarizedMeasurement[];
+  }>(url, {
     fetcher: () => fetcher(url),
+    ...swrOptions,
     use: [laggy],
   });
 
@@ -75,10 +97,17 @@ export const useSummarizedData = (url, fetcher = defaultFetcher) => {
   };
 };
 
-
-export const useSummarizedMeasurements = (url, fetcher = defaultFetcher) => {
-  const { data, isLagging, error } = useSWR(url, {
+export const useSummarizedMeasurements = (
+  url: string,
+  swrOptions?: { [key: string]: any }
+) => {
+  // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
+  const { data, isLagging, error } = useSWR<{
+    summary: Summary;
+    measurements: SummarizedMeasurement[];
+  }>(url, {
     fetcher: () => fetcher(url),
+    ...swrOptions,
     use: [laggy],
   });
 

@@ -2,6 +2,7 @@ import { urlWithParams } from "../lib/utilityFunctions";
 import { useMeasurements } from "../lib/hooks/swr-extensions";
 import { PreferenceContext } from "../pages/_app";
 import {useMemo, useContext} from "react";
+import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
 import styles from "src/styles/LocationRow.module.css"
 
 export default function LocationRow({locName, selected}){
@@ -9,6 +10,7 @@ export default function LocationRow({locName, selected}){
     const ENDPOINT = "/api/v3/measurements?";
 
     const { preferences } = useContext(PreferenceContext);
+    const sensorTypes = useSensorTypes("/api/v3/sensors/types");
 
     const url = useMemo(() => urlWithParams(ENDPOINT, {
         pageSize: 1,
@@ -24,33 +26,29 @@ export default function LocationRow({locName, selected}){
         return <div>No data</div>;
     }
     
-    if(isLoading)
+    if(isLoading || !sensorTypes)
     return <div>Loading again...</div>;
 
     const sensors = measurements[0].sensors;
-    console.log(url);
-    console.log(sensors);
 
     const borderColor = selected ? "red" : "";
    
     return (
         <div style={{border: `1px solid ${borderColor}`}} className={styles.entireSection}>
-            <div style={{ marginRight: 15 }}>{locName}</div>
-            <div className={styles.sensors}>
-                {Object.entries(sensors).map(([sensor, value], idx) => (
-                <div
-                    key={idx}
-                    style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    minWidth: "max-content",
-                    padding: 10,
-                    }}
-                >
-                    <b>{sensor}</b> <p>{value}</p>
-                </div>
-                ))}
+            <div className={styles.loc}>
+                {locName}
             </div>
+
+            <div className={styles.sensors}>
+                {sensorTypes.map((sensor, idx) =>(
+                    
+                    <div key={idx} className={styles.sensor}>
+                        <b>{sensor}</b> <p>{sensors[sensor]}</p>
+                    </div>
+                ))}
+                
+            </div>
+
         </div>
     );
 }
