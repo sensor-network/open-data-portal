@@ -19,7 +19,7 @@ import { getPreferredUnitSymbol } from "~/lib/utils/load-preferences";
 import type { Location } from "~/lib/database/location";
 
 /* available markers from here: https://github.com/pointhi/leaflet-color-markers */
-const getIcon = (color: string) =>
+export const getIcon = (color: string) =>
   new Icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
     shadowUrl:

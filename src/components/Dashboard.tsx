@@ -1,7 +1,7 @@
 import Card from "src/components/Card";
-import Left from "src/components/DashboardLeft";
-import { useLocations } from "src/lib/hooks/useLocations";
-import { useEffect, useState } from "react";
+import LocationRow from "src/components/LocationRow";
+import { PreferenceContext } from "src/pages/_app";
+import { useEffect, useState, useContext } from "react";
 import type { PointTuple } from "leaflet";
 import type { Location } from "src/lib/database/location";
 
@@ -26,7 +26,7 @@ const paneStyle = {
 const mapCenter: PointTuple = [56.178516, 15.60261];
 
 const Dashboard: React.FC = () => {
-  const locations = useLocations("/api/v3/locations");
+  const { locations } = useContext(PreferenceContext);
   const TIMEOUT_MS = 5000;
 
   const [selectedLocationIndex, setSelectedIndex] = useState(0);
@@ -50,10 +50,17 @@ const Dashboard: React.FC = () => {
         {locations ? (
           <>
             <div style={paneStyle}>
-              <Left
-                locations={locations}
-                selectedLocation={selectedLocationIndex}
-              />
+              <div>
+                {locations.map((location, index) => (
+                  <div key={location.id} style={{ margin: "5px 0" }}>
+                    <LocationRow
+                      key={location.id}
+                      locName={location.name}
+                      selected={index === selectedLocationIndex}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
             <div style={paneStyle}>
               <MapWithNoSSR
