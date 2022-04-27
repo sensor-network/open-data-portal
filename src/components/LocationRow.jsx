@@ -4,7 +4,7 @@ import { PreferenceContext } from "../pages/_app";
 import {useMemo, useContext} from "react";
 import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
 import styles from "src/styles/LocationRow.module.css"
-
+import { capitalize } from "src/lib/utilityFunctions";
 export default function LocationRow({locName, selected}){
     
     const ENDPOINT = "/api/v3/measurements?";
@@ -20,7 +20,7 @@ export default function LocationRow({locName, selected}){
         conductivityUnit: preferences.conductivityUnit.symbol,
     }), [preferences]);
     
-    const { measurements, pagination, isLoading, isLagging, error } = useMeasurements(url);
+    const { measurements, pagination, isLoading, isLagging, error } = useMeasurements(url, {refreshInterval: 5000});
     
     if (error) {
         return <div>No data</div>;
@@ -34,7 +34,7 @@ export default function LocationRow({locName, selected}){
     const borderColor = selected ? "red" : "";
    
     return (
-        <div style={{border: `1px solid ${borderColor}`}} className={styles.entireSection}>
+        <div style={{border: `3px solid ${borderColor}`}} className={styles.entireSection}>
             <div className={styles.loc}>
                 {locName}
             </div>
@@ -43,7 +43,7 @@ export default function LocationRow({locName, selected}){
                 {sensorTypes.map((sensor, idx) =>(
                     
                     <div key={idx} className={styles.sensor}>
-                        <b>{sensor}</b> <p>{sensors[sensor]}</p>
+                        <b>{sensor === "ph" ? "pH" :capitalize(sensor)}</b> <p>{sensors[sensor]}</p>
                     </div>
                 ))}
                 
