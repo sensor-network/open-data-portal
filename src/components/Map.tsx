@@ -137,7 +137,7 @@ const Map: React.FC<{}> = () => {
       />
       <YouAreHereMarker />
       {locations?.map((l) => (
-        <LocationMarker location={l} />
+        <LocationMarker key={l.id} location={l} />
       ))}
     </MapContainer>
   );
