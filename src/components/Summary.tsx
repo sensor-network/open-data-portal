@@ -24,7 +24,7 @@ const Summary: React.FC<{}> = () => {
     const base = {
       temperatureUnit: preferences.temperatureUnit.symbol,
       conductivityUnit: preferences.conductivityUnit.symbol,
-      includeMeasurements: false,
+      includeMeasurements: "false",
     };
     const endOfEndDate = endOfDay(endDate);
     return {
