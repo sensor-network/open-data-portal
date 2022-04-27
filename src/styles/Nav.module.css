@@ -1,6 +1,7 @@
 .nav {
   display: flex;
   bottom: 0;
+  z-index: 10;
   position: fixed;
   justify-content: space-between;
   background-color: #fff;
