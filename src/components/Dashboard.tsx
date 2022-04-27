@@ -1,9 +1,9 @@
 import Card from "src/components/Card";
 import Left from "src/components/DashboardLeft";
-import { useLocations } from "src/lib/hooks/useLocations";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import type { PointTuple } from "leaflet";
 import type { Location } from "src/lib/database/location";
+import { PreferenceContext } from "../pages/_app";
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
@@ -26,7 +26,7 @@ const paneStyle = {
 const mapCenter: PointTuple = [56.178516, 15.60261];
 
 const Dashboard: React.FC = () => {
-  const locations = useLocations("/api/v3/locations");
+  const {locations} = useContext(PreferenceContext);
   const TIMEOUT_MS = 5000;
 
   const [selectedLocationIndex, setSelectedIndex] = useState(0);
@@ -50,10 +50,7 @@ const Dashboard: React.FC = () => {
         {locations ? (
           <>
             <div style={paneStyle}>
-              <Left
-                locations={locations}
-                selectedLocation={selectedLocationIndex}
-              />
+              <Left locations={locations} selectedLocation={selectedLocationIndex}/>
             </div>
             <div style={paneStyle}>
               <MapWithNoSSR
