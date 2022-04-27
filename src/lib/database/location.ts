@@ -68,11 +68,14 @@ export const findClosest = async ({ lat, long }: { lat: number, long: number }) 
                      'long', ST_Y(position)
                  )         AS position
       FROM location
-      WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= RADIUS_METERS
-      Limit 1
+      WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', ?)) <= radius_meters
+      LIMIT 1
   `, [lat, long, SRID]);
   const rows = result[0] as RowDataPacket[];
-  return rows[0] as Location;
+  if (rows.length > 0) {
+    return rows[0] as Location;
+  }
+  return null;
 };
 
 export const findByName = async ({ name }: { name: string }) => {
