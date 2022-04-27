@@ -2,12 +2,13 @@ import { MapContainer, Marker, Popup, TileLayer, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon.png";
-import { Icon } from "leaflet";
+import { Icon, PointTuple } from "leaflet";
 import { useLocations } from "src/lib/hooks/useLocations";
 import { useSummarizedData } from "src/lib/hooks/swr-extensions";
 import { useContext, useMemo } from "react";
 import { PreferenceContext } from "src/pages/_app";
 import { urlWithParams, capitalize } from "src/lib/utilityFunctions";
+import { getPreferredUnitSymbol } from "~/lib/utils/load-preferences";
 
 var greenIcon = new Icon({
   iconUrl:
@@ -20,7 +21,7 @@ var greenIcon = new Icon({
   shadowSize: [41, 41],
 });
 
-const PopupContent = ({ locationName }) => {
+const PopupContent: React.FC<{ locationName: string }> = ({ locationName }) => {
   const { preferences } = useContext(PreferenceContext);
   const url = useMemo(
     () =>
@@ -36,33 +37,28 @@ const PopupContent = ({ locationName }) => {
     return <div>Loading...</div>;
   }
   if (!isLoading && error) {
-    return (
-      <div style={{ minWidth: 150 }}>
-        <p>No data found</p>
-      </div>
-    );
+    return <div>No data found</div>;
   }
   return (
-    <div style={{ minWidth: 150 }}>
+    <div>
       {!isLoading &&
-        Object.entries(summary.sensors).map(([sensor, sensorData], idx) => (
-          <p key={idx} style={{ margin: "0.25em 0" }}>
-            <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>
-            {sensorData.end} {capitalize(preferences[`${sensor}Unit`]?.symbol)}
-          </p>
-        ))}
+        summary &&
+        Object.entries(summary.sensors).map(([sensor, sensorData], idx) => {
+          const unitSymbol = getPreferredUnitSymbol(sensor, preferences);
+          return (
+            <p key={idx} style={{ margin: "0.25em 0" }}>
+              <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>
+              {sensorData.end} {capitalize(unitSymbol)}
+            </p>
+          );
+        })}
     </div>
   );
 };
 
 const Map = () => {
-  const locations = useLocations("/api/v3/locations");
-  const mapCenter = [56.178516, 15.60261];
-
-  const formatted = locations?.map((l) => ({
-    ...l,
-    position: [l.position.lat, l.position?.long],
-  }));
+  const { locations } = useContext(PreferenceContext);
+  const mapCenter = [56.178516, 15.60261] as PointTuple;
 
   return (
     <MapContainer
@@ -75,12 +71,18 @@ const Map = () => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {formatted?.map((l) => (
-        <Marker key={l.id} position={l.position} icon={greenIcon}>
+      {locations?.map((l) => (
+        <Marker
+          key={l.id}
+          position={[l.position.lat, l.position.long]}
+          icon={greenIcon}
+        >
           <Popup>
-            <h2 style={{ margin: 0 }}>{capitalize(l.name)}</h2>
-            <h3 style={{ margin: 0 }}>Latest data:</h3>
-            <PopupContent locationName={l.name} />
+            <div style={{ minWidth: 200 }}>
+              <h2 style={{ margin: 0 }}>{capitalize(l.name)}</h2>
+              <h3 style={{ margin: 0 }}>Latest data:</h3>
+              <PopupContent locationName={l.name} />
+            </div>
           </Popup>
         </Marker>
       ))}
