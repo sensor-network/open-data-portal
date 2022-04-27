@@ -15,11 +15,11 @@ import { useSummarizedData } from "src/lib/hooks/swr-extensions";
 import { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { PreferenceContext } from "src/pages/_app";
 import { urlWithParams, capitalize } from "src/lib/utilityFunctions";
-import { getPreferredUnitSymbol } from "~/lib/utils/load-preferences";
-import type { Location } from "~/lib/database/location";
+import { getPreferredUnitSymbol } from "src/lib/utils/load-preferences";
+import type { Location } from "src/lib/database/location";
 
 /* available markers from here: https://github.com/pointhi/leaflet-color-markers */
-const getIcon = (color: string) =>
+export const getIcon = (color: string) =>
   new Icon({
     iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
     shadowUrl:

@@ -2,9 +2,9 @@ import { MapContainer, Marker, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon.png";
-import { Icon } from "leaflet";
+import { Icon, PointTuple } from "leaflet";
 import type { Location } from "src/lib/database/location";
-import type { PointTuple } from "leaflet";
+import {getIcon} from "src/components/Map";
 
 const iconConfig = {
   shadowUrl:
@@ -15,17 +15,9 @@ const iconConfig = {
   shadowSize: [41, 41] as PointTuple,
 };
 
-const blueIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-  ...iconConfig,
-});
+const blueIcon = getIcon("blue");
 
-const redIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-  ...iconConfig,
-});
+const redIcon = getIcon("red");
 
 const DashboardMap: React.FC<{
   locations: Location[];
