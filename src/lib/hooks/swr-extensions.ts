@@ -55,7 +55,7 @@ export const laggy: Middleware = (useSWRNext: SWRHook) => {
 /* Wrapper for SWR using 'laggy' data */
 export const useMeasurements = (
   url: string,
-  swrOptions: { [key: string]: any }
+  swrOptions?: { [key: string]: any }
 ) => {
   // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
   const { data, isLagging, error } = useSWR<{
@@ -77,7 +77,7 @@ export const useMeasurements = (
 
 export const useSummarizedData = (
   url: string,
-  swrOptions: { [key: string]: any }
+  swrOptions?: { [key: string]: any }
 ) => {
   // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
   const { data, isLagging, error } = useSWR<{
@@ -99,7 +99,7 @@ export const useSummarizedData = (
 
 export const useSummarizedMeasurements = (
   url: string,
-  swrOptions: { [key: string]: any }
+  swrOptions?: { [key: string]: any }
 ) => {
   // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
   const { data, isLagging, error } = useSWR<{
