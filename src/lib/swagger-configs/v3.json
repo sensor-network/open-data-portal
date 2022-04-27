@@ -2639,6 +2639,89 @@
         }
       }
     },
+    "/locations/closest": {
+      "get": {
+        "tags": ["Locations"],
+        "summary": "Gets the first closest location based on user geoinformation",
+        "description": "Retrieves a JSON array with location id, location name, the radius which encapsulates the location, latitude and longitude.",
+        "operationId": "getClosest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Gräsvik"
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "example": 56.183016,
+                          "format": "float"
+                        },
+                        "lng": {
+                          "type": "number",
+                          "example": 15.58817,
+                          "format": "float"
+                        }
+                      }
+                    },
+                    "radiusMeters": {
+                      "type": "number",
+                      "example": 100,
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No location found close enough."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sensors/status": {
       "get": {
         "tags": ["Sensors"],
