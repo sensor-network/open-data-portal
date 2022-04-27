@@ -3,12 +3,13 @@ import { useMeasurements } from "../lib/hooks/swr-extensions";
 import { PreferenceContext } from "../pages/_app";
 import {useMemo, useContext} from "react";
 import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
-import styles from "src/styles/LocationRow.module.css"
 import { capitalize } from "src/lib/utilityFunctions";
+import {CustomProgressBar} from "./CustomProgressBar"
+import styles from "src/styles/LocationRow.module.css"
+
 export default function LocationRow({locName, selected}){
     
-    const ENDPOINT = "/api/v3/measurements?";
-
+    const ENDPOINT = "/api/v3/measurements?"; 
     const { preferences } = useContext(PreferenceContext);
     const sensorTypes = useSensorTypes("/api/v3/sensors/types");
 
@@ -23,15 +24,15 @@ export default function LocationRow({locName, selected}){
     const { measurements, pagination, isLoading, isLagging, error } = useMeasurements(url, {refreshInterval: 5000});
     
     if (error) {
-        return <div>No data</div>;
+        return <div className={styles.entireSection}>No data found for ${locName}</div>;
     }
     
     if(isLoading || !sensorTypes)
-    return <div>Loading again...</div>;
+    return (<CustomProgressBar />);
 
     const sensors = measurements[0].sensors;
 
-    const borderColor = selected ? "red" : "";
+    const borderColor = selected ? "red" : "#185693";
    
     return (
         <div style={{border: `3px solid ${borderColor}`}} className={styles.entireSection}>
