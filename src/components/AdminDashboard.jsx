@@ -1,9 +1,6 @@
-import { useContext, useMemo, useState } from "react";
 import Card from "src/components/Card";
 import React from 'react'
 import { HealthDashboard } from 'react-health-dashboard'
-import { ConstructionOutlined } from "@mui/icons-material";
-//import { healthData } from './adminHealthData'
 
 const healthData = [
   {
@@ -82,14 +79,18 @@ async function fetchSensorData() {
 // Fetches the data from health/status and puts the data in healthData
 async function fetchStatusData() {
   const response = await fetch('/api/v3/health/status');
+
   // waits until the request completes...
   const StatusData = await response.json();
   var today = new Date();
+
+  // Adds the current datetime for database and server.
   healthData[1].lastCheckTime = today
   healthData[2].lastCheckTime = today
   healthData[1].elements[0].lastCheckTime = today
   healthData[2].elements[0].lastCheckTime = today
 
+  // Checks if server is online and if so, show it
   if (StatusData.status.server == "OK") {
     healthData[1].status = 1.0
     healthData[1].elements[0].status = 1.0
@@ -99,6 +100,7 @@ async function fetchStatusData() {
     healthData[1].status = 0.0
     healthData[1].elements[0].status = 0.0
   }
+  // Checks if database is online and if so, show it
   if (StatusData.status.database == "OK") {
     healthData[2].status = 1.0
     healthData[2].elements[0].status = 1.0
