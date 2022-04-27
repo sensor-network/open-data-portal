@@ -39,7 +39,7 @@ const ComparisonGraph = ({
       : windowWidth < 1400
       ? Math.floor(data.length / 10)
       : Math.floor(data.length / 15);
-  }, [windowWidth]);
+  }, [windowWidth, data, error]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
