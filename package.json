@@ -12,8 +12,12 @@
     "fill-history-table": "ts-node ./scripts/fill-history-db.ts --compiler-options \"{\\\"module\\\":\\\"commonjs\\\"}\""
   },
   "dependencies": {
+    "@date-io/date-fns": "^2.13.1",
     "@emotion/react": "^11.8.1",
     "@emotion/styled": "^11.8.1",
+    "@material-ui/core": "^4.12.4",
+    "@material-ui/icons": "^4.11.3",
+    "@material-ui/styles": "^4.11.5",
     "@mui/icons-material": "^5.5.0",
     "@mui/lab": "^5.0.0-alpha.75",
     "@mui/material": "^5.5.0",
@@ -27,9 +31,9 @@
     "next": "^12.1.0",
     "nextjs-progressbar": "^0.0.14",
     "node-mocks-http": "^1.11.0",
+    "prop-types": "^15.8.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-health-dashboard": "^1.0.1",
     "react-leaflet": "^3.2.5",
     "react-modal": "^3.14.4",
     "recharts": "^2.1.9",
