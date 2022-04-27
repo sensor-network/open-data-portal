@@ -15,7 +15,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* error checks etc.*/
       if (!closest) {
-        const message = "no location found close enough.";
+        const message = "No location found close enough";
         console.log(`${req.method} /api/v3/locations/closest:: ${message}`);
         res.status(STATUS.NOT_FOUND).json({ message });
         return;
