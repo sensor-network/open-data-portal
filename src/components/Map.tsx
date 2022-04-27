@@ -1,27 +1,76 @@
-import { MapContainer, Marker, Popup, TileLayer, Circle } from "react-leaflet";
+import {
+  MapContainer,
+  Marker,
+  Popup,
+  TileLayer,
+  Circle,
+  useMapEvents,
+  useMap,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon.png";
-import { Icon, PointTuple } from "leaflet";
-import { useLocations } from "src/lib/hooks/useLocations";
+import { Icon, LatLngExpression, map, PointTuple } from "leaflet";
 import { useSummarizedData } from "src/lib/hooks/swr-extensions";
-import { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { PreferenceContext } from "src/pages/_app";
 import { urlWithParams, capitalize } from "src/lib/utilityFunctions";
 import { getPreferredUnitSymbol } from "~/lib/utils/load-preferences";
+import type { Location } from "~/lib/database/location";
 
-var greenIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
+/* available markers from here: https://github.com/pointhi/leaflet-color-markers */
+const getIcon = (color: string) =>
+  new Icon({
+    iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`,
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
 
-const PopupContent: React.FC<{ locationName: string }> = ({ locationName }) => {
+const LocationMarker: React.FC<{ location: Location }> = ({ location }) => {
+  const [selected, setSelected] = useState(false);
+  const position: PointTuple = [location.position.lat, location.position.long];
+  const map = useMap();
+  return (
+    <Marker
+      key={location.id}
+      position={position}
+      icon={getIcon("blue")}
+      eventHandlers={{
+        click: (e) => {
+          map.setView(e.latlng, map.getZoom(), { animate: true });
+        },
+      }}
+    >
+      <Popup
+        eventHandlers={{
+          add: () => {
+            setSelected(true);
+          },
+          remove: () => {
+            setSelected(false);
+          },
+        }}
+      >
+        {selected && (
+          <Circle center={position} radius={location.radiusMeters} />
+        )}
+        <div style={{ minWidth: 200 }}>
+          <h2 style={{ margin: 0 }}>{capitalize(location.name)}</h2>
+          <h3 style={{ margin: 0 }}>Latest data:</h3>
+          <LocationMarkerPopupContent locationName={location.name} />
+        </div>
+      </Popup>
+    </Marker>
+  );
+};
+
+const LocationMarkerPopupContent: React.FC<{ locationName: string }> = ({
+  locationName,
+}) => {
   const { preferences } = useContext(PreferenceContext);
   const url = useMemo(
     () =>
@@ -56,7 +105,22 @@ const PopupContent: React.FC<{ locationName: string }> = ({ locationName }) => {
   );
 };
 
-const Map = () => {
+const YouAreHereMarker = () => {
+  /* displays a marker at the users current location, if the user has allowed to share their location */
+  const [position, setPosition] = useState<LatLngExpression | null>(null);
+  const map = useMap();
+  useEffect(() => {
+    map.locate().on("locationfound", (e) => {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+    });
+  }, [map]);
+  return position === null ? null : (
+    <Marker position={position} icon={getIcon("red")} />
+  );
+};
+
+const Map: React.FC<{}> = () => {
   const { locations } = useContext(PreferenceContext);
   const mapCenter = [56.178516, 15.60261] as PointTuple;
 
@@ -71,26 +135,12 @@ const Map = () => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <YouAreHereMarker />
       {locations?.map((l) => (
-        <Marker
-          key={l.id}
-          position={[l.position.lat, l.position.long]}
-          icon={greenIcon}
-        >
-          <Popup>
-            <div style={{ minWidth: 200 }}>
-              <h2 style={{ margin: 0 }}>{capitalize(l.name)}</h2>
-              <h3 style={{ margin: 0 }}>Latest data:</h3>
-              <PopupContent locationName={l.name} />
-            </div>
-          </Popup>
-        </Marker>
+        <LocationMarker location={l} />
       ))}
     </MapContainer>
   );
 };
 
 export default Map;
-
-//Its possible to use this inside the popup to visually get the radius for the location. But currently there is no way to remove the circle.
-//<Circle center={l.position} radius={l.radius_meters} />
