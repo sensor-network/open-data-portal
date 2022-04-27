@@ -45,7 +45,7 @@ const Dashboard: React.FC = () => {
   }, [locations]);
 
   return (
-    <Card title="Dashboard" margin={20}>
+    <Card title="Dashboard" styles={{ margin: "40px 0 0 0" }}>
       <div style={{ display: "flex" }}>
         {locations ? (
           <>
