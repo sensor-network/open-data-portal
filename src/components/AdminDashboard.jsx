@@ -1,6 +1,5 @@
 import Card from "src/components/Card";
 import React from 'react'
-//import { HealthDashboard } from 'react-health-dashboard'
 import HealthDashboard from './HealthDashboard'
 
 const healthData = [
