@@ -15,7 +15,7 @@
     /*align-items: center;
     justify-content: center; these two rows do nothing i think.*/
     /*border: 1px solid black;*/
-    font-size: x-large;
+    font-size: inherit;
 }
 .sensor{
     display: flex;
@@ -23,12 +23,78 @@
     min-width: max-content;
     padding: 10px;
    /* border: 1px solid black;*/
-    font-size: x-large;
+    font-size: inherit;
     min-width: 5ch;/*So that empty pH doesn't mess up other columns*/
 }
 .loc{
     margin-right: 15px;
     /*border: 1px solid black;*/
     min-width: 15ch;/*So that different locations align as long as there is no location above 15 characters*/
-    font-size: x-large;
+    font-size: inherit;
+}
+
+/* Extra small devices (phones, 600px and down) */
+@media only screen and (max-width: 600px) {
+
+    .entireSection{
+
+    }
+
+    .sensors{
+
+    }
+
+    .sensor{
+
+    }
+
+    .loc{
+        
+    }
+
+}
+
+/* Small devices (portrait tablets and large phones, 600px and up) */
+@media only screen and (max-width: 750px) {
+
+    .entireSection{
+        font-size: xx-small;
+    }
+
+
+}
+
+@media only screen and (min-width: 750px) {
+
+    .entireSection{
+        font-size: x-small;
+    }
+}
+
+@media only screen and (min-width: 1000px) {
+
+    .entireSection{
+        font-size: small;
+    }
+}
+
+@media only screen and (min-width: 1300px) {
+
+    .entireSection{
+        font-size: medium;
+    }
+}
+
+@media only screen and (min-width: 1700px) {
+
+    .entireSection{
+        font-size: large;
+    }
+}
+
+@media only screen and (min-width: 2300px) {
+
+    .entireSection{
+        font-size: x-large;
+    }
 }
