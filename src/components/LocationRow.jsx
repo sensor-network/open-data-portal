@@ -68,7 +68,7 @@ export default function LocationRow({ locName, selected }) {
           )
         })}
       </div>
-      Updated {formatRelative(addDays(new Date(measurements[0].time), 0), new Date())}
+      Updated {formatRelative(addDays(new Date(measurements[0].time), 0), new Date()).toLocaleString()}
     </div>
   );
 }
