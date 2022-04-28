@@ -1,9 +1,9 @@
-import { urlWithParams } from "../lib/utilityFunctions";
+import { urlWithParams, capitalize } from "../lib/utilityFunctions";
 import { useMeasurements } from "../lib/hooks/swr-extensions";
 import { PreferenceContext } from "../pages/_app";
 import { useMemo, useContext } from "react";
+import { formatRelative, addDays } from "date-fns";
 import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
-import { capitalize } from "src/lib/utilityFunctions";
 import {CustomProgressBar} from "./CustomProgressBar"
 import styles from "src/styles/LocationRow.module.css"
 
@@ -32,10 +32,14 @@ export default function LocationRow({ locName, selected }) {
 
 
   const borderColor = selected ? "red" : "#185693";
+    
+  if(error) return <div>No data found for {locName}</div>
 
   if (isLoading || !sensorTypes) return <CustomProgressBar/>;
 
   const sensors = measurements[0].sensors;
+
+  let date = new Date(measurements[0].time);
 
   return (
     <div
@@ -64,6 +68,7 @@ export default function LocationRow({ locName, selected }) {
           )
         })}
       </div>
+      Updated {formatRelative(addDays(new Date(measurements[0].time), 0), new Date())}
     </div>
   );
 }
