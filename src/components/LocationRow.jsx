@@ -4,15 +4,13 @@ import { PreferenceContext } from "../pages/_app";
 import { useMemo, useContext } from "react";
 import { formatRelative, addDays } from "date-fns";
 import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
-import {CustomProgressBar} from "./CustomProgressBar"
-import styles from "src/styles/LocationRow.module.css"
+import { CustomProgressBar } from "./CustomProgressBar";
+import styles from "src/styles/LocationRow.module.css";
+import { getPreferredUnitSymbol } from "src/lib/utils/load-preferences";
 
-
-
+const ENDPOINT = "/api/v3/measurements?";
 
 export default function LocationRow({ locName, selected }) {
-
-  const ENDPOINT = "/api/v3/measurements?";
   const { preferences } = useContext(PreferenceContext);
   const sensorTypes = useSensorTypes("/api/v3/sensors/types");
 
@@ -24,51 +22,52 @@ export default function LocationRow({ locName, selected }) {
         locationName: locName,
         temperatureUnit: preferences.temperatureUnit.symbol,
         conductivityUnit: preferences.conductivityUnit.symbol,
-      }), [preferences]
+      }),
+    [preferences, locName]
   );
 
-  const { measurements, pagination, isLoading, isLagging, error } =
-    useMeasurements(url, { refreshInterval: 5000 });
+  const { measurements, isLoading, error } = useMeasurements(url, {
+    refreshInterval: 5000,
+  });
 
-
-  const borderColor = selected ? "red" : "#185693";
-    
-  if(error) return <div>No data found for {locName}</div>
-
-  if (isLoading || !sensorTypes) return <CustomProgressBar/>;
+  if (error) return <div>No data found for {locName}</div>;
+  if (isLoading || !sensorTypes) return <CustomProgressBar />;
 
   const sensors = measurements[0].sensors;
-
-  let date = new Date(measurements[0].time);
+  const date = new Date(measurements[0].time);
+  const borderColor = selected ? "red" : "#185693";
 
   return (
     <div
       style={{ border: `3px solid ${borderColor}` }}
       className={styles.entireSection}
     >
-      <div className={styles.loc}>{locName}</div>
+      <div className={styles.loc}>
+        <b>Location</b>
+        <p>{locName}</p>
+      </div>
 
       <div className={styles.sensors}>
         {sensorTypes.map((sensor, idx) => {
-          
-          const unit = capitalize(preferences[`${sensor}Unit`]?.symbol);
+          const unitKey = sensor.toLowerCase() + "Unit";
+          const unit = getPreferredUnitSymbol(unitKey, preferences);
           const sensorName = sensor === "ph" ? "pH" : capitalize(sensor);
 
-          if(!unit) //Not returning () in case no unit, e.g for pH.
-            return (
+          return (
             <div key={idx} className={styles.sensor}>
               <b>{sensorName}</b>
-              <p>{sensors[sensor]}</p>
-            </div>)
-          return(
-          <div key={idx} className={styles.sensor}>
-            <b>{sensorName} ({unit})</b>
-            <p>{sensors[sensor]}</p>
-          </div>
-          )
+              <p>
+                {sensors[sensor]} {capitalize(unit)}
+              </p>
+            </div>
+          );
         })}
       </div>
-      Updated {formatRelative(addDays(new Date(measurements[0].time), 0), new Date()).toLocaleString()}
+
+      <div className={styles.sensor}>
+        <b>Updated</b>
+        <p>{formatRelative(date, new Date()).toLocaleString()}</p>
+      </div>
     </div>
   );
 }
