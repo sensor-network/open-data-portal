@@ -26,7 +26,7 @@ const paneStyle = {
 const mapCenter: PointTuple = [56.178516, 15.60261];
 
 const Dashboard: React.FC = () => {
-  const {locations} = useContext(PreferenceContext);
+  const { locations } = useContext(PreferenceContext);
   const TIMEOUT_MS = 5000;
 
   const [selectedLocationIndex, setSelectedIndex] = useState(0);
