@@ -173,7 +173,7 @@ const DataColumns: React.FC<{
                   comparedToLastYear,
                   comparedToArchipelago,
                 ].map((section, index) => (
-                  <div className={styles.row}>
+                  <div className={styles.row} key={index}>
                     <span
                       style={{
                         color: section.color,
