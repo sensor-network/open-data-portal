@@ -5,7 +5,7 @@
 
 import React from "react";
 import "date-fns";
-import { makeStyles } from "@material-ui/styles";
+import { makeStyles } from "@mui/styles";
 import {
   Table,
   TableBody,
@@ -21,11 +21,11 @@ import {
   ListItemText,
   ListItemIcon,
   Tooltip,
-} from "@material-ui/core";
-import ErrorIcon from "@material-ui/icons/Error";
-import ExpandLess from "@material-ui/icons/ExpandLess";
-import ExpandMore from "@material-ui/icons/ExpandMore";
-import FiberManualRecordIcon from "@material-ui/icons/FiberManualRecord";
+} from "@mui/material";
+import ErrorIcon from "@mui/icons-material/Error";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 const useStyles = makeStyles((theme) => ({
   root: {
