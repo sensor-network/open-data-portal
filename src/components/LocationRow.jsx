@@ -47,7 +47,7 @@ export default function LocationRow({ locName, selected }) {
       <div className={styles.sensors}>
         {sensorTypes.map((sensor, idx) => (
           <div key={idx} className={styles.sensor}>
-            <b>{sensor === "ph" ? "pH" : capitalize(sensor)}</b>{" "}
+            <b>{sensor === "ph" ? "pH" : capitalize(sensor)}</b>
             <p>{sensors[sensor]}</p>
           </div>
         ))}
