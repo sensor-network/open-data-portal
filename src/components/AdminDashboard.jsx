@@ -39,6 +39,14 @@ const healthData = [
         datapoints: []
       }
     ]
+  },
+  {
+    name: 'Stations',
+    status: 1.0,
+    lastCheckTime: 0,
+    datapoints: [],
+    elements: [
+    ]
   }
 ]
 
@@ -76,6 +84,44 @@ async function fetchSensorData() {
   }
 }
 
+
+
+const emptylist_station = []
+
+// Fetches the data from health/stations and puts the data in healthData
+async function fetchStationData() {
+  const response = await fetch('/api/v3/health/stations');
+  // waits until the request completes...
+  const stationData = await response.json();
+
+  for (var i = 0; i < stationData.length; i++) {
+
+    if (stationData[i].status == "OK") {
+      emptylist_station.push({"name":stationData[i].location, "status": 1.0, lastCheckTime: stationData[i].lastActive, datapoints: []})
+      healthData[3].lastCheckTime = stationData[i].lastActive
+    }
+    else if (stationData[i].status == "PARTIALLY FAULTY") {
+      emptylist_station.push({"name":stationData[i].location, "status": 0.5, lastCheckTime: stationData[i].lastActive, datapoints: []})
+      healthData[3].lastCheckTime = stationData[i].lastActive
+    }
+    else {
+      emptylist_station.push({"name":stationData[i].location, "status": 0.0, lastCheckTime: stationData[i].lastActive, datapoints: []})
+      healthData[3].lastCheckTime = stationData[i].lastActive
+    }
+  }
+
+  for (var i = 0; i < emptylist_station.length; i++) {
+    healthData[3].elements?.push(emptylist_station[i])}
+
+  for (let i = 0; i < healthData[3].elements.length; i++) {
+    if (healthData[3].elements[i].status === 0.0)
+    {
+      healthData[3].status = 0.0
+    }
+  }
+}
+
+
 // Fetches the data from health/status and puts the data in healthData
 async function fetchStatusData() {
   const response = await fetch('/api/v3/health/status');
@@ -110,13 +156,14 @@ async function fetchStatusData() {
     healthData[2].elements[0].status = 0.0
     healthData[0].status = null
     healthData[0].elements = [{"name":"No sensor data avaliable, database is down.", datapoints: []}]
-
+    healthData[3].status = null
+    healthData[3].elements = [{"name":"No station data avaliable, database is down.", datapoints: []}]
   }
 }
 
 fetchSensorData()
 fetchStatusData()
-
+fetchStationData()
 
 const AdminView = () => {
 
