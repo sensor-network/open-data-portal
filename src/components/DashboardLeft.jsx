@@ -1,5 +1,4 @@
 import LocationRow from "src/components/LocationRow";
-import { Grid } from '@mui/material';
 
 
 const Left = ({locations, selectedLocation}) => {
