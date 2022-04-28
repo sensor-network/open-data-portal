@@ -57,7 +57,7 @@ export default function LocationRow({ locName, selected }) {
             <div key={idx} className={styles.sensor}>
               <b>{sensorName}</b>
               <p>
-                {sensors[sensor]} {capitalize(unit)}
+                {sensors[sensor]} {sensors[sensor] && capitalize(unit)}
               </p>
             </div>
           );
