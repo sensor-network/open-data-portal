@@ -1384,6 +1384,147 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": ["Locations"],
+        "summary": "Delete a location",
+        "description": "Delete a location. The locationId must be given in the URL. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "deleteLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the location to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The location was deleted successfully. The deleted value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "deletedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Hästö"
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "example": 56.183016
+                            },
+                            "lng": {
+                              "type": "number",
+                              "example": 15.58817
+                            }
+                          }
+                        },
+                        "radiusMeters": {
+                          "type": "number",
+                          "example": 100
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Location with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stations": {
@@ -1899,7 +2040,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "The id of the station to get",
+            "description": "The id of the station to update",
             "required": true,
             "schema": {
               "type": "number",
@@ -2005,6 +2146,163 @@
                     "fieldErrors": {
                       "type": "object",
                       "properties": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Station with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Stations"],
+        "summary": "Delete a station",
+        "description": "Delete a station. The stationId must be given in the URL. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "deleteStation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the station to delete",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The station was deleted successfully. The deleted value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "deletedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Hästö"
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "lat": {
+                                  "type": "number",
+                                  "example": 56.183016
+                                },
+                                "lng": {
+                                  "type": "number",
+                                  "example": 15.58817
+                                }
+                              }
+                            },
+                            "radiusMeters": {
+                              "type": "number",
+                              "example": 100
+                            }
+                          }
+                        },
+                        "sensors": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
                     }
                   }
                 }

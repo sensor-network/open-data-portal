@@ -279,3 +279,15 @@ export const updateLocation = async ({
   );
   return result[0] as OkPacket;
 };
+
+export const deleteById = async ({ id }: { id: number }) => {
+  const connection = await getConnectionPool();
+  const result = await connection.query(
+    `
+      DELETE FROM station
+      WHERE id = ?
+  `,
+    [id]
+  );
+  return result[0] as OkPacket;
+};
