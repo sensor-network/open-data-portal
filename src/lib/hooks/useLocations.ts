@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { fetcher } from "src/lib/utilityFunctions";
 import type { Location } from 'src/lib/database/location';
 
 export const useLocations = (url: string) => {
@@ -6,9 +7,14 @@ export const useLocations = (url: string) => {
 
   useEffect(() => {
     const fetchLocations = async () => {
-      const res = await fetch(url);
-      const locations: Array<Location> = await res.json();
-      setLocations(locations);
+      try {
+        const locations: Location[] = await fetcher(url);
+        setLocations(locations);
+      }
+      catch (e) {
+        console.error(`useLocations::`, e);
+        setLocations([]);
+      }
     };
     fetchLocations();
   }, [url]);

@@ -2,7 +2,8 @@ import { useContext, useMemo, useState } from "react";
 
 import Pagination from "@mui/material/Pagination";
 import {
-  DataGrid, gridPageCountSelector,
+  DataGrid,
+  gridPageCountSelector,
   gridPageSelector,
   useGridApiContext,
   useGridSelector,
@@ -21,7 +22,7 @@ import { PreferenceContext } from "../pages/_app";
 import { urlWithParams, capitalize, round } from "../lib/utilityFunctions";
 import { formatISO } from "date-fns";
 
-const ENDPOINT = "http://localhost:3000/api/v2/measurements?";
+const ENDPOINT = "/api/v3/measurements?";
 
 function MyExportButton() {
   return (
@@ -43,32 +44,38 @@ const ServerPaginationGrid = () => {
 
   /* Get correct url for fetching the filtered data */
   const { preferences } = useContext(PreferenceContext);
-  const url = useMemo(() => urlWithParams(ENDPOINT, {
-    temperature_unit: preferences.temperature_unit.symbol,
-    conductivity_unit: preferences.conductivity_unit.symbol,
-    location_name: preferences.location.symbol,
-    page: page + 1, /* mui grid starts indexing at 0, api at 1 */
-    page_size: pageSize,
-    start_date: formatISO(startDate),
-    end_date: formatISO(endDate),
-  }), [preferences, page, pageSize, startDate, endDate]);
+  const url = useMemo(
+    () =>
+      urlWithParams(ENDPOINT, {
+        temperatureUnit: preferences.temperatureUnit.symbol,
+        conductivityUnit: preferences.conductivityUnit.symbol,
+        locationName: preferences.location.symbol,
+        page: page + 1 /* mui grid starts indexing at 0, api at 1 */,
+        pageSize: pageSize,
+        startTime: formatISO(startDate),
+        endTime: formatISO(endDate),
+      }),
+    [preferences, page, pageSize, startDate, endDate]
+  );
 
-  const { measurements, pagination, isLoading, isLagging } = useMeasurements(url);
+  const { measurements, pagination, isLoading, isLagging, error } =
+    useMeasurements(url);
 
-  const sensorTypes = useSensorTypes("/api/v2/sensors/types");
+  const sensorTypes = useSensorTypes("/api/v3/sensors/types");
 
   const gridColumns = useMemo(() => {
     const columns = [
       {
-        field: "time", width: 180,
+        field: "time",
+        width: 180,
         headerName: `Time (${Intl.DateTimeFormat().resolvedOptions().locale})`,
-        valueGetter: time => new Date(time.value).toLocaleString(),
+        valueGetter: (time) => new Date(time.value).toLocaleString(),
       },
       {
-        field: "location_name",
+        field: "locationName",
         width: 150,
         headerName: "Location Name",
-        valueGetter: (measurement) => measurement.row.location_name,
+        valueGetter: (measurement) => measurement.row.locationName,
       },
       {
         field: "longitude",
@@ -83,13 +90,17 @@ const ServerPaginationGrid = () => {
         valueGetter: (measurement) => round(measurement.row.position.lat, 6),
       },
     ];
-    const sensorColumns = sensorTypes?.map(sensor => {
-      const unit = preferences[`${sensor}_unit`]?.symbol;
-      const header = unit ? `${capitalize(sensor)} (${capitalize(unit)})` :
-        sensor === "ph" ? "pH" :
-          capitalize(sensor);
+    const sensorColumns = sensorTypes?.map((sensor) => {
+      const unit = preferences[`${sensor}Unit`]?.symbol;
+      const header = unit
+        ? `${capitalize(sensor)} (${capitalize(unit)})`
+        : sensor === "ph"
+        ? "pH"
+        : capitalize(sensor);
       return {
-        field: sensor, headerName: header, width: 150,
+        field: sensor,
+        headerName: header,
+        width: 150,
         valueGetter: (measurement) => measurement.row.sensors[sensor],
       };
     });
@@ -113,13 +124,15 @@ const ServerPaginationGrid = () => {
     };
 
     return (
-      <div style={{
-        width: "100%",
-        right: 0,
-        display: "flex",
-        justifyContent: "flex-end",
-        alignItems: "center",
-      }}>
+      <div
+        style={{
+          width: "100%",
+          right: 0,
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+        }}
+      >
         <ThemeProvider theme={theme}>
           <Pagination
             color="primary"
@@ -127,43 +140,62 @@ const ServerPaginationGrid = () => {
             page={page + 1}
             onChange={(event, value) => apiRef.current.setPage(value - 1)}
           />
-          <TextField size="small" label="Page" value={textFieldValue}
-                     onChange={e => setTextFieldValue(e.target.value)}/>
-          <Button variant="contained" color="primary" onClick={validateInput}>Go To</Button>
+          <TextField
+            size="small"
+            label="Page"
+            value={textFieldValue}
+            onChange={(e) => setTextFieldValue(e.target.value)}
+          />
+          <Button variant="contained" color="primary" onClick={validateInput}>
+            Go To
+          </Button>
         </ThemeProvider>
       </div>
     );
   };
 
   return (
-    <Card title="Explore the data on your own" margin="40px 0 0 0">
+    <Card
+      title="Explore the data on your own"
+      styles={{ margin: "40px 0 0 0" }}
+    >
       <div style={{ height: 750, margin: "20px 0" }}>
-        {isLoading ? <CustomProgressBar/> : <DataGrid
-          rows={measurements}
-          columns={gridColumns}
-          rowCount={pagination?.total_rows}
-          loading={isLagging || isLoading}
-          getRowId={row => row.time}
-          components={{ LoadingOverlay: CustomProgressBar, Pagination: CustomPagination, Toolbar: MyExportButton }}
-          pagination
-          paginationMode={"server"}
-          page={page}
-          pageSize={pageSize}
-          rowsPerPageOptions={[5, 10, 20, 50, 100]}
-          onPageChange={page => setPage(page)}
-          onPageSizeChange={pageSize => setPageSize(pageSize)}
-        />}
+        {isLoading ? (
+          <CustomProgressBar />
+        ) : error ? (
+          <div>No data found</div>
+        ) : (
+          <DataGrid
+            rows={measurements}
+            columns={gridColumns}
+            rowCount={pagination?.totalRows}
+            loading={isLagging || isLoading}
+            getRowId={(row) => row.time}
+            components={{
+              LoadingOverlay: CustomProgressBar,
+              Pagination: CustomPagination,
+              Toolbar: MyExportButton
+            }}
+            pagination
+            paginationMode={"server"}
+            page={page}
+            pageSize={pageSize}
+            rowsPerPageOptions={[5, 10, 20, 50, 100]}
+            onPageChange={(page) => setPage(page)}
+            onPageSizeChange={(pageSize) => setPageSize(pageSize)}
+          />
+        )}
       </div>
 
       <div>
         <DateRangeSelector
-          startDate={startDate} setStartDate={setStartDate}
-          endDate={endDate} setEndDate={setEndDate}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
         />
       </div>
-
     </Card>
-
   );
 };
 
