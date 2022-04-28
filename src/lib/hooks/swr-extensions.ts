@@ -97,6 +97,24 @@ export const useSummarizedData = (
   };
 };
 
+export const useSummary = (
+  url: string,
+  swrOptions?: { [key: string]: any }
+) => {
+  const { data, error } = useSWR<{
+    summary: Summary;
+    measurements: SummarizedMeasurement[];
+  }>(url, {
+    fetcher: () => fetcher(url),
+    ...swrOptions,
+  });
+  return {
+    summary: data?.summary,
+    error: error,
+    isLoading: !data && !error,
+  };
+};
+
 export const useSummarizedMeasurements = (
   url: string,
   swrOptions?: { [key: string]: any }
