@@ -14,9 +14,9 @@ function formatSensorStatus(sensorData) {
     elements: [],
   };
   for (const sensor of sensorData) {
-    const { name, firmware, status, lastActive } = sensor;
+    const { id, name, firmware, status, lastActive } = sensor;
     formatted.elements.push({
-      name: `Name: ${name}, Firmware: ${firmware}`,
+      name: `Id: ${id}, Name: ${name}, Firmware: ${firmware}`,
       status: status === "OK" ? 1.0 : 0.0,
       lastCheckTime: lastActive,
       datapoints: [],
@@ -98,7 +98,7 @@ function formatServerStatus(servicesData) {
 
   const formatted = {
     name: "Services",
-    status: 1.0,
+    status: status.database === "UP" ? 1.0 : 0.5, // server is always up
     lastCheckTime: new Date(),
     datapoints: [],
     elements: [server, database],
@@ -122,21 +122,18 @@ const AdminView = () => {
   });
 
   const healthData = useMemo(() => {
-    console.log(sensorHealth);
     if (!sensorHealth || !servicesHealth) {
       return null;
     }
-    const formatted = formatSensorStatus(sensorHealth);
-    console.log(formatted);
     return [
       formatServerStatus(servicesHealth),
-      formatted,
       //formatStationStatus(stationHealth),
+      formatSensorStatus(sensorHealth),
     ];
-  }, [servicesHealth, sensorHealth]);
+  }, [servicesHealth, /* stationHealth, */ sensorHealth]);
 
   return (
-    <Card title="Admin view" margin="40px 0 0 0">
+    <Card title="Admin view" styles={{ margin: "40px 0 0 0" }}>
       {healthData && <HealthDashboard data={healthData} />}
     </Card>
   );
