@@ -1,7 +1,7 @@
 import useSWR, { Middleware, SWRHook } from "swr";
 import { useRef, useEffect, useCallback } from "react";
 
-import { fetcher as defaultFetcher } from "src/lib/utilityFunctions";
+import { fetcher } from "src/lib/utilityFunctions";
 import type { Measurement } from "~/lib/database/measurement";
 import type { Pagination } from "~/pages/api/v3/measurements";
 import type {
@@ -53,13 +53,17 @@ export const laggy: Middleware = (useSWRNext: SWRHook) => {
 };
 
 /* Wrapper for SWR using 'laggy' data */
-export const useMeasurements = (url: string, fetcher = defaultFetcher) => {
+export const useMeasurements = (
+  url: string,
+  swrOptions?: { [key: string]: any }
+) => {
   // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
   const { data, isLagging, error } = useSWR<{
     measurements: Measurement;
     pagination: Pagination;
   }>(url, {
     fetcher: () => fetcher(url),
+    ...swrOptions,
     use: [laggy],
   });
   return {
@@ -71,13 +75,17 @@ export const useMeasurements = (url: string, fetcher = defaultFetcher) => {
   };
 };
 
-export const useSummarizedData = (url: string, fetcher = defaultFetcher) => {
+export const useSummarizedData = (
+  url: string,
+  swrOptions?: { [key: string]: any }
+) => {
   // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
   const { data, isLagging, error } = useSWR<{
     summary: Summary;
     measurements: SummarizedMeasurement[];
   }>(url, {
     fetcher: () => fetcher(url),
+    ...swrOptions,
     use: [laggy],
   });
 
@@ -89,9 +97,27 @@ export const useSummarizedData = (url: string, fetcher = defaultFetcher) => {
   };
 };
 
+export const useSummary = (
+  url: string,
+  swrOptions?: { [key: string]: any }
+) => {
+  const { data, error } = useSWR<{
+    summary: Summary;
+    measurements: SummarizedMeasurement[];
+  }>(url, {
+    fetcher: () => fetcher(url),
+    ...swrOptions,
+  });
+  return {
+    summary: data?.summary,
+    error: error,
+    isLoading: !data && !error,
+  };
+};
+
 export const useSummarizedMeasurements = (
   url: string,
-  fetcher = defaultFetcher
+  swrOptions?: { [key: string]: any }
 ) => {
   // @ts-ignore - isLagging field added by 'laggy' middleware. Not sure how to type this.
   const { data, isLagging, error } = useSWR<{
@@ -99,6 +125,7 @@ export const useSummarizedMeasurements = (
     measurements: SummarizedMeasurement[];
   }>(url, {
     fetcher: () => fetcher(url),
+    ...swrOptions,
     use: [laggy],
   });
 

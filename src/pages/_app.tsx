@@ -34,7 +34,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
     <>
       <NextNProgress
         color={"#185693"}
-        height={5}
+        height={8}
         options={{ showSpinner: false }}
       />
       <PreferenceContext.Provider value={{ preferences, locations }}>
