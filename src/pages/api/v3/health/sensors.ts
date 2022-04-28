@@ -19,7 +19,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /* respond with 404 with appropriate message if no stations matching filter was found */
     if (!sensors.length) {
       const message = `No sensors found.`;
-      console.log(`${req.method} /api/v3/sensors:: ${message}`);
+      console.log(`${req.method} /api/v3/health/sensors:: ${message}`);
       res.status(STATUS.NOT_FOUND).json({ message });
       return;
     }
@@ -27,7 +27,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /* else respond with 200 and the stations matching the query */
     res.status(STATUS.OK).json(sensors);
   } catch (e) {
-    console.error(`${req.method}: /api/v3/sensors/status::`, e);
+    console.error(`${req.method}: /api/v3/health/sensors::`, e);
     res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
   }
 };

@@ -18,9 +18,7 @@
   "paths": {
     "/measurements": {
       "get": {
-        "tags": [
-          "Measurements"
-        ],
+        "tags": ["Measurements"],
         "summary": "Gets a collection of measurements",
         "description": "Retrieves measurement-data, including the selected `pagination`-options and `units` the data is returned in. The `measurements`-property is an array of datapoints. Location filters applies in the following order: `locationName` -> `lat/long`.",
         "operationId": "getData",
@@ -342,9 +340,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Measurements"
-        ],
+        "tags": ["Measurements"],
         "summary": "Creates a new measurement",
         "description": "Adds a new set of measurements to the database. The inserted measurements are returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
         "security": [
@@ -353,8 +349,7 @@
           }
         ],
         "operationId": "createMeasurements",
-        "parameters": [
-        ],
+        "parameters": [],
         "requestBody": {
           "description": "Request body has to follow this schema. Not supplying units will make them fallback to the respective SI-unit - Kelvin (`k`) for temperature and Siemens per meter (`spm`) for conductivity. See `GET: /measurements` for a list of the supported units.",
           "content": {
@@ -384,12 +379,9 @@
                     "type": "array",
                     "items": {
                       "type": "object",
-                      "required": [
-                        "sensorId",
-                        "value"
-                      ],
+                      "required": ["id", "value"],
                       "properties": {
-                        "sensorId": {
+                        "id": {
                           "type": "number",
                           "format": "integer",
                           "example": 1
@@ -537,9 +529,7 @@
     },
     "/measurements/history": {
       "get": {
-        "tags": [
-          "Measurements"
-        ],
+        "tags": ["Measurements"],
         "summary": "Get summary of history data",
         "description": "Retrieves a summary of the data for a selected time period. The data is selected more sparse than if querying `/measurements`. For example, the default density for querying a years worth of data is 1 measurement per week.",
         "operationId": "getMeasurementsHistory",
@@ -794,9 +784,7 @@
     },
     "/locations": {
       "get": {
-        "tags": [
-          "Locations"
-        ],
+        "tags": ["Locations"],
         "summary": "Gets the available locations",
         "description": "Retrieves a JSON array with all the available locations. Filter options are taken in the following order: `name` -> `lat/long`.",
         "operationId": "getLocation",
@@ -967,9 +955,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Locations"
-        ],
+        "tags": ["Locations"],
         "security": [
           {
             "bearerAuth": []
@@ -994,7 +980,7 @@
                   },
                   "long": {
                     "type": "number",
-                    "example": 15.588170
+                    "example": 15.58817
                   },
                   "rad": {
                     "type": "number",
@@ -1031,7 +1017,7 @@
                         },
                         "long": {
                           "type": "number",
-                          "example": 15.588170
+                          "example": 15.58817
                         }
                       }
                     },
@@ -1119,9 +1105,7 @@
     },
     "/locations/{id}": {
       "get": {
-        "tags": [
-          "Locations"
-        ],
+        "tags": ["Locations"],
         "summary": "Gets a single location with a given id",
         "description": "Gets a single location with a given id. The id is passed in the url-parameter.",
         "operationId": "getLocationById",
@@ -1194,8 +1178,7 @@
                     },
                     "fieldErrors": {
                       "type": "object",
-                      "properties": {
-                      }
+                      "properties": {}
                     }
                   }
                 }
@@ -1237,9 +1220,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Locations"
-        ],
+        "tags": ["Locations"],
         "summary": "Update a location",
         "description": "Update a location. The locationId must be given in the URL. Updated values should be given in the request body. Currently, its only possible to update the `name` of a location, which is useful if your locations have been generated for you. Authorization is required by a `Bearer` token in the `Authorization`-header.",
         "security": [
@@ -1403,13 +1384,152 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": ["Locations"],
+        "summary": "Delete a location",
+        "description": "Delete a location. The locationId must be given in the URL. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "deleteLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the location to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The location was deleted successfully. The deleted value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "deletedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Hästö"
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "example": 56.183016
+                            },
+                            "lng": {
+                              "type": "number",
+                              "example": 15.58817
+                            }
+                          }
+                        },
+                        "radiusMeters": {
+                          "type": "number",
+                          "example": 100
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Location with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stations": {
       "get": {
-        "tags": [
-          "Stations"
-        ],
+        "tags": ["Stations"],
         "summary": "Gets the available stations",
         "description": "Retrieves a JSON array with all the available stations. Filter options are taken in the following order: `stationId` -> `locationName` -> `sensorId` -> `sensorType`.",
         "operationId": "getStations",
@@ -1608,9 +1728,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Stations"
-        ],
+        "tags": ["Stations"],
         "summary": "Creates a new station",
         "security": [
           {
@@ -1754,9 +1872,7 @@
     },
     "/stations/{id}": {
       "get": {
-        "tags": [
-          "Stations"
-        ],
+        "tags": ["Stations"],
         "summary": "Gets a single station with a given id",
         "description": "Gets a single station with a given id. The id is passed in the url-parameter.",
         "operationId": "getStationById",
@@ -1869,8 +1985,7 @@
                     },
                     "fieldErrors": {
                       "type": "object",
-                      "properties": {
-                      }
+                      "properties": {}
                     }
                   }
                 }
@@ -1912,9 +2027,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Stations"
-        ],
+        "tags": ["Stations"],
         "summary": "Update a station",
         "description": "Update a station. The stationId must be given in the URL. Updated values should be given in the request body. Currently, its only possible to update the `locationId` of a station. Authorization is required by a `Bearer` token in the `Authorization`-header.",
         "security": [
@@ -1927,7 +2040,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "The id of the station to get",
+            "description": "The id of the station to update",
             "required": true,
             "schema": {
               "type": "number",
@@ -2032,8 +2145,164 @@
                     },
                     "fieldErrors": {
                       "type": "object",
+                      "properties": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Station with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Stations"],
+        "summary": "Delete a station",
+        "description": "Delete a station. The stationId must be given in the URL. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "deleteStation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the station to delete",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The station was deleted successfully. The deleted value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "deletedValue": {
+                      "type": "object",
                       "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Hästö"
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "lat": {
+                                  "type": "number",
+                                  "example": 56.183016
+                                },
+                                "lng": {
+                                  "type": "number",
+                                  "example": 15.58817
+                                }
+                              }
+                            },
+                            "radiusMeters": {
+                              "type": "number",
+                              "example": 100
+                            }
+                          }
+                        },
+                        "sensors": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
                       }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
                     }
                   }
                 }
@@ -2093,9 +2362,7 @@
     },
     "/sensors": {
       "get": {
-        "tags": [
-          "Sensors"
-        ],
+        "tags": ["Sensors"],
         "summary": "Gets all available sensors.",
         "description": "Retrieves a JSON array with all the available sensors. Filter options are taken in the following order: `name` -> `type`",
         "operationId": "getSensors",
@@ -2219,9 +2486,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Sensors"
-        ],
+        "tags": ["Sensors"],
         "summary": "Adds a new sensor",
         "description": "Adds a new sensor to the database. The inserted sensor is returned to the client. Authorization is required by a `Bearer` token in the `Authorization`-header.",
         "security": [
@@ -2355,9 +2620,7 @@
     },
     "/sensors/{id}": {
       "get": {
-        "tags": [
-          "Sensors"
-        ],
+        "tags": ["Sensors"],
         "summary": "Gets a single sensor with a given id",
         "description": "Gets a single sensor with a given id. The id is passed in the url-parameter.",
         "operationId": "getSensorById",
@@ -2418,8 +2681,7 @@
                     },
                     "fieldErrors": {
                       "type": "object",
-                      "properties": {
-                      }
+                      "properties": {}
                     }
                   }
                 }
@@ -2461,9 +2723,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "Sensors"
-        ],
+        "tags": ["Sensors"],
         "summary": "Update a sensor",
         "description": "Update a sensor. The sensorId must be given in the URL. Updated values should be given in the request body. You can not change the sensors `type` after its creation since it may have relations to `Measurements`. Authorization is required by a `Bearer` token in the `Authorization`-header.",
         "security": [
@@ -2562,8 +2822,7 @@
                     },
                     "fieldErrors": {
                       "type": "object",
-                      "properties": {
-                      }
+                      "properties": {}
                     }
                   }
                 }
@@ -2623,9 +2882,7 @@
     },
     "/sensors/types": {
       "get": {
-        "tags": [
-          "Sensors"
-        ],
+        "tags": ["Sensors"],
         "summary": "Gets all different sensor types used throughout the application",
         "description": "Retrieves a JSON array with all the sensor types used throughout the application.",
         "operationId": "getSensorTypes",
@@ -2680,11 +2937,40 @@
         }
       }
     },
-    "/sensors/status": {
+    "/health": {
       "get": {
-        "tags": [
-          "Sensors"
-        ],
+        "tags": ["Health"],
+        "summary": "Gets the health of the application",
+        "description": "Endpoint to see if the services are available. Returns two properties, server and database. Responses are OK or DOWN",
+        "operationId": "getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "server": {
+                      "type": "string",
+                      "example": "UP"
+                    },
+                    "database": {
+                      "type": "string",
+                      "example": "UP"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/sensors": {
+      "get": {
+        "tags": ["Health"],
         "summary": "Gets a collection of sensors including the last known status of each sensor",
         "description": "When a sensor tries to post a measurement, we record the result of the request. If it is successful, the sensor's status is updated to `OK`, else the status is set to the appropriate error message that occured during the failed request, for example `too_big` (i.e. the measurement wasn't in the valid range), `ER_DUP_ENTRY` (i.e. the sensor had already posted a measurement with the same time). With this endpoint, you can get a list of all sensors with their last known status, so that you could easily see if all the sensors are sending correct measurements.",
         "operationId": "getSensorStatus",
