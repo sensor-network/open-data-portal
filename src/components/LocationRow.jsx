@@ -45,12 +45,24 @@ export default function LocationRow({ locName, selected }) {
       <div className={styles.loc}>{locName}</div>
 
       <div className={styles.sensors}>
-        {sensorTypes.map((sensor, idx) => (
+        {sensorTypes.map((sensor, idx) => {
+          
+          const unit = capitalize(preferences[`${sensor}Unit`]?.symbol);
+          const sensorName = sensor === "ph" ? "pH" : capitalize(sensor);
+
+          if(!unit) //Not returning () in case no unit, e.g for pH.
+            return (
+            <div key={idx} className={styles.sensor}>
+              <b>{sensorName}</b>
+              <p>{sensors[sensor]}</p>
+            </div>)
+          return(
           <div key={idx} className={styles.sensor}>
-            <b>{sensor === "ph" ? "pH" : capitalize(sensor)}</b>
+            <b>{sensorName} ({unit})</b>
             <p>{sensors[sensor]}</p>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   );
