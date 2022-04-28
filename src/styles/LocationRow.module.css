@@ -5,7 +5,7 @@
     padding: 15px;
     border-radius: 0.75em;
     width: 100%;
-    font-size: xx-large;
+    font-size: x-large;
     background-color: rgb(250, 250, 250);
     box-shadow: 5px 10px 18px #726a6a;
 }
@@ -15,7 +15,7 @@
     /*align-items: center;
     justify-content: center; these two rows do nothing i think.*/
     /*border: 1px solid black;*/
-    font-size: xx-large;
+    font-size: x-large;
 }
 .sensor{
     display: flex;
@@ -23,12 +23,12 @@
     min-width: max-content;
     padding: 10px;
    /* border: 1px solid black;*/
-    font-size: xx-large;
+    font-size: x-large;
     min-width: 5ch;/*So that empty pH doesn't mess up other columns*/
 }
 .loc{
     margin-right: 15px;
     /*border: 1px solid black;*/
     min-width: 15ch;/*So that different locations align as long as there is no location above 15 characters*/
-    font-size: xx-large;
+    font-size: x-large;
 }
