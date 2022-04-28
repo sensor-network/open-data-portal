@@ -25,7 +25,7 @@ The sensors are the individual devices that will be used to collect data of a ce
 The following POST request to the `/sensors` endpoint will create a new `temperature` sensor, which I will
 name `rkz1000` (perhaps its model number) and it runs firmware `1.3.1`.
 
-*Note: The meta-data `name` and `firmware` are not mandatory and can be left out and updated later*
+_Note: The meta-data `name` and `firmware` are not mandatory and can be left out and updated later_
 
 ```sh
 POST: /api/<api_version>/sensors
@@ -52,8 +52,8 @@ sensor to a station.
 
 ### Create a new location where you will place the sensor station \<optional>
 
-*Note: You could just start uploading measurements from your sensor as it is, in which case the location will be created
-automatically.*
+_Note: You could just start uploading measurements from your sensor as it is, in which case the location will be created
+automatically._
 
 In order to create a location, send a POST request to the `/locations`
 endpoint. In this example, I will create a new location for `Gräsvik`.
@@ -85,8 +85,8 @@ link a sensor station to this location.
 
 ### Link your sensors to your location with a sensor station \<optional>
 
-*Note: By not linking your sensors to a station some API queries will not function properly, and your sensors may not be
-included in certain queries. It is therefore recommended performing this step.*
+_Note: By not linking your sensors to a station some API queries will not function properly, and your sensors may not be
+included in certain queries. It is therefore recommended performing this step._
 
 A sensor station is a collection of sensors that are placed in a location. The following POST request will create a new
 station with the sensor we just created. I will also place the station in the location we created earlier.
@@ -115,8 +115,8 @@ Now everything is set up, and we can start collecting data.
 
 ## Collecting data
 
-*Note: all the previous steps are one-time-setups and can be done remotely using e.g. Curl. The following should only be
-done using proper sensors to ensure the data displayed is accurate.*
+_Note: all the previous steps are one-time-setups and can be done remotely using e.g. Curl. The following should only be
+done using proper sensors to ensure the data displayed is accurate._
 
 ### Upload measurements
 
@@ -143,7 +143,7 @@ JSON BODY:
       "long": 15.589274
     },
     "sensors": [
-        { "sensorId": 1, "value": 23.5, "unit": "c" }
+        { "id": 1, "value": 23.5, "unit": "c" }
     ]
 }
 
@@ -158,7 +158,7 @@ $ curl --request POST \
       "long": 15.589274
     },
 	"sensors": [
-		{"sensorId": 1, "value": 23.5, "unit": "c"}
+		{"id": 1, "value": 23.5, "unit": "c"}
 	]
 }'
 ```
@@ -176,12 +176,12 @@ solids, just specify multiple sensors in the `sensors` field:
   },
   "sensors": [
     {
-      "sensorId": 1,
+      "id": 1,
       "value": 23.5,
       "unit": "c"
     },
     {
-      "sensorId": 2,
+      "id": 2,
       "value": 40000,
       "unit": "ppm"
     }
@@ -191,12 +191,12 @@ solids, just specify multiple sensors in the `sensors` field:
 
 ### Monitoring the sensors statuses
 
-You can see the status of each sensor using the `/sensors/status` endpoint. For example, if you forgot to
+You can see the status of each sensor using the `/health/sensors` endpoint. For example, if you forgot to
 specify `"unit": "c"`, the API would interpret the measurement as `23.5 K` and the measurement would not be allowed
-since this is an unreasonable temperature value. The status of the sensor would then be updated to `too_low` a query to
+since this is an unreasonable temperature value. The status of the sensor would then be updated to `TOO_LOW` a query to
 the API would return something like this:
 
-```sh 
+```sh
 GET: /api/<api_version>/sensors/status
 
 Response: [
