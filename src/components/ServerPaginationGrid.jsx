@@ -21,6 +21,7 @@ import { useMeasurements } from "../lib/hooks/swr-extensions";
 import { PreferenceContext } from "../pages/_app";
 import { urlWithParams, capitalize, round } from "../lib/utilityFunctions";
 import { formatISO } from "date-fns";
+import { CardContent, Stack } from "@mui/material";
 
 const ENDPOINT = "/api/v3/measurements?";
 
@@ -124,7 +125,9 @@ const ServerPaginationGrid = () => {
     };
 
     return (
-      <div
+      <Stack
+        direction="row"
+        spacing={2}
         style={{
           width: "100%",
           right: 0,
@@ -139,27 +142,26 @@ const ServerPaginationGrid = () => {
             count={pageCount}
             page={page + 1}
             onChange={(event, value) => apiRef.current.setPage(value - 1)}
-          />
+            />
           <TextField
             size="small"
             label="Page"
             value={textFieldValue}
             onChange={(e) => setTextFieldValue(e.target.value)}
-          />
+            />
           <Button variant="contained" color="primary" onClick={validateInput}>
             Go To
           </Button>
         </ThemeProvider>
-      </div>
+      </Stack>
     );
   };
 
   return (
     <Card
       title="Explore the data on your own"
-      styles={{ margin: "40px 0 0 0" }}
     >
-      <div style={{ height: 750, margin: "20px 0" }}>
+      <CardContent style={{ height: 750 }}>
         {isLoading ? (
           <CustomProgressBar />
         ) : error ? (
@@ -185,7 +187,7 @@ const ServerPaginationGrid = () => {
             onPageSizeChange={(pageSize) => setPageSize(pageSize)}
           />
         )}
-      </div>
+      </CardContent>
 
       <div>
         <DateRangeSelector
