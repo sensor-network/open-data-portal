@@ -12,7 +12,8 @@ export type Station = {
 export const reformatSQLResult = (
   result: RowDataPacket[],
   expandLocation: boolean,
-  expandSensors: boolean
+  expandSensors: boolean,
+  includeSensorStatus?: boolean
 ): Station[] => {
   /**
    * Reformats the RowDataPacket[] => Station[]
@@ -64,6 +65,15 @@ export const reformatSQLResult = (
             firmware: row.firmware,
             type: row.type,
           }
+        : includeSensorStatus
+        ? {
+            id: row.sensorId,
+            name: row.sensorName,
+            firmware: row.firmware,
+            type: row.type,
+            status: row.status,
+            lastActive: row.lastActive,
+          }
         : row.sensorId
     );
   });
@@ -102,7 +112,11 @@ export const createOne = async ({
   return okPacket.insertId;
 };
 
-const selectQuery = (expandSensors: boolean, expandLocation: boolean) => `
+const selectQuery = (
+  expandSensors: boolean,
+  expandLocation: boolean,
+  includeSensorStatus?: boolean
+) => `
     SELECT st.id AS stationId,
            ${
              expandLocation
@@ -112,6 +126,8 @@ const selectQuery = (expandSensors: boolean, expandLocation: boolean) => `
            ${
              expandSensors
                ? "sn.id AS sensorId, sn.name AS sensorName, sn.firmware, sn.type"
+               : includeSensorStatus
+               ? "sn.id AS sensorId, sn.name AS sensorName, sn.firmware, sn.type, sn.status, sn.last_active as lastActive"
                : "sn.id AS sensorId"
            }
     FROM station st
@@ -122,17 +138,24 @@ const selectQuery = (expandSensors: boolean, expandLocation: boolean) => `
 export const findMany = async ({
   expandLocation,
   expandSensors,
+  includeSensorStatus = false,
 }: {
   expandLocation: boolean;
   expandSensors: boolean;
+  includeSensorStatus?: boolean;
 }) => {
-  const query = selectQuery(expandSensors, expandLocation);
+  const query = selectQuery(expandSensors, expandLocation, includeSensorStatus);
 
   const connection = await getConnectionPool();
   const result = await connection.query(query);
   const rows = result[0] as RowDataPacket[];
 
-  return reformatSQLResult(rows, expandLocation, expandSensors);
+  return reformatSQLResult(
+    rows,
+    expandLocation,
+    expandSensors,
+    includeSensorStatus
+  );
 };
 
 export const findByStationId = async ({
