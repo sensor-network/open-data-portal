@@ -3,12 +3,13 @@ import { useMemo } from "react";
 import HealthDashboard from "./HealthDashboard";
 import useSWR from "swr";
 import { fetcher } from "src/lib/utilityFunctions";
+import { getAverage } from "src/lib/utilityFunctions";
 
 // Reformats the given sensor-health-data to a format accepted by HealthDashboard
 function formatSensorStatus(sensorData) {
   let formatted = {
     name: "Sensors",
-    status: 1.0,
+    status: 1.0 /** assume all sensors are up */,
     lastCheckTime: 0,
     datapoints: [],
     elements: [],
@@ -26,55 +27,33 @@ function formatSensorStatus(sensorData) {
     }
   }
 
-  if (sensorData.some((sensor) => sensor.status !== "OK")) {
-    formatted.status = 0.5;
-  }
+  formatted.status = getAverage(formatted.elements.map((elem) => elem.status));
 
   return formatted;
 }
 
-/*
 // Reformats the given station-health-data to a format accepted by HealthDashboard
 function formatStationStatus(stationData) {
-  for (let i = 0; i < stationData.length; i++) {
-    if (stationData[i].status == "OK") {
-      emptylist_station.push({
-        name: stationData[i].location,
-        status: 1.0,
-        lastCheckTime: stationData[i].lastActive,
-        datapoints: [],
-      });
-      healthData[3].lastCheckTime = stationData[i].lastActive;
-    } else if (stationData[i].status == "PARTIALLY FAULTY") {
-      emptylist_station.push({
-        name: stationData[i].location,
-        status: 0.5,
-        lastCheckTime: stationData[i].lastActive,
-        datapoints: [],
-      });
-      healthData[3].lastCheckTime = stationData[i].lastActive;
-    } else {
-      emptylist_station.push({
-        name: stationData[i].location,
-        status: 0.0,
-        lastCheckTime: stationData[i].lastActive,
-        datapoints: [],
-      });
-      healthData[3].lastCheckTime = stationData[i].lastActive;
-    }
+  let formatted = {
+    name: "Stations",
+    status: 1.0 /** assume all stations are up */,
+    lastCheckTime: 0,
+    datapoints: [],
+    elements: [],
+  };
+  for (const station of stationData) {
+    const { id, location, status, lastActive } = station;
+    formatted.elements.push({
+      name: `Id: ${id}, Location: ${location}`,
+      status: status === "OK" ? 1.0 : status === "FAULTY" ? 0.0 : 0.5,
+      lastCheckTime: lastActive,
+      datapoints: [],
+    });
   }
 
-  for (let i = 0; i < emptylist_station.length; i++) {
-    healthData[3].elements?.push(emptylist_station[i]);
-  }
-
-  for (let i = 0; i < healthData[3].elements.length; i++) {
-    if (healthData[3].elements[i].status === 0.0) {
-      healthData[3].status = 0.0;
-    }
-  }
+  formatted.status = getAverage(formatted.elements.map((elem) => elem.status));
+  return formatted;
 }
-*/
 
 // Fetches the data from health/status and puts the data in healthData
 function formatServerStatus(servicesData) {
@@ -98,7 +77,7 @@ function formatServerStatus(servicesData) {
 
   const formatted = {
     name: "Services",
-    status: status.database === "UP" ? 1.0 : 0.5, // server is always up
+    status: status.database === "UP" ? 1.0 : 0.5, // server is always up, so the status is determined by the database
     lastCheckTime: new Date(),
     datapoints: [],
     elements: [server, database],
@@ -112,25 +91,25 @@ const AdminView = () => {
     fetcher,
     refreshInterval: 10e3,
   });
-  /*const { data: stationHealth } = useSWR("/api/v3/health/stations", {
+  const { data: stationHealth } = useSWR("/api/v3/health/stations", {
     fetcher: fetcher,
     refreshInterval: 10e3,
-  });*/
+  });
   const { data: sensorHealth } = useSWR("/api/v3/health/sensors", {
     fetcher: fetcher,
     refreshInterval: 10e3,
   });
 
   const healthData = useMemo(() => {
-    if (!sensorHealth || !servicesHealth) {
+    if (!sensorHealth || !servicesHealth || !stationHealth) {
       return null;
     }
     return [
       formatServerStatus(servicesHealth),
-      //formatStationStatus(stationHealth),
+      formatStationStatus(stationHealth),
       formatSensorStatus(sensorHealth),
     ];
-  }, [servicesHealth, /* stationHealth, */ sensorHealth]);
+  }, [servicesHealth, stationHealth, sensorHealth]);
 
   return (
     <Card title="Admin view" styles={{ margin: "40px 0 0 0" }}>
