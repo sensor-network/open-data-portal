@@ -7,6 +7,7 @@ import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
 import { CustomProgressBar } from "./CustomProgressBar";
 import styles from "src/styles/LocationRow.module.css";
 import { getPreferredUnitSymbol } from "src/lib/utils/load-preferences";
+import { endOfDay } from "date-fns";
 
 const ENDPOINT = "/api/v3/measurements?";
 
@@ -20,6 +21,7 @@ export default function LocationRow({ locName, selected }) {
         pageSize: 1,
         sortOrder: "desc",
         locationName: locName,
+        endTime: endOfDay(new Date()).toISOString(),
         temperatureUnit: preferences.temperatureUnit.symbol,
         conductivityUnit: preferences.conductivityUnit.symbol,
       }),
