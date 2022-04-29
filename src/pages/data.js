@@ -13,6 +13,7 @@ export default function App() {
         flexDirection: "column",
         gap: 50,
         marginBottom: 50,
+        marginTop: 50,
       }}
       maxWidth={"xl"}
     >
