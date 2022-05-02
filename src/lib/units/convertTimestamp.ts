@@ -8,12 +8,14 @@ export function ISOStringToSQLTimestamp(ISOString: string) {
     /* And Node MySQL does not accept the trailing Z when inserting timestamps */
     const idx = inUTC.length - 1;
     return inUTC.substring(0, idx);
-  }
-  catch (e) {
-    throw new ZodError([{
-      code: "invalid_date",
-      path: ["timestamp"],
-      message: "Invalid timestamp format. Timestamps should be provided using ISO8601 format, e.g. 2022-03-08T18:31:23+0100.",
-    }]);
+  } catch (e) {
+    throw new ZodError([
+      {
+        code: "invalid_date",
+        path: ["time"],
+        message:
+          "Invalid time format. Time should be provided using ISO8601 format.",
+      },
+    ]);
   }
 }
