@@ -9,7 +9,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /* parse query params */
     try {
       const { lat, long } = zLatLong.parse(req.query);
-
       /* call db (separat funktion för att det ska vara testbart) */
       const closest = await Location.findClosest({ lat, long });
 
