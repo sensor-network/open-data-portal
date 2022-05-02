@@ -1,10 +1,15 @@
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 
 import {
-  ResponsiveContainer, ComposedChart,
-  XAxis, YAxis,
-  Area, Line,
-  Legend, Brush, Tooltip,
+  ResponsiveContainer,
+  ComposedChart,
+  XAxis,
+  YAxis,
+  Area,
+  Line,
+  Legend,
+  Brush,
+  Tooltip,
 } from "recharts";
 import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
@@ -15,14 +20,26 @@ import style from "src/styles/ComparisonGraph.module.css";
 import { useWidth } from "src/lib/hooks/useWidth";
 import { capitalize } from "src/lib/utilityFunctions";
 
-const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, dateFormatter }) => {
+const ComparisonGraph = ({
+  data,
+  error,
+  height,
+  mainValue,
+  valuesToCompare,
+  dontCompareValue,
+  dateFormatter,
+}) => {
   const { preferences } = useContext(PreferenceContext);
 
   const windowWidth = useWidth();
-  const xAxisInterval = windowWidth < 768
-    ? Math.floor(data.length / 5) : windowWidth < 1400
-      ? Math.floor(data.length / 10) :
-      Math.floor(data.length / 15);
+  const xAxisInterval = useMemo(() => {
+    if (error) return null;
+    return windowWidth < 768
+      ? Math.floor(data.length / 5)
+      : windowWidth < 1400
+      ? Math.floor(data.length / 10)
+      : Math.floor(data.length / 15);
+  }, [windowWidth, data, error]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -30,10 +47,12 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
       return (
         <div className={style.chartToolTip}>
           <div className={style.dataLabel}>
-            <p><strong>Measured at:</strong> {formattedDate}</p>
+            <p>
+              <strong>Measured at:</strong> {formattedDate}
+            </p>
           </div>
           <div className={style.dataPayload}>
-            {payload.map(row => {
+            {payload.map((row) => {
               /* use optional chaining for sensors without units, e.g. ph */
               const unit = preferences[`${row.dataKey}Unit`]?.symbol;
               const capitalized = capitalize(unit);
@@ -44,7 +63,6 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
               );
             })}
           </div>
-
         </div>
       );
     }
@@ -53,9 +71,10 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
 
   const CustomLegend = ({ payload }) => {
     return (
-      <div style={{ display: "flex", gap: 15 }}>
-        {
-          payload.filter(p => p.value !== mainValue.name).map((entry, idx) => (
+      <div style={{ display: "flex", gap: 15, marginTop: -10 }}>
+        {payload
+          .filter((p) => p.value !== mainValue.name)
+          .map((entry, idx) => (
             <div
               key={idx}
               style={{
@@ -68,13 +87,18 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
                 alignItems: "center",
               }}
             >
-              <CircleIcon fontSize={"small"} sx={{ color: entry.color, cursor: "pointer" }}/>
+              <CircleIcon
+                fontSize={"small"}
+                sx={{ color: entry.color, cursor: "pointer" }}
+              />
               {entry.value}
-              <CloseIcon fontSize={"small"} sx={{ fontWeight: "bold", cursor: "pointer" }}
-                         onClick={() => dontCompareValue(entry.value)}/>
+              <CloseIcon
+                fontSize={"small"}
+                sx={{ fontWeight: "bold", cursor: "pointer" }}
+                onClick={() => dontCompareValue(entry.value)}
+              />
             </div>
-          ))
-        }
+          ))}
       </div>
     );
   };
@@ -84,65 +108,123 @@ const ComparisonGraph = ({ data, mainValue, valuesToCompare, dontCompareValue, d
     const formatted = dateFormatter(date);
     return (
       <g transform={`translate(${x},${y})`}>
-        <text fontSize=".6em" x={0} y={0} dy={16} textAnchor={payload.index > 0 ? "middle" : "start"} fill="#666"
-              transform="rotate(-20)">
+        <text
+          fontSize=".6em"
+          x={0}
+          y={0}
+          dy={16}
+          textAnchor={payload.index > 0 ? "middle" : "start"}
+          fill="#666"
+          transform="rotate(-20)"
+        >
           {formatted}
         </text>
       </g>
     );
   };
 
-  if (!data.length) {
+  if (error) {
     return (
-      <div style={{ width: "100%", height: "100%", minHeight: 500 }}>
-        <h4 style={{ margin: "5px 0" }}>Sorry, but there is no data matching your selected filters.</h4>
-        <p style={{ margin: "5px 0" }}>Try selecting a longer time-range or change the preferred location in the
-          settings-menu at the top.</p>
-        <Skeleton animatin="wave" variant="rect" width="100%" height={400}/>
+      <div style={{ width: "100%", height: "100%", minHeight: height }}>
+        <h4 style={{ margin: "5px 0" }}>
+          Sorry, but there is no data matching your selected filters.
+        </h4>
+        <p style={{ margin: "5px 0" }}>
+          Try selecting a longer time-range or change the preferred location in
+          the settings-menu at the top.
+        </p>
+        <Skeleton
+          animatin="wave"
+          variant="rectangular"
+          width="100%"
+          height={height - 100}
+        />
       </div>
     );
   }
 
   return (
-    <ResponsiveContainer width="100%" height="100%" minHeight={500}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={height}>
       <ComposedChart
-        data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+        data={data}
+        margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
         padding={{ top: 0, bottom: 0, left: 0, right: 0 }}
       >
         <defs>
-          <linearGradient key={mainValue.key} id={`area-gradient`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={mainValue.color} stopOpacity={0.6}/>
-            <stop offset="95%" stopColor={mainValue.color} stopOpacity={0.1}/>
+          <linearGradient
+            key={mainValue.key}
+            id={`area-gradient`}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop offset="5%" stopColor={mainValue.color} stopOpacity={0.6} />
+            <stop offset="95%" stopColor={mainValue.color} stopOpacity={0.1} />
           </linearGradient>
         </defs>
         <XAxis
-          dataKey="time" height={60}
-          tick={CustomXAxisTick} tickSize={12} interval={xAxisInterval}
+          dataKey="time"
+          height={60}
+          tick={CustomXAxisTick}
+          tickSize={12}
+          interval={xAxisInterval}
         />
         <Brush
-          dataKey={"time"} stroke={mainValue.color} height={30} y={460}
-          tickFormatter={date => dateFormatter(date)}
+          dataKey={"time"}
+          stroke={mainValue.color}
+          height={30}
+          y={460}
+          tickFormatter={(date) => dateFormatter(date)}
         />
         <YAxis
-          margin={{ top: 0, right: 0, left: 0, bottom: 0 }} orientation="right"
-          domain={[0, dataMax => Math.round(dataMax * 1.1)]} mirror
-          tick={{ strokeWidth: 1 }} minTickGap={5} tickCount={10}
+          margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+          orientation="right"
+          yAxisId="right"
+          domain={[0, (dataMax) => Math.round(dataMax * 1.1)]}
+          mirror
+          tick={{ strokeWidth: 2 }}
+          minTickGap={5}
+          tickCount={10}
         />
-        <Legend verticalAlign="top" height={36} content={CustomLegend}/>
-        <Tooltip content={CustomTooltip}/>
+        <YAxis
+          margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+          orientation="left"
+          yAxisId="left"
+          domain={[0, (dataMax) => Math.round(dataMax * 1.1)]}
+          mirror
+          tick={{ strokeWidth: 2 }}
+          minTickGap={5}
+          tickCount={10}
+        />
+        <Legend verticalAlign="top" height={36} content={CustomLegend} />
+        <Tooltip content={CustomTooltip} />
         <Area
-          connectNulls type="monotone" dataKey={`sensors[${mainValue.key}].avg`} name={mainValue.name}
+          connectNulls
+          type="monotone"
+          yAxisId="right"
+          dataKey={`sensors[${mainValue.key}].avg`}
+          name={mainValue.name}
           stroke={mainValue.color}
-          fillOpacity={1} fill={`url(#area-gradient)`} key={mainValue.key} strokeWidth={2}
+          fillOpacity={1}
+          fill={`url(#area-gradient)`}
+          key={mainValue.key}
+          strokeWidth={2}
         />
-        {valuesToCompare.map(v => (
+        {valuesToCompare.map((v) => (
           <Line
-            connectNulls type="monotone" dataKey={`sensors[${v.key}].avg`} name={v.name} stroke={v.color}
-            key={v.key} dot={false} strokeWidth={2}
+            connectNulls
+            type="monotone"
+            yAxisId="left"
+            dataKey={`sensors[${v.key}].avg`}
+            name={v.name}
+            stroke={v.color}
+            key={v.key}
+            dot={false}
+            strokeWidth={2}
           />
         ))}
       </ComposedChart>
-
     </ResponsiveContainer>
   );
 };

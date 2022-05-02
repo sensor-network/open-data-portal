@@ -1,7 +1,7 @@
 import { useContext, useMemo, useState } from "react";
 import { formatISO } from "date-fns";
 
-import { Select, MenuItem } from "@mui/material";
+import { Select, MenuItem, Skeleton } from "@mui/material";
 import CircleIcon from "@mui/icons-material/Circle";
 import Card from "./Card";
 import ComparisonGraph from "./ComparisonGraph";
@@ -50,8 +50,12 @@ const Visualization = () => {
     [preferences, startDate, endDate]
   );
 
-  const { summarizedMeasurements: measurements } =
-    useSummarizedMeasurements(url);
+  const {
+    summarizedMeasurements: measurements,
+    isLoading,
+    isLagging,
+    error,
+  } = useSummarizedMeasurements(url);
 
   /* mainValue is graphed as an Area */
   const [mainValue, setMainValue] = useState(valueOptions[0]);
@@ -69,7 +73,6 @@ const Visualization = () => {
 
   /* compareValues are graphed as Lines */
   const [compareValues, setCompareValues] = useState<ValueOption[]>([
-    valueOptions[1],
     valueOptions[2],
   ]);
   const addCompareValue = (key: string) => {
@@ -131,11 +134,23 @@ const Visualization = () => {
 
       <div className={styles.content}>
         <div className={styles.graphContainer}>
-          {!measurements ? (
-            <CustomProgressBar />
-          ) : (
+          {isLoading && (
+            <>
+              <CustomProgressBar />
+              <Skeleton
+                animation="wave"
+                variant="rectangular"
+                width="100%"
+                height={500}
+              />
+            </>
+          )}
+          {isLagging && !error && <CustomProgressBar />}
+          {!isLoading && (
             <ComparisonGraph
               data={measurements}
+              error={error}
+              height={500}
               mainValue={mainValue}
               valuesToCompare={compareValues}
               dontCompareValue={dontCompareValue}
