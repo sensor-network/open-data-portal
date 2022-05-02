@@ -7,10 +7,6 @@ jest.mock("~/lib/database/connection", () => ({
   getStatus: jest.fn().mockImplementation(async () => void 0),
 }));
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 describe("TEST /health", () => {
   const mockReqRes = () => createMocks();
 
