@@ -128,7 +128,7 @@ export const parseUnit = (unit: string) => {
       {
         code: "invalid_enum_value",
         options,
-        path: ["conductivity_unit"],
+        path: ["conductivityUnit"],
         message: `Unexpected unit ${unit.toLowerCase()}. Expected${options.map(
           (o) => " " + o
         )}.`,

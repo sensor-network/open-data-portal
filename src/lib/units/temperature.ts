@@ -67,7 +67,7 @@ export const parseUnit = (unit: string) => {
       {
         code: "invalid_enum_value",
         options,
-        path: ["temperature_unit"],
+        path: ["temperatureUnit"],
         message: `Unexpected unit ${unit.toLowerCase()}. Expected${options.map(
           (o) => " " + o
         )}.`,
