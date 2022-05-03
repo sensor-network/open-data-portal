@@ -8,10 +8,12 @@ import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
 import {
   parseUnit as parseTempUnit,
   parseTemperature,
+  Temperature,
 } from "src/lib/units/temperature";
 import {
   parseUnit as parseCondUnit,
   parseConductivity,
+  Conductivity,
 } from "src/lib/units/conductivity";
 import { PH } from "src/lib/units/ph";
 import { round } from "src/lib/utilityFunctions";
@@ -152,18 +154,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* convert necessary sensors (or just round) to selected unit */
       measurements.forEach(({ sensors }) => {
-        if (sensors.hasOwnProperty("temperature")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+        if (Temperature.keyName in sensors) {
           sensors.temperature = temperatureUnit.fromKelvin(sensors.temperature);
         }
-        if (sensors.hasOwnProperty("conductivity")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+        if (Conductivity.keyName in sensors) {
           sensors.conductivity = conductivityUnit.fromSiemensPerMeter(
             sensors.conductivity
           );
         }
-        if (sensors.hasOwnProperty("ph")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+        if (PH.keyName in sensors) {
           sensors.ph = new PH(sensors.ph).getValue();
         }
         // FIXME: other sensors will not be converted nor rounded
@@ -263,14 +262,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
             /* convert the value to SI-unit if there is one */
             let convertedValue = value;
-            if (sensor.type === "temperature") {
+            if (sensor.type === Temperature.keyName) {
               convertedValue = parseTemperature(value, unit || "k").asKelvin();
-            } else if (sensor.type === "conductivity") {
+            } else if (sensor.type === Conductivity.keyName) {
               convertedValue = parseConductivity(
                 value,
                 unit || "spm"
               ).asSiemensPerMeter();
-            } else if (sensor.type === "ph") {
+            } else if (sensor.type === PH.keyName) {
               convertedValue = new PH(value).getValue();
             } else {
               convertedValue = round(value);
