@@ -19,8 +19,11 @@ import {
   defineDataDensity,
   findLast,
 } from "lib/utilityFunctions";
-import { parseUnit as parseTempUnit } from "lib/units/temperature";
-import { parseUnit as parseCondUnit } from "lib/units/conductivity";
+import { parseUnit as parseTempUnit, Temperature } from "lib/units/temperature";
+import {
+  Conductivity,
+  parseUnit as parseCondUnit,
+} from "lib/units/conductivity";
 import { PH } from "src/lib/units/ph";
 
 const DAILY_DENSITIES = ["5min", "30min", "1h", "12h"] as const;
@@ -154,19 +157,19 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     /* convert to correct units */
     const converted = rows.map((row) => {
-      if (row.type === "temperature") {
+      if (row.type === Temperature.keyName) {
         Object.assign(row, {
           min: temperatureUnit.fromKelvin(row.min),
           avg: temperatureUnit.fromKelvin(row.avg),
           max: temperatureUnit.fromKelvin(row.max),
         });
-      } else if (row.type === "conductivity") {
+      } else if (row.type === Conductivity.keyName) {
         Object.assign(row, {
           min: conductivityUnit.fromSiemensPerMeter(row.min),
           avg: conductivityUnit.fromSiemensPerMeter(row.avg),
           max: conductivityUnit.fromSiemensPerMeter(row.max),
         });
-      } else if (row.type === "ph") {
+      } else if (row.type === PH.keyName) {
         Object.assign(row, {
           min: new PH(row.min).getValue(),
           avg: new PH(row.avg).getValue(),
@@ -202,6 +205,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       });
     }
 
+    /* if we should include measurements, then we need to do some more work */
+    /* aggregate the result in chunks of the given density */
     let currentTime = new Date(startTime);
     while (currentTime <= new Date(endTime)) {
       const nextTime = add(currentTime, nextDateOptions);
@@ -235,10 +240,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       measurements.push(measurement);
       currentTime = nextTime;
     }
-
     sensorTypes.forEach((type) => {
       /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
-      if (summary.sensors.hasOwnProperty(type)) {
+      if (type in summary.sensors) {
         Object.assign(summary.sensors[type], {
           min: round(getMin(measurements.map((m) => m.sensors[type].min))),
           avg: round(getAverage(measurements.map((m) => m.sensors[type].avg))),
