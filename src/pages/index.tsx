@@ -1,8 +1,10 @@
+import type { NextPage } from "next";
 import Head from "next/head";
+
 import Container from "@mui/material/Container";
-import Welcome from "/src/components/Welcome";
 import Dashboard from "src/components/Dashboard";
-export default function Home() {
+
+const HomePage: NextPage<{}> = () => {
   return (
     <div>
       <Head>
@@ -14,20 +16,11 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main>
-        <Container
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 50,
-            marginBottom: 50,
-          }}
-          maxWidth={"xxl"}
-        >
-          {/*<Welcome/>*/}
-          <Dashboard />
-        </Container>
-      </main>
+      <div style={{ width: "95%", margin: "0 auto 40px auto" }}>
+        <Dashboard />
+      </div>
     </div>
   );
-}
+};
+
+export default HomePage;

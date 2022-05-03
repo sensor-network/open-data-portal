@@ -1,8 +1,8 @@
 import dynamic from "next/dynamic";
 
 /* disable ssr for map-component */
-const MapWithNoSSR = dynamic(() => import('../components/Map'), {
-  ssr: false
+const MapWithNoSSR = dynamic(() => import("../components/Map"), {
+  ssr: false,
 });
 
 const MapPage = () => {

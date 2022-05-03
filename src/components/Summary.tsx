@@ -10,7 +10,7 @@ import DateRangeSelector from "src/components/DateRangeSelector";
 import { useSummary } from "src/lib/hooks/swr-extensions";
 import { round, capitalize, urlWithParams } from "src/lib/utilityFunctions";
 import styles from "src/styles/Summary.module.css";
-import type { Summary } from "~/pages/api/v3/measurements/history";
+import type { Summary as SummaryType } from "~/pages/api/v3/measurements/history";
 
 import { getPreferredUnitSymbol } from "~/lib/utils/load-preferences";
 
@@ -67,10 +67,10 @@ const TitleColumn: React.FC<{ columnCount: number }> = ({ columnCount }) => {
 
 /** SUBCOMPONENT FOR ALL THE SECTIONS DATA */
 const DataColumns: React.FC<{
-  currentSummary: Summary;
-  allTimeSummary: Summary | undefined;
-  lastYearsSummary: Summary | undefined;
-  archipelagoSummary: Summary | undefined;
+  currentSummary: SummaryType;
+  allTimeSummary: SummaryType | undefined;
+  lastYearsSummary: SummaryType | undefined;
+  archipelagoSummary: SummaryType | undefined;
 }> = ({
   currentSummary,
   allTimeSummary,
