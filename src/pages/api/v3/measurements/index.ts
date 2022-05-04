@@ -8,10 +8,12 @@ import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
 import {
   parseUnit as parseTempUnit,
   parseTemperature,
+  Temperature,
 } from "src/lib/units/temperature";
 import {
   parseUnit as parseCondUnit,
   parseConductivity,
+  Conductivity,
 } from "src/lib/units/conductivity";
 import { PH } from "src/lib/units/ph";
 import { round } from "src/lib/utilityFunctions";
@@ -152,18 +154,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* convert necessary sensors (or just round) to selected unit */
       measurements.forEach(({ sensors }) => {
-        if (sensors.hasOwnProperty("temperature")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+        if (Temperature.keyName in sensors) {
           sensors.temperature = temperatureUnit.fromKelvin(sensors.temperature);
         }
-        if (sensors.hasOwnProperty("conductivity")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+        if (Conductivity.keyName in sensors) {
           sensors.conductivity = conductivityUnit.fromSiemensPerMeter(
             sensors.conductivity
           );
         }
-        if (sensors.hasOwnProperty("ph")) {
-          // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+        if (PH.keyName in sensors) {
           sensors.ph = new PH(sensors.ph).getValue();
         }
         // FIXME: other sensors will not be converted nor rounded
@@ -220,128 +219,128 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       return;
     }
 
-    try {
-      /* parse request body */
-      const { time, position, sensors } = zCreateMeasurement.parse(req.body);
+    /* parse request body, put it into an array if its not */
+    let arrayedBody = Array.isArray(req.body) ? req.body : [req.body];
+    let insertedMeasurements: {
+      time: string;
+      locationId: number;
+      sensorId: number;
+      value: number;
+    }[] = [];
+    let sensorErrors: { sensorId: number; status: string }[] = [];
+    let parsingErrors: { body: {}; error: any }[] = [];
 
-      /* find location in the db from the lat,long specified */
-      const [closestLocation] = await Location.findByLatLong({
-        long: position.long,
-        lat: position.lat,
-        rad: null,
-      });
-      let locationId: number;
-      if (closestLocation) {
-        locationId = closestLocation.id;
-      } else {
-        /* if no location is found nearby, create a new location whose name could be filled in later, useful when on boat? */
-        const DEFAULT_RADIUS = 200;
-        locationId = await Location.createOne({
-          name: "unknown",
-          long: position.long,
-          lat: position.lat,
-          rad: DEFAULT_RADIUS,
-        });
-      }
+    for (const body of arrayedBody) {
+      try {
+        /* validate request body */
+        const { time, position, sensors } = zCreateMeasurement.parse(body);
 
-      let insertedMeasurements = [];
-      let errors: { sensorId: number; status: string }[] = [];
-      for (const { id, value, unit } of sensors) {
-        try {
-          /* find associated sensor by the id to get its type */
-          const sensor = await Sensor.findById({ id });
-          if (!sensor) {
-            errors.push({ sensorId: id, status: "SENSOR_NOT_FOUND" });
-          }
-
-          /* convert the value to SI-unit if there is one */
-          let convertedValue = value;
-          if (sensor.type === "temperature") {
-            convertedValue = parseTemperature(value, unit || "k").asKelvin();
-          } else if (sensor.type === "conductivity") {
-            convertedValue = parseConductivity(
-              value,
-              unit || "spm"
-            ).asSiemensPerMeter();
-          } else if (sensor.type === "ph") {
-            convertedValue = new PH(value).getValue();
-          } else {
-            convertedValue = round(value);
-          }
-
-          /* insert measurement into db */
-          await Measurement.createOne({
-            sensorId: id,
-            value: convertedValue,
-            time,
-            sensorType: sensor.type,
-            locationId,
-            position,
+        /* find location in the db from the lat,long specified */
+        const closestLocation = await Location.findClosest(position);
+        let locationId: number;
+        if (closestLocation) {
+          locationId = closestLocation.id;
+        } else {
+          /* if no location is found nearby, create a new location whose name could be filled in later, useful when on boat? */
+          const DEFAULT_RADIUS = 200;
+          locationId = await Location.createOne({
+            name: `unknown-${Math.floor(Math.random() * 100)}`,
+            long: position.long,
+            lat: position.lat,
+            rad: DEFAULT_RADIUS,
           });
+        }
 
-          /* push to response array */
-          insertedMeasurements.push({
-            id,
-            value: convertedValue,
-            time,
-            locationId,
-          });
-        } catch (e) {
-          if (e instanceof ZodError) {
-            errors.push({ sensorId: id, status: e.issues[0].code });
-          } else if (e instanceof Object && e.hasOwnProperty("code")) {
-            // @ts-ignore - this validation is apparently not enough to keep TS happy :(
-            errors.push({ sensorId: id, status: e.code });
-          } else {
-            console.error(`${req.method}: /api/v3/measurements::`, e);
-            errors.push({ sensorId: id, status: "UNKNOWN_ERROR" });
+        for (const { id, value, unit } of sensors) {
+          try {
+            /* find associated sensor by the id to get its type */
+            const sensor = await Sensor.findById({ id });
+            if (!sensor) {
+              sensorErrors.push({ sensorId: id, status: "SENSOR_NOT_FOUND" });
+              continue;
+            }
+
+            /* convert the value to SI-unit if there is one */
+            let convertedValue = value;
+            if (sensor.type === Temperature.keyName) {
+              convertedValue = parseTemperature(value, unit || "k").asKelvin();
+            } else if (sensor.type === Conductivity.keyName) {
+              convertedValue = parseConductivity(
+                value,
+                unit || "spm"
+              ).asSiemensPerMeter();
+            } else if (sensor.type === PH.keyName) {
+              convertedValue = new PH(value).getValue();
+            } else {
+              convertedValue = round(value);
+            }
+
+            /* insert measurement into db */
+            await Measurement.createOne({
+              sensorId: id,
+              value: convertedValue,
+              time,
+              sensorType: sensor.type,
+              locationId,
+              position,
+            });
+
+            /* push to response array */
+            insertedMeasurements.push({
+              sensorId: id,
+              value: convertedValue,
+              time: time + "Z", // add the removed Z back when responding
+              locationId,
+            });
+          } catch (e) {
+            if (e instanceof ZodError) {
+              sensorErrors.push({
+                sensorId: id,
+                status: e.issues[0].code.toUpperCase(),
+              });
+            } else if (e instanceof Object && e.hasOwnProperty("code")) {
+              // @ts-ignore - this validation is apparently not enough to keep TS happy :(
+              sensorErrors.push({ sensorId: id, status: e.code.toUpperCase() });
+            } else {
+              console.error(`${req.method}: /api/v3/measurements::`, e);
+              sensorErrors.push({ sensorId: id, status: "UNKNOWN_ERROR" });
+            }
           }
         }
-      }
-
-      /* update sensor health status */
-      const updateStatuses: Promise<OkPacket>[] = [];
-      errors.forEach(({ sensorId, status }) => {
-        updateStatuses.push(
-          Sensor.updateStatus({ id: sensorId, status: status.toUpperCase() })
-        );
-      });
-      insertedMeasurements.forEach(({ id }) => {
-        updateStatuses.push(Sensor.updateStatus({ id, status: "OK" }));
-      });
-      await Promise.all(updateStatuses);
-
-      if (!insertedMeasurements.length) {
-        res
-          .status(STATUS.BAD_REQUEST)
-          .json({ message: "No inserted measurements", errors });
-        return;
-      }
-
-      /* Returning the location with STATUS.CREATED response code */
-      res.status(STATUS.CREATED).json({ errors, insertedMeasurements });
-    } catch (e) {
-      if (e instanceof ZodError) {
-        console.log(
-          `${req.method}: /api/v3/measurements:: Error parsing request body:\n`,
-          e.flatten()
-        );
-        res.status(STATUS.BAD_REQUEST).json(e.flatten());
-      }
-      // @ts-ignore - mysql errors throws errors which has property code
-      else if (e.hasOwnProperty("code") && e.code === "ER_DUP_ENTRY") {
-        console.log(`${req.method}: /api/v3/measurements::`, e);
-        res.status(STATUS.BAD_REQUEST).json({
-          error:
-            "Unable to upload the given measurement. A sensor can only upload a single measurement for a given time and such measurement already exists.",
-        });
-      } else {
-        console.error(`${req.method}: /api/v3/measurements::`, e);
-        res.status(STATUS.SERVER_ERROR).json({
-          error: "Internal server error",
-        });
+      } catch (e) {
+        if (e instanceof ZodError) {
+          parsingErrors.push({
+            body,
+            error: e.flatten(),
+          });
+        }
       }
     }
+    /* update sensor health status */
+    const updateStatuses: Promise<OkPacket>[] = [];
+    sensorErrors.forEach(({ sensorId, status }) => {
+      updateStatuses.push(
+        Sensor.updateStatus({ id: sensorId, status: status.toUpperCase() })
+      );
+    });
+    insertedMeasurements.forEach(({ sensorId }) => {
+      updateStatuses.push(Sensor.updateStatus({ id: sensorId, status: "OK" }));
+    });
+    await Promise.all(updateStatuses);
+
+    if (!insertedMeasurements.length) {
+      res.status(STATUS.BAD_REQUEST).json({
+        message: "No inserted measurements",
+        errors: [...sensorErrors, ...parsingErrors],
+      });
+      return;
+    }
+
+    /* Returning the location with STATUS.CREATED response code */
+    res.status(STATUS.CREATED).json({
+      insertedMeasurements,
+      errors: [...sensorErrors, ...parsingErrors],
+    });
   } else {
     /**
      * {unknown} /api/v3/measurements

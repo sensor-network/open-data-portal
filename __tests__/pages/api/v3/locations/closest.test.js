@@ -38,10 +38,6 @@ jest.mock("~/lib/database/location", () => ({
   }),
 }));
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 describe("GET: /api/v3/locations/closest", () => {
   const mockReqRes = ({ method = "GET", query = {} }) => {
     return createMocks({
