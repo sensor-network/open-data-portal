@@ -4,11 +4,7 @@ import { HTTP_STATUS as STATUS } from "~/lib/constants";
 const AUTHENTICATION_SCHEMA = "Bearer";
 const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
 
-export const authorizeRequest = (
-  req: NextApiRequest,
-  res: NextApiResponse,
-  route: string
-) => {
+export const authorizeRequest = (req: NextApiRequest, res: NextApiResponse) => {
   const { authorization } = req.headers;
 
   if (authorization !== `${AUTHENTICATION_SCHEMA} ${AUTHENTICATION_TOKEN}`) {

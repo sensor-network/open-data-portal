@@ -1,17 +1,17 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { z, ZodError } from "zod";
-import { format, isValid } from "date-fns";
+import { ZodError } from "zod";
 
 import { HTTP_STATUS as STATUS } from "~/lib/constants";
 import * as Location from "~/lib/database/location";
 import * as History from "~/lib/database/history";
 import * as Sensor from "~/lib/database/sensor";
 
+import { zTime } from "~/lib/validators/time";
+import { authorizeRequest } from "~/lib/utils/api/auth";
+
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "POST") {
-    console.log(
-      `${req.method}: /api/private/aggregate-daily:: Method not allowed`
-    );
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res
       .setHeader("Allow", "POST")
       .status(STATUS.NOT_ALLOWED)
@@ -19,32 +19,13 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  /**
-   * Use Bearer authentication schema with private token for this
-   * endpoint, which should not be queryable by external sources.
-   **/
-  const AUTHENTICATION_SCHEMA = "Bearer";
-  const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_PRIVATE_API_KEY;
-
-  const { authorization } = req.headers;
-  if (authorization !== `${AUTHENTICATION_SCHEMA} ${AUTHENTICATION_TOKEN}`) {
-    const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
-    console.log(`${req.method} /api/private/aggregate-daily:: ${errorMessage}`);
-
-    res
-      .setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA)
-      .status(STATUS.UNAUTHORIZED)
-      .json({ error: errorMessage });
+  if (!authorizeRequest(req, res)) {
     return;
   }
 
   try {
     /* parse and validate date from query */
-    const date = z
-      .string()
-      .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
-      .transform((str) => format(new Date(str), "yyyy-MM-dd"))
-      .parse(req.query.date);
+    const date = zTime.parse(req.query.date);
 
     /* get all locations from database, as well as the available sensors */
     const locations = await Location.findMany();
@@ -73,10 +54,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     res.status(STATUS.OK).json({ insertedIds });
   } catch (e) {
     if (e instanceof ZodError) {
-      console.log(`${req.method}: /api/private/aggregate-daily::`, e.flatten());
+      console.log(`${req.method}: ${req.url}::`, e.flatten());
       res.status(STATUS.BAD_REQUEST).json(e.flatten());
     } else {
-      console.error(`${req.method}: /api/private/aggregate-daily::`, e);
+      console.error(`${req.method}: ${req.url}::`, e);
       res.status(STATUS.SERVER_ERROR).json({
         error: "There was an error when executing the cron job.",
       });
