@@ -1,5 +1,8 @@
 export const DECIMAL_PLACES = 2;
 
+export const NAV_HEIGHT = 60;
+export const MOBILE_BREAKPOINT = 768;
+
 export const SRID = 4326;
 
 export const HTTP_STATUS = {
