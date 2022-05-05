@@ -38,7 +38,7 @@ describe("useLocations hook", () => {
     expect(result.current).toEqual([]);
   });
 
-  it("should return the locations from db", async () => {
+  it("should return the locations from api", async () => {
     const { result, waitFor } = renderHook(() => useLocations(""));
     await waitFor(() => Array.isArray(result.current));
 
