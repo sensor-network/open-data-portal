@@ -1,5 +1,8 @@
+import { createContext } from "react";
+
 import { UNITS as TEMP_UNITS } from "lib/units/temperature";
 import { UNITS as COND_UNITS } from "lib/units/conductivity";
+import type { Location } from "~/lib/database/location";
 
 const DEFAULT_TEMP = TEMP_UNITS.CELSIUS;
 const DEFAULT_COND = COND_UNITS.SIEMENS_PER_METER;
@@ -10,6 +13,15 @@ export type Preferences = {
   temperatureUnit: PreferenceItem;
   conductivityUnit: PreferenceItem;
 };
+
+export type PreferenceContextType = {
+  preferences: Preferences;
+  locations: Location[] | undefined;
+};
+
+export const PreferenceContext = createContext<PreferenceContextType>(
+  {} as PreferenceContextType
+);
 
 export const loadPreferences = (prefCookieString: string): Preferences => {
   /* load preferences from cookies, or fallback to default values */
