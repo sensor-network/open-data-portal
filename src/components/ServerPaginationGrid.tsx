@@ -127,7 +127,7 @@ const ServerPaginationGrid: React.FC = () => {
             columns={gridColumns}
             rowCount={pagination?.totalRows}
             loading={isLagging || isLoading}
-            getRowId={(row) => row.time}
+            getRowId={(row) => row.time.getTime()}
             components={{
               LoadingOverlay: CustomProgressBar,
               Pagination: () => <CustomPagination setPage={setPage} />,
