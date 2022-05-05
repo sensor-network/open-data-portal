@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react-hooks";
 import { useLocations } from "~/lib/hooks/useLocations";
 import { fetcher } from "~/lib/utilityFunctions";
 
-let locationDb = [
+let locationsFromAPI = [
   {
     id: 1,
     name: "test1",
@@ -20,7 +20,7 @@ let locationDb = [
 // mock external dependency
 jest.mock("~/lib/utilityFunctions", () => ({
   __esModule: true,
-  fetcher: jest.fn().mockImplementation(async () => locationDb),
+  fetcher: jest.fn().mockImplementation(async () => locationsFromAPI),
 }));
 
 describe("useLocations hook", () => {
@@ -42,6 +42,6 @@ describe("useLocations hook", () => {
     const { result, waitFor } = renderHook(() => useLocations(""));
     await waitFor(() => Array.isArray(result.current));
 
-    expect(result.current).toEqual(locationDb);
+    expect(result.current).toEqual(locationsFromAPI);
   });
 });
