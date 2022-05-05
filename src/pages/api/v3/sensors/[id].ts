@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import * as Sensor from "lib/database/sensor";
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
 import { ZodError } from "zod";
-import { zIdFromString, zUpdateSensor } from "lib/types/ZodSchemas";
+
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Sensor from "~/lib/database/sensor";
+import { zIdFromString } from "~/lib/validators/id";
+import { zUpdateSensor } from "~/lib/validators/sensor";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**

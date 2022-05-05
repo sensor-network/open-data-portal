@@ -1,9 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import * as Station from "lib/database/station";
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
 import { ZodError } from "zod";
-import { zIdFromString, zId, zStationExpandParam } from "lib/types/ZodSchemas";
+
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Station from "~/lib/database/station";
+import { zIdFromString, zId } from "~/lib/validators/id";
+import { zStationExpandParam } from "~/lib/validators/station";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**

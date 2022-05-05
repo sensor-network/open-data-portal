@@ -1,30 +1,27 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
-import * as History from "lib/database/history";
-import * as Measurement from "lib/database/measurement";
-import * as Location from "lib/database/location";
-import * as Sensor from "lib/database/sensor";
-import { z, ZodError } from "zod";
-import { zTime } from "lib/types/ZodSchemas";
-import type { CombinedFormat } from "lib/database/history";
-
 import { add, format } from "date-fns";
+import { z, ZodError } from "zod";
 
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as History from "~/lib/database/history";
+import * as Measurement from "~/lib/database/measurement";
+import * as Location from "~/lib/database/location";
+import * as Sensor from "~/lib/database/sensor";
+import type { CombinedFormat } from "~/lib/database/history";
+
+import { zTimeRange } from "~/lib/validators/time";
+import { getAverage, getMin, getMax, round } from "~/lib/utils/math";
+import { defineDataDensity } from "~/lib/utils/define-data-density";
+import findLast from "~/lib/utils/find-last";
 import {
-  getAverage,
-  getMin,
-  getMax,
-  round,
-  defineDataDensity,
-  findLast,
-} from "lib/utilityFunctions";
-import { parseUnit as parseTempUnit, Temperature } from "lib/units/temperature";
+  parseUnit as parseTempUnit,
+  Temperature,
+} from "~/lib/units/temperature";
 import {
   Conductivity,
   parseUnit as parseCondUnit,
-} from "lib/units/conductivity";
-import { PH } from "src/lib/units/ph";
+} from "~/lib/units/conductivity";
+import { PH } from "~/lib/units/ph";
 
 const DAILY_DENSITIES = ["5min", "30min", "1h", "12h"] as const;
 const HISTORY_DENSITIES = ["1d", "1w", "2w", "1mon", "1y"] as const;
@@ -76,7 +73,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     /* parse necessary parameters */
-    const { startTime, endTime } = zTime.parse(req.query);
+    const { startTime, endTime } = zTimeRange.parse(req.query);
     /* whether we should include all measurements or just summarize */
     const includeMeasurements = z
       .enum(["true", "false"])
