@@ -1,22 +1,25 @@
+import { useContext, useEffect, useMemo, useState } from "react";
 import {
   MapContainer,
   Marker,
   Popup,
   TileLayer,
   Circle,
-  useMapEvents,
   useMap,
 } from "react-leaflet";
+import { Icon, LatLngExpression, PointTuple } from "leaflet";
+import { useMeasurements } from "~/lib/hooks";
+import {
+  PreferenceContext,
+  getPreferredUnitSymbol,
+} from "~/lib/utils/preferences";
+import { urlWithParams } from "~/lib/utils/fetch";
+import capitalize from "~/lib/utils/capitalize";
+import type { Location } from "src/lib/database/location";
+
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon.png";
-import { Icon, LatLngExpression, map, PointTuple } from "leaflet";
-import { useSummarizedData } from "src/lib/hooks/swr-extensions";
-import { useContext, useEffect, useMemo, useState, useRef } from "react";
-import { PreferenceContext } from "src/pages/_app";
-import { urlWithParams, capitalize } from "src/lib/utilityFunctions";
-import { getPreferredUnitSymbol } from "src/lib/utils/load-preferences";
-import type { Location } from "src/lib/database/location";
 
 /* available markers from here: https://github.com/pointhi/leaflet-color-markers */
 export const getIcon = (color: string) =>
@@ -74,13 +77,17 @@ const LocationMarkerPopupContent: React.FC<{ locationName: string }> = ({
   const { preferences } = useContext(PreferenceContext);
   const url = useMemo(
     () =>
-      urlWithParams("/api/v3/measurements/history?", {
+      urlWithParams("/api/v3/measurements?", {
+        pageSize: 1,
+        sortOrder: "desc",
         locationName,
         temperatureUnit: preferences.temperatureUnit.symbol,
+        conductivityUnit: preferences.conductivityUnit.symbol,
       }),
     [locationName, preferences]
   );
-  const { summarizedData: summary, isLoading, error } = useSummarizedData(url);
+
+  const { measurements, isLoading, error } = useMeasurements(url);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -91,16 +98,18 @@ const LocationMarkerPopupContent: React.FC<{ locationName: string }> = ({
   return (
     <div>
       {!isLoading &&
-        summary &&
-        Object.entries(summary.sensors).map(([sensor, sensorData], idx) => {
-          const unitSymbol = getPreferredUnitSymbol(sensor, preferences);
-          return (
-            <p key={idx} style={{ margin: "0.25em 0" }}>
-              <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>
-              {sensorData.end} {capitalize(unitSymbol)}
-            </p>
-          );
-        })}
+        measurements &&
+        Object.entries(measurements[0].sensors).map(
+          ([sensor, sensorData], idx) => {
+            const unitSymbol = getPreferredUnitSymbol(sensor, preferences);
+            return (
+              <p key={idx} style={{ margin: "0.25em 0" }}>
+                <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>
+                {sensorData} {capitalize(unitSymbol)}
+              </p>
+            );
+          }
+        )}
     </div>
   );
 };

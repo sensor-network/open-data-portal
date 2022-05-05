@@ -1,18 +1,21 @@
 import { useContext, useState, useMemo } from "react";
-import { PreferenceContext } from "src/pages/_app";
 import { formatISO, startOfToday, endOfDay, sub } from "date-fns";
-
 import { Grid, Skeleton } from "@mui/material";
-import { CustomProgressBar } from "./CustomProgressBar";
-import Card from "src/components/Card";
-import DateRangeSelector from "src/components/DateRangeSelector";
 
-import { useSummary } from "src/lib/hooks/swr-extensions";
-import { round, capitalize, urlWithParams } from "src/lib/utilityFunctions";
-import styles from "src/styles/Summary.module.css";
 import type { Summary as SummaryType } from "~/pages/api/v3/measurements/history";
+import { useSummary } from "~/lib/hooks";
+import { round } from "~/lib/utils/math";
+import capitalize from "~/lib/utils/capitalize";
+import { urlWithParams } from "lib/utils/fetch";
+import {
+  PreferenceContext,
+  getPreferredUnitSymbol,
+} from "~/lib/utils/preferences";
 
-import { getPreferredUnitSymbol } from "~/lib/utils/load-preferences";
+import Card from "./Card";
+import { CustomProgressBar } from "./CustomProgressBar";
+import DateRangeSelector from "./DateRangeSelector";
+import styles from "src/styles/Summary.module.css";
 
 const ENDPOINT = "/api/v3/measurements/history?";
 

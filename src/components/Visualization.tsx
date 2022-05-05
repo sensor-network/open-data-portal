@@ -9,9 +9,10 @@ import DateRangeSelector from "./DateRangeSelector";
 import { CustomProgressBar } from "./CustomProgressBar";
 import styles from "~/styles/Visualization.module.css";
 
-import { PreferenceContext } from "~/pages/_app";
-import { urlWithParams, dateFormatter } from "~/lib/utilityFunctions";
-import { useSummarizedMeasurements } from "~/lib/hooks/swr-extensions";
+import { PreferenceContext } from "~/lib/utils/preferences";
+import { urlWithParams } from "~/lib/utils/fetch";
+import dateFormatter from "~/lib/utils/date-formatter";
+import { useSummarizedMeasurements } from "~/lib/hooks";
 
 const ENDPOINT = "/api/v3/measurements/history?";
 

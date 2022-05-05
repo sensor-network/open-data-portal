@@ -1,27 +1,25 @@
 import { useContext, useMemo, useState } from "react";
-
-import Pagination from "@mui/material/Pagination";
+import { formatISO } from "date-fns";
 import {
   DataGrid,
-  gridPageCountSelector,
-  gridPageSelector,
-  useGridApiContext,
-  useGridSelector,
   GridToolbarExport,
-  GridToolbarContainer
+  GridToolbarContainer,
+  GridValueGetterParams,
 } from "@mui/x-data-grid";
-import { ThemeProvider } from "@mui/material/styles";
-import { theme, CustomProgressBar } from "./CustomProgressBar";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Card from "src/components/Card";
-import DateRangeSelector from "src/components/DateRangeSelector";
-import { useSensorTypes } from "src/lib/hooks/useSensorTypes";
-import { useMeasurements } from "../lib/hooks/swr-extensions";
-import { PreferenceContext } from "../pages/_app";
-import { urlWithParams, capitalize, round } from "../lib/utilityFunctions";
-import { formatISO } from "date-fns";
-import { CardContent, Stack } from "@mui/material";
+import { CardContent } from "@mui/material";
+
+import { useMeasurements, useSensorTypes } from "~/lib/hooks";
+import {
+  PreferenceContext,
+  getPreferredUnitSymbol,
+} from "~/lib/utils/preferences";
+import { urlWithParams } from "lib/utils/fetch";
+import capitalize from "~/lib/utils/capitalize";
+import { round } from "~/lib/utils/math";
+import { CustomProgressBar } from "./CustomProgressBar";
+import CustomPagination from "./GridPagination";
+import Card from "./Card";
+import DateRangeSelector from "./DateRangeSelector";
 
 const ENDPOINT = "/api/v3/measurements?";
 
@@ -32,9 +30,8 @@ function MyExportButton() {
     </GridToolbarContainer>
   );
 }
-  
 
-const ServerPaginationGrid = () => {
+const ServerPaginationGrid: React.FC = () => {
   /* Define pagination options, which can be modified in the grid */
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(100);
@@ -70,29 +67,34 @@ const ServerPaginationGrid = () => {
         field: "time",
         width: 180,
         headerName: `Time (${Intl.DateTimeFormat().resolvedOptions().locale})`,
-        valueGetter: (time) => new Date(time.value).toLocaleString(),
+        valueGetter: (time: GridValueGetterParams) =>
+          new Date(time.value).toLocaleString(),
       },
       {
         field: "locationName",
         width: 150,
         headerName: "Location Name",
-        valueGetter: (measurement) => measurement.row.locationName,
+        valueGetter: (measurement: GridValueGetterParams) =>
+          measurement.row.locationName,
       },
       {
         field: "longitude",
         headerName: "Longitude",
         width: 120,
-        valueGetter: (measurement) => round(measurement.row.position.long, 6),
+        valueGetter: (measurement: GridValueGetterParams) =>
+          round(measurement.row.position.long, 6),
       },
       {
         field: "latitude",
         headerName: "Latitude",
         width: 120,
-        valueGetter: (measurement) => round(measurement.row.position.lat, 6),
+        valueGetter: (measurement: GridValueGetterParams) =>
+          round(measurement.row.position.lat, 6),
       },
     ];
     const sensorColumns = sensorTypes?.map((sensor) => {
-      const unit = preferences[`${sensor}Unit`]?.symbol;
+      const unitKey = sensor + "Unit";
+      const unit = getPreferredUnitSymbol(unitKey, preferences);
       const header = unit
         ? `${capitalize(sensor)} (${capitalize(unit)})`
         : sensor === "ph"
@@ -102,7 +104,8 @@ const ServerPaginationGrid = () => {
         field: sensor,
         headerName: header,
         width: 150,
-        valueGetter: (measurement) => measurement.row.sensors[sensor],
+        valueGetter: (measurement: GridValueGetterParams) =>
+          measurement.row.sensors[sensor],
       };
     });
     if (sensorColumns) {
@@ -111,60 +114,12 @@ const ServerPaginationGrid = () => {
     return columns;
   }, [sensorTypes, preferences]);
 
-  const CustomPagination = () => {
-    const apiRef = useGridApiContext();
-    const page = useGridSelector(apiRef, gridPageSelector);
-    const pageCount = useGridSelector(apiRef, gridPageCountSelector);
-
-    const [textFieldValue, setTextFieldValue] = useState(page + 1);
-    const validateInput = () => {
-      const value = parseInt(textFieldValue, 10);
-      if (!isNaN(value) && value > 0) {
-        setPage(value - 1);
-      }
-    };
-
-    return (
-      <Stack
-        direction="row"
-        spacing={2}
-        style={{
-          width: "100%",
-          right: 0,
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
-        <ThemeProvider theme={theme}>
-          <Pagination
-            color="primary"
-            count={pageCount}
-            page={page + 1}
-            onChange={(event, value) => apiRef.current.setPage(value - 1)}
-            />
-          <TextField
-            size="small"
-            label="Page"
-            value={textFieldValue}
-            onChange={(e) => setTextFieldValue(e.target.value)}
-            />
-          <Button variant="contained" color="primary" onClick={validateInput}>
-            Go To
-          </Button>
-        </ThemeProvider>
-      </Stack>
-    );
-  };
-
   return (
-    <Card
-      title="Explore the data on your own"
-    >
+    <Card title="Explore the data on your own">
       <CardContent style={{ height: 750 }}>
         {isLoading ? (
           <CustomProgressBar />
-        ) : error ? (
+        ) : error || !measurements ? (
           <div>No data found</div>
         ) : (
           <DataGrid
@@ -175,8 +130,8 @@ const ServerPaginationGrid = () => {
             getRowId={(row) => row.time}
             components={{
               LoadingOverlay: CustomProgressBar,
-              Pagination: CustomPagination,
-              Toolbar: MyExportButton
+              Pagination: () => <CustomPagination setPage={setPage} />,
+              Toolbar: MyExportButton,
             }}
             pagination
             paginationMode={"server"}

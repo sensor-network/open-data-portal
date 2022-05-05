@@ -15,10 +15,11 @@ import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
 import { Skeleton } from "@mui/material";
 
-import { PreferenceContext } from "src/pages/_app";
-import style from "src/styles/ComparisonGraph.module.css";
-import { useWidth } from "src/lib/hooks/useWidth";
-import { capitalize } from "src/lib/utilityFunctions";
+import { PreferenceContext } from "~/lib/utils/preferences";
+import { useWidth } from "~/lib/hooks";
+import { capitalize } from "~/lib/utils/capitalize";
+
+import style from "~/styles/ComparisonGraph.module.css";
 
 const ComparisonGraph = ({
   data,

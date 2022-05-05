@@ -1,36 +1,26 @@
+import { useContext, useMemo, useState, Dispatch, SetStateAction } from "react";
+import Cookies from "js-cookie";
+import Modal from "react-modal";
+
 import { Autocomplete, Button, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-import Modal from "react-modal";
+import { UNITS as TEMP_UNITS } from "~/lib/units/temperature";
+import { UNITS as COND_UNITS } from "~/lib/units/conductivity";
+import { PreferenceContext, Preferences } from "~/lib/utils/preferences";
+import style from "~/styles/PreferenceModal.module.css";
 
 Modal.setAppElement("#__next");
-import { useContext, useMemo, useState } from "react";
 
-import Cookies from "js-cookie";
-
-import { UNITS as TEMP_UNITS } from "src/lib/units/temperature";
-import { UNITS as COND_UNITS } from "src/lib/units/conductivity";
-import { PreferenceContext } from "src/pages/_app";
-import style from "src/styles/PreferenceModal.module.css";
-
-const PreferenceModal = ({ setPreferences, closeModal, isOpen }) => {
-  const { preferences, locations } =
-    useContext(
-      PreferenceContext
-    ); /* <-- global preferences from _app-context-provider */
-  const [tempPref, setTempPref] =
-    useState(preferences); /* <-- local preferences while modal is open */
+const PreferenceModal: React.FC<{
+  isOpen: boolean;
+  closeModal: () => void;
+  setPreferences: Dispatch<SetStateAction<Preferences>>;
+}> = ({ setPreferences, closeModal, isOpen }) => {
+  const { preferences, locations } = useContext(PreferenceContext);
+  const [tempPref, setTempPref] = useState(preferences);
   const preferenceOptions = useMemo(() => {
-    return [
-      {
-        name: "Location",
-        key: "location",
-        options: [
-          { name: "Everywhere", symbol: "Everywhere" },
-          ...locations.map((l) => ({ name: l.name, symbol: l.name })),
-        ],
-        default: preferences.location,
-      },
+    const options = [
       {
         name: "Temperature",
         key: "temperatureUnit",
@@ -50,13 +40,19 @@ const PreferenceModal = ({ setPreferences, closeModal, isOpen }) => {
         default: preferences.conductivityUnit,
       },
     ];
+    if (locations) {
+      options.push({
+        name: "Location",
+        key: "location",
+        options: [
+          { name: "Everywhere", symbol: "Everywhere" },
+          ...locations.map((l) => ({ name: l.name, symbol: l.name })),
+        ],
+        default: preferences.location,
+      });
+    }
+    return options;
   }, [locations, preferences]);
-
-  const handleChange = (key, val) => {
-    const updated = { ...tempPref };
-    updated[key] = val;
-    setTempPref(updated);
-  };
 
   const savePreferences = () => {
     setPreferences(tempPref);
@@ -89,14 +85,17 @@ const PreferenceModal = ({ setPreferences, closeModal, isOpen }) => {
             options={p.options}
             renderInput={(params) => <TextField {...params} />}
             getOptionLabel={(o) => o.name}
-            renderOption={(props, option) => (
-              <div {...props}>{option.name}</div>
-            )}
+            renderOption={(props, option) => <div>{option.name}</div>}
             defaultValue={p.default}
             isOptionEqualToValue={(option, value) =>
               value.symbol === option.symbol
             }
-            onChange={(e, val) => handleChange(p.key, val)}
+            onChange={(e, val) =>
+              setTempPref((prev) => ({
+                ...prev,
+                [p.key]: val,
+              }))
+            }
           />
         </div>
       ))}
