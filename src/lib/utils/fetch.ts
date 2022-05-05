@@ -1,7 +1,15 @@
 export const urlWithParams = (
   baseUrl: string,
   params: { [key: string]: any }
-) => baseUrl + new URLSearchParams(params);
+) => {
+  if (Object.keys(params).length === 0) {
+    return baseUrl;
+  }
+  if (baseUrl.includes("?")) {
+    return baseUrl + "&" + new URLSearchParams(params);
+  }
+  return baseUrl + "?" + new URLSearchParams(params);
+};
 
 export class FetcherError extends Error {
   constructor({
