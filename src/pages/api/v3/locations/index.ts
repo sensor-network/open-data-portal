@@ -1,9 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import * as Location from "lib/database/location";
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
 import { ZodError } from "zod";
-import { zLocation, zCreateLocation } from "lib/types/ZodSchemas";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Location from "~/lib/database/location";
+import { zLocation, zCreateLocation } from "~/lib/validators/location";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**

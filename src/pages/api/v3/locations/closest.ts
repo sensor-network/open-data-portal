@@ -1,8 +1,8 @@
-import { HTTP_STATUS as STATUS } from "~/lib/httpStatusCodes";
 import { NextApiRequest, NextApiResponse } from "next";
-import * as Location from "~/lib/database/location";
-import { zLatLong } from "~/lib/types/ZodSchemas";
 import { ZodError } from "zod";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Location from "~/lib/database/location";
+import { zLatLong } from "~/lib/validators/location";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") {
