@@ -1,3 +1,4 @@
+import useSWR from "swr";
 import type {
   SummarizedMeasurement,
   Summary,
