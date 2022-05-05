@@ -101,7 +101,8 @@ const LocationMarkerPopupContent: React.FC<{ locationName: string }> = ({
         measurements &&
         Object.entries(measurements[0].sensors).map(
           ([sensor, sensorData], idx) => {
-            const unitSymbol = getPreferredUnitSymbol(sensor, preferences);
+            const unitKey = sensor.toLowerCase() + "Unit";
+            const unitSymbol = getPreferredUnitSymbol(unitKey, preferences);
             return (
               <p key={idx} style={{ margin: "0.25em 0" }}>
                 <span style={{ fontWeight: 500 }}>{capitalize(sensor)}: </span>

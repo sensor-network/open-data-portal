@@ -6,7 +6,7 @@ import type { Summary as SummaryType } from "~/pages/api/v3/measurements/history
 import { useSummary } from "~/lib/hooks";
 import { round } from "~/lib/utils/math";
 import capitalize from "~/lib/utils/capitalize";
-import { urlWithParams } from "lib/utils/fetch";
+import { urlWithParams } from "~/lib/utils/fetch";
 import {
   PreferenceContext,
   getPreferredUnitSymbol,
@@ -15,7 +15,7 @@ import {
 import Card from "./Card";
 import { CustomProgressBar } from "./CustomProgressBar";
 import DateRangeSelector from "./DateRangeSelector";
-import styles from "src/styles/Summary.module.css";
+import styles from "~/styles/Summary.module.css";
 
 const ENDPOINT = "/api/v3/measurements/history?";
 

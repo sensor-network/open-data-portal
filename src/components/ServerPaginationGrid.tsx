@@ -13,7 +13,7 @@ import {
   PreferenceContext,
   getPreferredUnitSymbol,
 } from "~/lib/utils/preferences";
-import { urlWithParams } from "lib/utils/fetch";
+import { urlWithParams } from "~/lib/utils/fetch";
 import capitalize from "~/lib/utils/capitalize";
 import { round } from "~/lib/utils/math";
 import { CustomProgressBar } from "./CustomProgressBar";
