@@ -1,7 +1,6 @@
 import type { NextPage } from "next";
-
 import Container from "@mui/material/Container";
-import AdminView from "src/components/AdminDashboard";
+import AdminView from "~/components/AdminDashboard";
 
 const AdminPage: NextPage<{}> = () => {
   return (
