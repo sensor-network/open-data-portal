@@ -1,16 +1,19 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import { z, ZodError } from 'zod';
-import { format, isValid } from 'date-fns';
+import { NextApiRequest, NextApiResponse } from "next";
+import { z, ZodError } from "zod";
+import { format, isValid } from "date-fns";
 
-import { HTTP_STATUS as STATUS } from 'src/lib/httpStatusCodes';
-import * as Location from 'lib/database/location';
-import * as History from 'lib/database/history';
-import * as Sensor from 'lib/database/sensor';
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Location from "~/lib/database/location";
+import * as History from "~/lib/database/history";
+import * as Sensor from "~/lib/database/sensor";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method !== 'POST') {
-    console.log(`${req.method}: /api/private/aggregate-daily:: Method not allowed`);
-    res.setHeader('Allow', 'POST')
+  if (req.method !== "POST") {
+    console.log(
+      `${req.method}: /api/private/aggregate-daily:: Method not allowed`
+    );
+    res
+      .setHeader("Allow", "POST")
       .status(STATUS.NOT_ALLOWED)
       .json({ error: `Method '${req.method}' not allowed.` });
     return;
@@ -20,7 +23,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
    * Use Bearer authentication schema with private token for this
    * endpoint, which should not be queryable by external sources.
    **/
-  const AUTHENTICATION_SCHEMA = 'Bearer';
+  const AUTHENTICATION_SCHEMA = "Bearer";
   const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_PRIVATE_API_KEY;
 
   const { authorization } = req.headers;
@@ -28,7 +31,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
     console.log(`${req.method} /api/private/aggregate-daily:: ${errorMessage}`);
 
-    res.setHeader('WWW-Authenticate', AUTHENTICATION_SCHEMA)
+    res
+      .setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA)
       .status(STATUS.UNAUTHORIZED)
       .json({ error: errorMessage });
     return;
@@ -36,9 +40,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     /* parse and validate date from query */
-    const date = z.string()
-      .refine(str => isValid(new Date(str)), 'Unable to parse string as Date')
-      .transform(str => format(new Date(str), 'yyyy-MM-dd'))
+    const date = z
+      .string()
+      .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
+      .transform((str) => format(new Date(str), "yyyy-MM-dd"))
       .parse(req.query.date);
 
     /* get all locations from database, as well as the available sensors */
@@ -50,7 +55,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     for (const { id: locationId } of locations) {
       for (const type of sensorTypes) {
         /* see if data for such date and sensor has already been aggregated */
-        const history = await History.findByFilter({ date, sensorType: type, locationId });
+        const history = await History.findByFilter({
+          date,
+          sensorType: type,
+          locationId,
+        });
         if (history.length === 0) {
           const insertId = await History.createOne({
             date,
@@ -61,21 +70,16 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         }
       }
     }
-    res.status(STATUS.OK)
-      .json({ insertedIds });
-  }
-  catch (e) {
+    res.status(STATUS.OK).json({ insertedIds });
+  } catch (e) {
     if (e instanceof ZodError) {
       console.log(`${req.method}: /api/private/aggregate-daily::`, e.flatten());
-      res.status(STATUS.BAD_REQUEST)
-        .json(e.flatten());
-    }
-    else {
+      res.status(STATUS.BAD_REQUEST).json(e.flatten());
+    } else {
       console.error(`${req.method}: /api/private/aggregate-daily::`, e);
-      res.status(STATUS.SERVER_ERROR)
-        .json({
-          error: 'There was an error when executing the cron job.'
-        });
+      res.status(STATUS.SERVER_ERROR).json({
+        error: "There was an error when executing the cron job.",
+      });
     }
   }
 };

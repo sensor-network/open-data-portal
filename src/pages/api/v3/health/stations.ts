@@ -1,8 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
 import * as Station from "lib/database/station";
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
-import { Sensor } from "lib/database/sensor";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import { z } from "zod";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "GET") {
@@ -15,9 +14,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   }
 
   try {
+    const expandLocation = z
+      .enum(["true", "false"])
+      .transform((str) => str === "true")
+      .parse(req.query.expandLocation);
+
     const stations = await Station.findMany({
       expandSensors: false,
-      expandLocation: false,
+      expandLocation,
       includeSensorStatus: true,
     });
 

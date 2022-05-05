@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import * as Sensor from "lib/database/sensor";
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Sensor from "~/lib/database/sensor";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "GET") {
