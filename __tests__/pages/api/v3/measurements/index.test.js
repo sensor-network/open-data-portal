@@ -1,10 +1,9 @@
-import handler from "src/pages/api/v3/measurements";
-import { createOne, findMany } from "src/lib/database/measurement";
-
 import { createMocks } from "node-mocks-http";
+import handler from "~/pages/api/v3/measurements";
+import { createOne, findMany } from "~/lib/database/measurement";
 
 /* Mock the database modules. */
-jest.mock("src/lib/database/measurement", () => ({
+jest.mock("~/lib/database/measurement", () => ({
   __esModule: true,
   createOne: jest.fn().mockImplementation(async () => void 0),
   findMany: jest.fn().mockImplementation(async () => [
@@ -21,7 +20,7 @@ jest.mock("src/lib/database/measurement", () => ({
     },
   ]),
 }));
-jest.mock("src/lib/database/location", () => ({
+jest.mock("~/lib/database/location", () => ({
   __esModule: true,
   /* simulate there being a single entry at (lat,lng) = (0, 0) with id 1 */
   findClosest: jest.fn().mockImplementation(async ({ lat, long }) => {
@@ -37,7 +36,7 @@ const sensorDb = [
   { id: 3, name: "ph1", type: "ph" },
   { id: 4, name: "orp1", type: "random-sensor-type" },
 ];
-jest.mock("src/lib/database/sensor", () => ({
+jest.mock("~/lib/database/sensor", () => ({
   __esModule: true,
   findById: jest
     .fn()

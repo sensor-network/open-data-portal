@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react-hooks";
-import { useWidth } from "~/lib/hooks/useWidth";
+import { useWidth } from "~/lib/hooks";
 
 describe("useWidth", () => {
   it("should return the width of the window", () => {

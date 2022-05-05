@@ -1,11 +1,11 @@
 import { renderHook } from "@testing-library/react-hooks";
-import { useSensorTypes } from "~/lib/hooks/useSensorTypes";
-import { fetcher } from "~/lib/utilityFunctions";
+import { useSensorTypes } from "~/lib/hooks";
+import { fetcher } from "~/lib/utils/fetch";
 
 let sensorTypesFromAPI = ["temperature", "conductivity", "ph"];
 
 // mock external dependency
-jest.mock("~/lib/utilityFunctions", () => ({
+jest.mock("~/lib/utils/fetch", () => ({
   __esModule: true,
   fetcher: jest.fn().mockImplementation(async () => sensorTypesFromAPI),
 }));

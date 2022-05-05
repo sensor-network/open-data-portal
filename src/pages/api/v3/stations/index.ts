@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import * as Station from "lib/database/station";
-import * as Sensor from "lib/database/sensor";
-import * as Location from "lib/database/location";
+import * as Station from "~/lib/database/station";
+import * as Sensor from "~/lib/database/sensor";
+import * as Location from "~/lib/database/location";
 import { HTTP_STATUS as STATUS } from "~/lib/constants";
 import { ZodError } from "zod";
 import { zCreateStation, zStationParams } from "~/lib/validators/station";

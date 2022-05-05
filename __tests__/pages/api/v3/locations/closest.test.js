@@ -1,7 +1,7 @@
 import { createMocks } from "node-mocks-http";
 import handler from "~/pages/api/v3/locations/closest";
 import { findClosest } from "~/lib/database/location";
-import haversine from "~/lib/utils/haversine";
+import { haversine } from "~/lib/utils/math";
 
 const locationDb = [
   { id: 1, name: "foo", position: { lat: 0, long: 0 }, radiusMeters: 100 },

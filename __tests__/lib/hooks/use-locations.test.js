@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react-hooks";
-import { useLocations } from "~/lib/hooks/useLocations";
-import { fetcher } from "~/lib/utilityFunctions";
+import { useLocations } from "~/lib/hooks";
+import { fetcher } from "~/lib/utils/fetch";
 
 let locationsFromAPI = [
   {
@@ -18,7 +18,7 @@ let locationsFromAPI = [
 ];
 
 // mock external dependency
-jest.mock("~/lib/utilityFunctions", () => ({
+jest.mock("~/lib/utils/fetch", () => ({
   __esModule: true,
   fetcher: jest.fn().mockImplementation(async () => locationsFromAPI),
 }));
