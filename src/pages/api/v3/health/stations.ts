@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import * as Station from "lib/database/station";
+import * as Station from "~/lib/database/station";
 import { HTTP_STATUS as STATUS } from "~/lib/constants";
 import { z } from "zod";
 

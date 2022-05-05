@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
-import * as Location from "lib/database/location";
+import * as Location from "~/lib/database/location";
 import { HTTP_STATUS as STATUS } from "~/lib/constants";
 import { ZodError } from "zod";
 import { zUpdateLocation } from "~/lib/validators/location";

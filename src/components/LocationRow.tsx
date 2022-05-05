@@ -9,7 +9,7 @@ import {
 } from "~/lib/utils/preferences";
 import { CustomProgressBar } from "./CustomProgressBar";
 
-import { PRIMARY_BLUE_COLOR } from "lib/constants";
+import { PRIMARY_BLUE_COLOR } from "~/lib/constants";
 import styles from "~/styles/LocationRow.module.css";
 
 const ENDPOINT = "/api/v3/measurements?";

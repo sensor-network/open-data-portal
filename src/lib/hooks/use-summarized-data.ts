@@ -2,7 +2,7 @@ import useSWR from "swr";
 import type {
   SummarizedMeasurement,
   Summary,
-} from "pages/api/v3/measurements/history";
+} from "~/pages/api/v3/measurements/history";
 import { fetcher } from "~/lib/utils/fetch";
 import { laggy } from "~/lib/middleware/swr-laggy";
 

@@ -9,7 +9,7 @@ import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import MapIcon from "@mui/icons-material/Map";
 
-import type { Preferences } from "lib/utils/preferences";
+import type { Preferences } from "~/lib/utils/preferences";
 import PreferenceModal from "./PreferenceModal";
 import style from "~/styles/Nav.module.css";
 
