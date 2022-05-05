@@ -6,7 +6,11 @@ import Cookies from "js-cookie";
 import Navbar from "~/components/Navbar";
 import Footer from "~/components/Footer";
 import { loadPreferences, PreferenceContext } from "~/lib/utils/preferences";
-import { NAV_HEIGHT, MOBILE_BREAKPOINT } from "~/lib/constants";
+import {
+  NAV_HEIGHT,
+  MOBILE_BREAKPOINT,
+  PRIMARY_BLUE_COLOR,
+} from "~/lib/constants";
 import { useWidth, useLocations } from "~/lib/hooks";
 
 import "~/styles/globals.css";
@@ -22,7 +26,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
       <NextNProgress
-        color={"#185693"}
+        color={PRIMARY_BLUE_COLOR}
         height={8}
         options={{ showSpinner: false }}
       />
