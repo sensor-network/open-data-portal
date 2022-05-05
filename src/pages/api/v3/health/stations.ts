@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "GET") {
-    console.log(`${req.method}: /api/v3/health/stations:: Method not allowed`);
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "GET");
     res
       .status(STATUS.NOT_ALLOWED)
@@ -75,7 +75,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /* else respond with 200 and the stations matching the query */
     res.status(STATUS.OK).json(includeStationStatus);
   } catch (e) {
-    console.error(`${req.method}: /api/v3/health/stations::`, e);
+    console.error(`${req.method}: ${req.url}::`, e);
     res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
   }
 };
