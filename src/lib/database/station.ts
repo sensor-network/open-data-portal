@@ -1,7 +1,7 @@
-import { getConnectionPool } from "lib/database/connection";
+import { getConnectionPool } from "./connection";
 import mysql, { OkPacket, RowDataPacket } from "mysql2/promise";
-import type { Sensor } from "src/lib/database/sensor";
-import type { Location } from "src/lib/database/location";
+import type { Sensor } from "./sensor";
+import type { Location } from "./location";
 
 export type Station = {
   id: number;

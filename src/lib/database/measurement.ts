@@ -1,6 +1,6 @@
 import { OkPacket, RowDataPacket } from "mysql2/promise";
-import { getConnectionPool } from "src/lib//database/connection";
-import type { CombinedFormat } from "src/lib/database/history";
+import { getConnectionPool } from "./connection";
+import type { CombinedFormat } from "./history";
 import mysql from "mysql2/promise";
 import { SRID } from "src/lib/constants";
 
