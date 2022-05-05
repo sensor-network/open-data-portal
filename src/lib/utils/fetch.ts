@@ -1,6 +1,6 @@
 export const urlWithParams = (
   baseUrl: string,
-  params: { [key: string]: string }
+  params: { [key: string]: any }
 ) => baseUrl + new URLSearchParams(params);
 
 export class FetcherError extends Error {
