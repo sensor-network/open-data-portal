@@ -1,6 +1,6 @@
 import { ZodError } from "zod";
 
-export function ISOStringToSQLTimestamp(ISOString: string) {
+const ISOStringToSQLTimestamp = (ISOString: string) => {
   try {
     /* JS Date-object is weird, and does not always support the T-separator  */
     const withoutT = ISOString.replace("T", " ");
@@ -18,4 +18,6 @@ export function ISOStringToSQLTimestamp(ISOString: string) {
       },
     ]);
   }
-}
+};
+
+export default ISOStringToSQLTimestamp;

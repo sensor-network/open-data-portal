@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ISOStringToSQLTimestamp } from "lib/units/convertTimestamp";
+import ISOStringToSQLTimestamp from "~/lib/utils/iso-to-sql-timestamp";
 
 export const zCreateMeasurement = z.object({
   time: z
