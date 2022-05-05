@@ -24,7 +24,7 @@ const hav = (x: number) => {
 type Point = { lat: number; long: number };
 
 // hav(theta) = hav(bLat - aLat) + cos(aLat) * cos(bLat) * hav(bLon - aLon)
-const haversine = (a: Point, b: Point) => {
+export const haversine = (a: Point, b: Point) => {
   const aLat = toRad(a.lat);
   const bLat = toRad(b.lat);
   const aLng = toRad(a.long);
@@ -33,5 +33,3 @@ const haversine = (a: Point, b: Point) => {
   const ht = hav(bLat - aLat) + cos(aLat) * cos(bLat) * hav(bLng - aLng);
   return 2 * R * asin(sqrt(ht));
 };
-
-export default haversine;
