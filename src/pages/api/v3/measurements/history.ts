@@ -61,9 +61,7 @@ export type Summary = {
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "GET") {
-    console.log(
-      `${req.method}: /api/v3/measurements/history:: Method not allowed`
-    );
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "GET");
     res
       .status(STATUS.NOT_ALLOWED)
@@ -147,7 +145,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (!rows.length) {
       const message = `No measurements found for location '${location.name}' between ${startTime} and ${endTime}.`;
-      console.log(`${req.method}: /api/v3/measurements/history:: ${message}`);
+      console.log(`${req.method}: ${req.url}:: ${message}`);
       res.status(STATUS.NOT_FOUND).json({ message });
       return;
     }
@@ -254,12 +252,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   } catch (e) {
     if (e instanceof ZodError) {
       console.log(
-        `${req.method}: /api/v3/measurements/history:: Error parsing query params:\n`,
+        `${req.method}: ${req.url}:: Error parsing query params:\n`,
         e.flatten()
       );
       res.status(STATUS.BAD_REQUEST).json(e.flatten());
     } else {
-      console.error(`${req.method}: /api/v3/measurements/history::`, e);
+      console.error(`${req.method}: ${req.url}::`, e);
       res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
     }
   }

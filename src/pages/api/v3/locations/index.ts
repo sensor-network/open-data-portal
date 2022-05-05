@@ -4,6 +4,8 @@ import { HTTP_STATUS as STATUS } from "~/lib/constants";
 import * as Location from "~/lib/database/location";
 import { zLocation, zCreateLocation } from "~/lib/validators/location";
 
+import { authorizeRequest } from "~/lib/utils/api/auth";
+
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
    * GET /api/v3/locations
@@ -48,7 +50,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* respond with 404 with appropriate message if no locations matching filter was found */
       if (!status.found) {
-        console.log(`${req.method} /api/v3/locations:: ${status.message}`);
+        console.log(`${req.method} ${req.url}:: ${status.message}`);
         res.status(STATUS.NOT_FOUND).json({ message: status.message });
         return;
       }
@@ -58,7 +60,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     } catch (e) {
       if (e instanceof ZodError) {
         console.log(
-          `${req.method}: /api/v3/locations:: Error parsing query params:\n`,
+          `${req.method}: ${req.url}:: Error parsing query params:\n`,
           e.flatten()
         );
         res.status(STATUS.BAD_REQUEST).json(e.flatten());
@@ -73,19 +75,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * POST /api/v3/locations
      **/
-    /**
-     * TODO: Implement more sophisticated authentication
-     */
-    const AUTHENTICATION_SCHEMA = "Bearer";
-    const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
-    const { authorization } = req.headers;
-
-    if (authorization !== `${AUTHENTICATION_SCHEMA} ${AUTHENTICATION_TOKEN}`) {
-      const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
-      console.log(`${req.method} /api/v3/locations:: ${errorMessage}`);
-
-      res.setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA);
-      res.status(STATUS.UNAUTHORIZED).json({ error: errorMessage });
+    if (!authorizeRequest(req, res)) {
       return;
     }
 
@@ -102,7 +92,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     } catch (e) {
       if (e instanceof ZodError) {
         console.log(
-          `${req.method}: /api/v3/locations:: Error parsing request body:\n`,
+          `${req.method}: ${req.url}:: Error parsing request body:\n`,
           e.flatten()
         );
         res.status(STATUS.BAD_REQUEST).json(e.flatten());
@@ -117,7 +107,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * {unknown} /api/v3/locations
      **/
-    console.log(`${req.method}: /api/v3/locations:: Method not allowed`);
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "POST, GET");
     res
       .status(STATUS.NOT_ALLOWED)

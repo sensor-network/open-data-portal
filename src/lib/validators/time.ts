@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { isValid } from "date-fns";
 
+export const zTime = z
+  .string()
+  .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
+  .transform((str) => new Date(str));
+
 /**
  * schema for parsing a valid time range
  * must be a valid ISO date and defaults to 2022-01-01 -> now

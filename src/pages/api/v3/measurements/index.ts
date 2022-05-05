@@ -85,7 +85,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* return early if no matching locations were found */
       if (!status.found) {
-        console.log(`${req.method} /api/v3/measurements:: ${status.message}`);
+        console.log(`${req.method}: ${req.url}:: ${status.message}`);
         res.status(STATUS.NOT_FOUND).json({ message: status.message });
         return;
       }
@@ -138,7 +138,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* return early if no measurements were found */
       if (!status.found) {
-        console.log(`${req.method} /api/v3/measurements:: ${status.message}`);
+        console.log(`${req.method}: ${req.url}:: ${status.message}`);
         res.status(STATUS.NOT_FOUND).json({ message: status.message });
         return;
       }
@@ -187,12 +187,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     } catch (e) {
       if (e instanceof ZodError) {
         console.log(
-          `${req.method}: /api/v3/measurements:: Error parsing query params:\n`,
+          `${req.method}: ${req.url}:: Error parsing query params:\n`,
           e.flatten()
         );
         res.status(STATUS.BAD_REQUEST).json(e.flatten());
       } else {
-        console.error(`${req.method}: /api/v3/measurements::`, e);
+        console.error(`${req.method}: ${req.url}::`, e);
         res
           .status(STATUS.SERVER_ERROR)
           .json({ error: "Internal server error" });
@@ -202,10 +202,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * POST /api/v3/measurements
      **/
-    /**
-     * TODO: Implement more sophisticated authentication
-     */
-    if (!authorizeRequest(req, res, "")) {
+    if (!authorizeRequest(req, res)) {
       return;
     }
 
@@ -292,7 +289,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               // @ts-ignore - this validation is apparently not enough to keep TS happy :(
               sensorErrors.push({ sensorId: id, status: e.code.toUpperCase() });
             } else {
-              console.error(`${req.method}: /api/v3/measurements::`, e);
+              console.error(`${req.method}: ${req.url}::`, e);
               sensorErrors.push({ sensorId: id, status: "UNKNOWN_ERROR" });
             }
           }
@@ -335,7 +332,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * {unknown} /api/v3/measurements
      **/
-    console.log(`${req.method}: /api/v3/measurements:: Method not allowed`);
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "POST, GET");
     res
       .status(STATUS.NOT_ALLOWED)
