@@ -5,6 +5,7 @@ import {
   GridToolbarExport,
   GridToolbarContainer,
   GridValueGetterParams,
+  GridRowIdGetter,
 } from "@mui/x-data-grid";
 import { CardContent } from "@mui/material";
 
@@ -114,6 +115,10 @@ const ServerPaginationGrid: React.FC = () => {
     return columns;
   }, [sensorTypes, preferences]);
 
+  const rowIdGetter: GridRowIdGetter = (row) => {
+    return `${row.time}-${row.position.lat}-${row.position.long}`;
+  };
+
   return (
     <Card title="Explore the data on your own">
       <CardContent style={{ height: 750 }}>
@@ -127,14 +132,7 @@ const ServerPaginationGrid: React.FC = () => {
             columns={gridColumns}
             rowCount={pagination?.totalRows}
             loading={isLagging || isLoading}
-            getRowId={(row) => {
-              console.log(row);
-              return (
-                new Date(row.time).getTime() *
-                row.position.lat *
-                row.position.long
-              );
-            }}
+            getRowId={rowIdGetter}
             components={{
               LoadingOverlay: CustomProgressBar,
               Pagination: () => <CustomPagination setPage={setPage} />,
