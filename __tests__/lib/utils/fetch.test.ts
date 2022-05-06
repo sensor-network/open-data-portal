@@ -1,4 +1,4 @@
-import { urlWithParams, fetcher } from "~/lib/utils/fetch";
+import { urlWithParams, fetcher, FetcherError } from "~/lib/utils/fetch";
 
 describe("urlWithParams", () => {
   it("no params", () => {
@@ -74,10 +74,16 @@ describe("fetcher", () => {
       ok: false,
       status: 404,
       statusText: "Not Found",
-      json: async () => undefined,
+      json: async () => ({ message: "Could not find any data" }),
     }));
 
     const url = "https://example.com";
-    await expect(fetcher(url)).rejects.toThrow();
+    await expect(fetcher(url)).rejects.toThrowError(
+      new FetcherError({
+        name: "Not Found",
+        status: 404,
+        message: "Could not find any data",
+      })
+    );
   });
 });

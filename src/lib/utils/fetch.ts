@@ -31,7 +31,7 @@ export const fetcher = async (url: string) => {
   if (!response.ok) {
     throw new FetcherError({
       name: response.statusText,
-      message: await response.json(),
+      message: (await response.json()).message ?? "Could not find any data",
       status: response.status,
     });
   }
