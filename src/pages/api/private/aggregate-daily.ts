@@ -47,7 +47,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             sensorType: type,
             locationId,
           });
-          insertedIds.push(insertId);
+          if (insertId !== null) insertedIds.push(insertId);
         }
       }
     }
