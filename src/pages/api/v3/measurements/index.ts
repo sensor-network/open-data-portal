@@ -1,30 +1,29 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { z, ZodError } from "zod";
+import { OkPacket } from "mysql2/promise";
 
-import * as Measurement from "src/lib/database/measurement";
-import * as Sensor from "src/lib/database/sensor";
-import * as Location from "src/lib/database/location";
-import { HTTP_STATUS as STATUS } from "src/lib/httpStatusCodes";
+import * as Measurement from "~/lib/database/measurement";
+import * as Sensor from "~/lib/database/sensor";
+import * as Location from "~/lib/database/location";
+
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import { zCreateMeasurement } from "~/lib/validators/measurement";
+import { zTimeRange } from "~/lib/validators/time";
+import { zLocation } from "~/lib/validators/location";
+import { zPage } from "~/lib/validators/pagination";
+import { authorizeRequest } from "~/lib/utils/api/auth";
+import { round } from "~/lib/utils/math";
 import {
   parseUnit as parseTempUnit,
   parseTemperature,
   Temperature,
-} from "src/lib/units/temperature";
+} from "~/lib/units/temperature";
 import {
   parseUnit as parseCondUnit,
   parseConductivity,
   Conductivity,
-} from "src/lib/units/conductivity";
-import { PH } from "src/lib/units/ph";
-import { round } from "src/lib/utilityFunctions";
-
-import {
-  zCreateMeasurement,
-  zTime,
-  zPage,
-  zLocation,
-} from "src/lib/types/ZodSchemas";
-import { OkPacket } from "mysql2/promise";
+} from "~/lib/units/conductivity";
+import { PH } from "~/lib/units/ph";
 
 export type Pagination = {
   page: number;
@@ -54,7 +53,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         .parse(req.query.sortOrder);
       const { lat, long, rad, locationName, useExactPosition } =
         zLocation.parse(req.query);
-      const { startTime, endTime } = zTime.parse(req.query);
+      const { startTime, endTime } = zTimeRange.parse(req.query);
       let { page, pageSize } = zPage.parse(req.query);
       const offset = (page - 1) * pageSize; // last row of previous page
 
@@ -86,7 +85,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* return early if no matching locations were found */
       if (!status.found) {
-        console.log(`${req.method} /api/v3/measurements:: ${status.message}`);
+        console.log(`${req.method}: ${req.url}:: ${status.message}`);
         res.status(STATUS.NOT_FOUND).json({ message: status.message });
         return;
       }
@@ -139,7 +138,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       /* return early if no measurements were found */
       if (!status.found) {
-        console.log(`${req.method} /api/v3/measurements:: ${status.message}`);
+        console.log(`${req.method}: ${req.url}:: ${status.message}`);
         res.status(STATUS.NOT_FOUND).json({ message: status.message });
         return;
       }
@@ -188,12 +187,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     } catch (e) {
       if (e instanceof ZodError) {
         console.log(
-          `${req.method}: /api/v3/measurements:: Error parsing query params:\n`,
+          `${req.method}: ${req.url}:: Error parsing query params:\n`,
           e.flatten()
         );
         res.status(STATUS.BAD_REQUEST).json(e.flatten());
       } else {
-        console.error(`${req.method}: /api/v3/measurements::`, e);
+        console.error(`${req.method}: ${req.url}::`, e);
         res
           .status(STATUS.SERVER_ERROR)
           .json({ error: "Internal server error" });
@@ -203,26 +202,14 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * POST /api/v3/measurements
      **/
-    /**
-     * TODO: Implement more sophisticated authentication
-     */
-    const AUTHENTICATION_SCHEMA = "Bearer";
-    const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
-    const { authorization } = req.headers;
-
-    if (authorization !== `${AUTHENTICATION_SCHEMA} ${AUTHENTICATION_TOKEN}`) {
-      const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
-      console.log(`${req.method} /api/v3/measurements:: ${errorMessage}`);
-
-      res.setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA);
-      res.status(STATUS.UNAUTHORIZED).json({ error: errorMessage });
+    if (!authorizeRequest(req, res)) {
       return;
     }
 
     /* parse request body, put it into an array if its not */
     let arrayedBody = Array.isArray(req.body) ? req.body : [req.body];
     let insertedMeasurements: {
-      time: string;
+      time: Date;
       locationId: number;
       sensorId: number;
       value: number;
@@ -289,7 +276,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             insertedMeasurements.push({
               sensorId: id,
               value: convertedValue,
-              time: time + "Z", // add the removed Z back when responding
+              time,
               locationId,
             });
           } catch (e) {
@@ -302,7 +289,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               // @ts-ignore - this validation is apparently not enough to keep TS happy :(
               sensorErrors.push({ sensorId: id, status: e.code.toUpperCase() });
             } else {
-              console.error(`${req.method}: /api/v3/measurements::`, e);
+              console.error(`${req.method}: ${req.url}::`, e);
               sensorErrors.push({ sensorId: id, status: "UNKNOWN_ERROR" });
             }
           }
@@ -345,7 +332,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * {unknown} /api/v3/measurements
      **/
-    console.log(`${req.method}: /api/v3/measurements:: Method not allowed`);
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "POST, GET");
     res
       .status(STATUS.NOT_ALLOWED)

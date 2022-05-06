@@ -17,8 +17,6 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "lib/*": ["src/lib/*"],
-      "pages/*": ["src/pages/*"],
       "~/*": ["src/*"]
     }
   },

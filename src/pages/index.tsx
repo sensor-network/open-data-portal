@@ -1,8 +1,6 @@
 import type { NextPage } from "next";
 import Head from "next/head";
-
-import Container from "@mui/material/Container";
-import Dashboard from "src/components/Dashboard";
+import Dashboard from "~/components/Dashboard";
 
 const HomePage: NextPage<{}> = () => {
   return (

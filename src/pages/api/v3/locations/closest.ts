@@ -1,8 +1,8 @@
-import { HTTP_STATUS as STATUS } from "~/lib/httpStatusCodes";
 import { NextApiRequest, NextApiResponse } from "next";
-import * as Location from "~/lib/database/location";
-import { zLatLong } from "~/lib/types/ZodSchemas";
 import { ZodError } from "zod";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Location from "~/lib/database/location";
+import { zLatLong } from "~/lib/validators/location";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method === "GET") {
@@ -15,7 +15,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       /* error checks etc.*/
       if (!closest) {
         const message = "No location found close enough";
-        console.log(`${req.method} /api/v3/locations/closest:: ${message}`);
+        console.log(`${req.method}: ${req.url}:: ${message}`);
         res.status(STATUS.NOT_FOUND).json({ message });
         return;
       }
@@ -25,7 +25,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     } catch (e) {
       if (e instanceof ZodError) {
         console.log(
-          `${req.method}: /api/v3/locations/closest:: Error parsing query params:\n`,
+          `${req.method}: ${req.url}:: Error parsing query params:\n`,
           e.flatten()
         );
         res.status(STATUS.BAD_REQUEST).json(e.flatten());
@@ -37,9 +37,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
     }
   } else {
-    console.log(
-      `${req.method}: /api/v3/locations/closest:: Method not allowed`
-    );
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "GET");
     res
       .status(STATUS.NOT_ALLOWED)

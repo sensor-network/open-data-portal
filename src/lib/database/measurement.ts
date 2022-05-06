@@ -1,7 +1,6 @@
-import { OkPacket, RowDataPacket } from "mysql2/promise";
-import { getConnectionPool } from "src/lib//database/connection";
-import type { CombinedFormat } from "src/lib/database/history";
-import mysql from "mysql2/promise";
+import mysql, { OkPacket, RowDataPacket } from "mysql2/promise";
+import { getConnectionPool } from "./connection";
+import type { CombinedFormat } from "./history";
 import { SRID } from "src/lib/constants";
 
 export type Measurement = {
@@ -20,8 +19,8 @@ export const findInCombinedFormat = async ({
   locationId,
   sortOrder = "ASC",
 }: {
-  startTime: Date | string;
-  endTime: Date | string;
+  startTime: Date;
+  endTime: Date;
   locationId: number;
   sortOrder?: string;
 }) => {
@@ -64,7 +63,7 @@ export const createOne = async ({
 }: {
   sensorId: number;
   value: number;
-  time: Date | string;
+  time: Date;
   sensorType: string;
   locationId: number;
   position: { lat: number; long: number };
@@ -104,8 +103,8 @@ export const findMany = async ({
   endTime,
   sortOrder = "ASC",
 }: {
-  startTime: Date | string;
-  endTime: Date | string;
+  startTime: Date;
+  endTime: Date;
   sortOrder?: string;
 }) => {
   const query = mysql.format(
@@ -137,8 +136,8 @@ export const findByLocationIds = async ({
   sortOrder = "ASC",
 }: {
   locationIds: number[];
-  startTime: Date | string;
-  endTime: Date | string;
+  startTime: Date;
+  endTime: Date;
   sortOrder?: string;
 }) => {
   const query = mysql.format(
@@ -173,8 +172,8 @@ export const findByLatLong = async ({
   lat: number;
   long: number;
   rad: number;
-  startTime: Date | string;
-  endTime: Date | string;
+  startTime: Date;
+  endTime: Date;
   sortOrder?: string;
 }) => {
   const query = mysql.format(

@@ -1,5 +1,5 @@
-import { HTTP_STATUS as STATUS } from "~/lib/httpStatusCodes";
 import { NextApiRequest, NextApiResponse } from "next";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
 import * as Connection from "~/lib/database/connection";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {

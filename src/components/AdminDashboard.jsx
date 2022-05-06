@@ -2,8 +2,8 @@ import Card from "src/components/Card";
 import { useMemo } from "react";
 import HealthDashboard from "./HealthDashboard";
 import useSWR from "swr";
-import { fetcher } from "src/lib/utilityFunctions";
-import { getAverage } from "src/lib/utilityFunctions";
+import { fetcher } from "~/lib/utils/fetch";
+import { getAverage } from "~/lib/utils/math";
 
 // Reformats the given sensor-health-data to a format accepted by HealthDashboard
 function formatSensorStatus(sensorData) {

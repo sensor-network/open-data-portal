@@ -1,9 +1,8 @@
 import type { NextPage } from "next";
-
 import Container from "@mui/material/Container";
-import ServerPaginationGrid from "src/components/ServerPaginationGrid";
-import Visualization from "src/components/Visualization";
-import Summary from "src/components/Summary";
+import ServerPaginationGrid from "~/components/ServerPaginationGrid";
+import Visualization from "~/components/Visualization";
+import Summary from "~/components/Summary";
 
 const DataPage: NextPage<{}> = () => {
   return (

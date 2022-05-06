@@ -1,30 +1,27 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
-import * as History from "lib/database/history";
-import * as Measurement from "lib/database/measurement";
-import * as Location from "lib/database/location";
-import * as Sensor from "lib/database/sensor";
+import { add, startOfDay, endOfDay, format } from "date-fns";
 import { z, ZodError } from "zod";
-import { zTime } from "lib/types/ZodSchemas";
-import type { CombinedFormat } from "lib/database/history";
 
-import { add, format } from "date-fns";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as History from "~/lib/database/history";
+import * as Measurement from "~/lib/database/measurement";
+import * as Location from "~/lib/database/location";
+import * as Sensor from "~/lib/database/sensor";
+import type { CombinedFormat } from "~/lib/database/history";
 
+import { zTimeRange } from "~/lib/validators/time";
+import { getAverage, getMin, getMax, round } from "~/lib/utils/math";
+import { defineDataDensity } from "~/lib/utils/define-data-density";
+import findLast from "~/lib/utils/find-last";
 import {
-  getAverage,
-  getMin,
-  getMax,
-  round,
-  defineDataDensity,
-  findLast,
-} from "lib/utilityFunctions";
-import { parseUnit as parseTempUnit, Temperature } from "lib/units/temperature";
+  parseUnit as parseTempUnit,
+  Temperature,
+} from "~/lib/units/temperature";
 import {
   Conductivity,
   parseUnit as parseCondUnit,
-} from "lib/units/conductivity";
-import { PH } from "src/lib/units/ph";
+} from "~/lib/units/conductivity";
+import { PH } from "~/lib/units/ph";
 
 const DAILY_DENSITIES = ["5min", "30min", "1h", "12h"] as const;
 const HISTORY_DENSITIES = ["1d", "1w", "2w", "1mon", "1y"] as const;
@@ -42,15 +39,15 @@ const DENSITY_OPTIONS = {
 };
 
 export type SummarizedMeasurement = {
-  time: string;
+  time: Date;
   sensors: {
     [key: string]: { min: number; avg: number; max: number };
   };
 };
 export type Summary = {
   locationName: string;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
   sensors: {
     [key: string]: {
       min: number;
@@ -64,9 +61,7 @@ export type Summary = {
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "GET") {
-    console.log(
-      `${req.method}: /api/v3/measurements/history:: Method not allowed`
-    );
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "GET");
     res
       .status(STATUS.NOT_ALLOWED)
@@ -76,7 +71,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     /* parse necessary parameters */
-    const { startTime, endTime } = zTime.parse(req.query);
+    const { startTime, endTime } = zTimeRange.parse(req.query);
     /* whether we should include all measurements or just summarize */
     const includeMeasurements = z
       .enum(["true", "false"])
@@ -124,8 +119,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const summary: Summary = {
       locationName: location.name,
-      startTime: format(new Date(startTime), "yyyy-MM-dd"),
-      endTime: format(new Date(endTime), "yyyy-MM-dd"),
+      startTime,
+      endTime,
       sensors: {},
     };
     let measurements: SummarizedMeasurement[] = [];
@@ -150,7 +145,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (!rows.length) {
       const message = `No measurements found for location '${location.name}' between ${startTime} and ${endTime}.`;
-      console.log(`${req.method}: /api/v3/measurements/history:: ${message}`);
+      console.log(`${req.method}: ${req.url}:: ${message}`);
       res.status(STATUS.NOT_FOUND).json({ message });
       return;
     }
@@ -207,8 +202,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     /* if we should include measurements, then we need to do some more work */
     /* aggregate the result in chunks of the given density */
-    let currentTime = new Date(startTime);
-    while (currentTime <= new Date(endTime)) {
+    let currentTime = startTime;
+    while (currentTime <= endTime) {
       const nextTime = add(currentTime, nextDateOptions);
       const inRange = converted.filter(
         (row) => currentTime <= row.time && row.time < nextTime
@@ -220,7 +215,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       const measurement: SummarizedMeasurement = {
-        time: format(currentTime, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+        time: currentTime,
         sensors: {},
       };
 
@@ -257,12 +252,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   } catch (e) {
     if (e instanceof ZodError) {
       console.log(
-        `${req.method}: /api/v3/measurements/history:: Error parsing query params:\n`,
+        `${req.method}: ${req.url}:: Error parsing query params:\n`,
         e.flatten()
       );
       res.status(STATUS.BAD_REQUEST).json(e.flatten());
     } else {
-      console.error(`${req.method}: /api/v3/measurements/history::`, e);
+      console.error(`${req.method}: ${req.url}::`, e);
       res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
     }
   }
