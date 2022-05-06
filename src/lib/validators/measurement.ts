@@ -1,6 +1,6 @@
 import { isValid, parseISO } from "date-fns";
 import { z } from "zod";
-import ISOStringToSQLTimestamp from "~/lib/utils/iso-to-sql-timestamp";
+import { zId } from "./id";
 
 export const zCreateMeasurement = z.object({
   time: z
@@ -25,6 +25,7 @@ export const zCreateMeasurement = z.object({
       .refine((num) => num <= 180, "should be less than or equal to 180")
       .or(z.number().gte(-180).lte(180)), // no need to transform if input is already a number (e.g. when coming from req. body)
   }),
+  stationId: z.number().positive().int(),
   sensors: z.array(
     z.object({
       id: z.number().positive(),
