@@ -16,6 +16,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   try {
     const expandLocation = z
       .enum(["true", "false"])
+      .default("false")
       .transform((str) => str === "true")
       .parse(req.query.expandLocation);
 
