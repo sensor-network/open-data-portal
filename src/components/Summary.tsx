@@ -16,6 +16,7 @@ import Card from "./Card";
 import { CustomProgressBar } from "./CustomProgressBar";
 import DateRangeSelector from "./DateRangeSelector";
 import styles from "~/styles/Summary.module.css";
+import { PH } from "~/lib/units/ph";
 
 const ENDPOINT = "/api/v3/measurements/history?";
 
@@ -85,12 +86,21 @@ const DataColumns: React.FC<{
     <>
       {Object.entries(currentSummary.sensors).map(
         ([sensor, currentSensorData], index) => {
+          /** FIXME: Use classes to determine header and unit in a neater way */
           const unitKey = sensor.toLowerCase() + "Unit";
           const unit = getPreferredUnitSymbol(unitKey, preferences);
-          const capitalizedUnit = capitalize(unit);
+          const header =
+            sensor === PH.keyName
+              ? PH.displayName
+              : `${capitalize(sensor)} (${capitalize(unit)})`;
 
           const getComparison = (a?: number, b?: number) => {
-            if (a === undefined || b === undefined) {
+            if (
+              a === undefined ||
+              b === undefined ||
+              a === null ||
+              b === null
+            ) {
               return {
                 string: "No data found",
                 color: "black",
@@ -98,7 +108,7 @@ const DataColumns: React.FC<{
             }
             const delta = a - b;
             const percentage = (delta / b) * 100;
-            const sign = delta < 0 ? "" : "+";
+            const sign = delta <= 0 ? "" : "+";
             const color = delta < 0 ? "red" : "green";
             return {
               string: `${sign}${round(delta)} (${sign}${round(percentage)} %)`,
@@ -112,17 +122,17 @@ const DataColumns: React.FC<{
           );
 
           const comparedToAllTime = getComparison(
-            allTimeSummary?.sensors[sensor].avg,
+            allTimeSummary?.sensors[sensor]?.avg,
             currentSensorData.avg
           );
 
           const comparedToLastYear = getComparison(
-            lastYearsSummary?.sensors[sensor].avg,
+            lastYearsSummary?.sensors[sensor]?.avg,
             currentSensorData.avg
           );
 
           const comparedToArchipelago = getComparison(
-            archipelagoSummary?.sensors[sensor].avg,
+            archipelagoSummary?.sensors[sensor]?.avg,
             currentSensorData.avg
           );
 
@@ -135,15 +145,16 @@ const DataColumns: React.FC<{
               lg={3}
               className={styles.gridValue}
             >
-              <div className={styles.header}>
-                {sensor === "ph" ? "ph" : capitalize(sensor)}{" "}
-                {capitalizedUnit && `(${capitalizedUnit})`}
-              </div>
+              <div className={styles.header}>{header}</div>
 
               {/* period's delta */}
               <div className={styles.section}>
-                <div className={styles.row}>{currentSensorData.start}</div>
-                <div className={styles.row}>{currentSensorData.end}</div>
+                <div className={styles.row}>
+                  {currentSensorData.start ?? "No data"}
+                </div>
+                <div className={styles.row}>
+                  {currentSensorData.end ?? "No data"}
+                </div>
                 <div className={styles.row}>
                   <span
                     style={{
@@ -158,9 +169,15 @@ const DataColumns: React.FC<{
 
               {/* current period */}
               <div className={styles.section}>
-                <div className={styles.row}>{currentSensorData.min}</div>
-                <div className={styles.row}>{currentSensorData.avg}</div>
-                <div className={styles.row}>{currentSensorData.max}</div>
+                <div className={styles.row}>
+                  {currentSensorData.min ?? "No data"}
+                </div>
+                <div className={styles.row}>
+                  {currentSensorData.avg ?? "No data"}
+                </div>
+                <div className={styles.row}>
+                  {currentSensorData.max ?? "No data"}
+                </div>
               </div>
 
               {/* compared to section */}
@@ -317,7 +334,7 @@ const Summary: React.FC<{}> = () => {
               <Skeleton
                 animation="wave"
                 variant="rectangular"
-                sx={{ height: "100%", width: "95%" }}
+                sx={{ height: "85%", width: "95%" }}
               />
             </div>
           )}

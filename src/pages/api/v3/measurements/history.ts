@@ -191,10 +191,18 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           converted,
           (row: CombinedFormat) => row.type === type
         )?.avg;
+        if (
+          first === undefined ||
+          last === undefined ||
+          first === null ||
+          last === null
+        ) {
+          return;
+        }
         Object.assign(summary.sensors, {
           [type]: {
-            start: first ? round(first) : null,
-            end: last ? round(last) : null,
+            start: round(first),
+            end: round(last),
           },
         });
       });
@@ -223,6 +231,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const values = inRange
           .filter((row) => row.type === type)
           .map((row) => ({ min: row.min, avg: row.avg, max: row.max }));
+        if (!values.length) {
+          return;
+        }
         Object.assign(measurement.sensors, {
           [type]: {
             min: round(getMin(values.map((v) => v.min))),
@@ -231,17 +242,17 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           },
         });
       });
-
       measurements.push(measurement);
       currentTime = nextTime;
     }
+
     sensorTypes.forEach((type) => {
       /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
       if (type in summary.sensors) {
         Object.assign(summary.sensors[type], {
-          min: round(getMin(measurements.map((m) => m.sensors[type].min))),
-          avg: round(getAverage(measurements.map((m) => m.sensors[type].avg))),
-          max: round(getMax(measurements.map((m) => m.sensors[type].max))),
+          min: round(getMin(measurements.map((m) => m.sensors[type]?.min))),
+          avg: round(getAverage(measurements.map((m) => m.sensors[type]?.avg))),
+          max: round(getMax(measurements.map((m) => m.sensors[type]?.max))),
         });
       }
     });

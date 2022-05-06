@@ -19,29 +19,32 @@ export const createOne = async ({
   locationId: number;
 }) => {
   const connection = await getConnectionPool();
+
+  const getMinAvgMax = await connection.query(
+    `
+    SELECT 
+      MIN(value) AS min, AVG(value) AS avg, MAX(value) AS max 
+    FROM measurement 
+    WHERE date(time) = ? 
+      AND location_id = ? 
+      AND type = ?
+  `,
+    [date, locationId, sensorType]
+  );
+  const rows = getMinAvgMax[0] as RowDataPacket[];
+  const { min, avg, max } = rows[0];
+
+  if (min === null || avg === null || max === null) {
+    return null;
+  }
+
   const result = await connection.query(
     `
       INSERT INTO history
           (date, location_id, type, daily_min, daily_avg, daily_max)
-      VALUES (?, ?, ?,
-              (SELECT MIN(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?),
-              (SELECT AVG(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?),
-              (SELECT MAX(value) FROM measurement WHERE date(time) = ? AND location_id = ? AND type = ?))
+      VALUES (?, ?, ?, ?, ?, ?)
   `,
-    [
-      date,
-      locationId,
-      sensorType,
-      date,
-      locationId,
-      sensorType,
-      date,
-      locationId,
-      sensorType,
-      date,
-      locationId,
-      sensorType,
-    ]
+    [date, locationId, sensorType, min, avg, max]
   );
   const okPacket = result[0] as OkPacket;
   return okPacket.insertId;
