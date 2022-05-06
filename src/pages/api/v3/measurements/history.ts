@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { add, format } from "date-fns";
+import { add, startOfDay, endOfDay, format } from "date-fns";
 import { z, ZodError } from "zod";
 
 import { HTTP_STATUS as STATUS } from "~/lib/constants";
@@ -39,15 +39,15 @@ const DENSITY_OPTIONS = {
 };
 
 export type SummarizedMeasurement = {
-  time: string;
+  time: Date;
   sensors: {
     [key: string]: { min: number; avg: number; max: number };
   };
 };
 export type Summary = {
   locationName: string;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
   sensors: {
     [key: string]: {
       min: number;
@@ -119,8 +119,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const summary: Summary = {
       locationName: location.name,
-      startTime: format(new Date(startTime), "yyyy-MM-dd"),
-      endTime: format(new Date(endTime), "yyyy-MM-dd"),
+      startTime,
+      endTime,
       sensors: {},
     };
     let measurements: SummarizedMeasurement[] = [];
@@ -202,8 +202,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     /* if we should include measurements, then we need to do some more work */
     /* aggregate the result in chunks of the given density */
-    let currentTime = new Date(startTime);
-    while (currentTime <= new Date(endTime)) {
+    let currentTime = startTime;
+    while (currentTime <= endTime) {
       const nextTime = add(currentTime, nextDateOptions);
       const inRange = converted.filter(
         (row) => currentTime <= row.time && row.time < nextTime
@@ -215,7 +215,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       const measurement: SummarizedMeasurement = {
-        time: format(currentTime, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+        time: currentTime,
         sensors: {},
       };
 

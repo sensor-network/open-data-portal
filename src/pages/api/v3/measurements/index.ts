@@ -209,7 +209,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /* parse request body, put it into an array if its not */
     let arrayedBody = Array.isArray(req.body) ? req.body : [req.body];
     let insertedMeasurements: {
-      time: string;
+      time: Date;
       locationId: number;
       sensorId: number;
       value: number;
@@ -276,7 +276,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
             insertedMeasurements.push({
               sensorId: id,
               value: convertedValue,
-              time: time + "Z", // add the removed Z back when responding
+              time,
               locationId,
             });
           } catch (e) {

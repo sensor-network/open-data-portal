@@ -1,11 +1,15 @@
+import { isValid, parseISO } from "date-fns";
 import { z } from "zod";
 import ISOStringToSQLTimestamp from "~/lib/utils/iso-to-sql-timestamp";
 
 export const zCreateMeasurement = z.object({
   time: z
     .string()
-    // maximize compatibility and validate the inputted date
-    .transform((str: string) => ISOStringToSQLTimestamp(str)),
+    .refine(
+      (str) => isValid(parseISO(str)),
+      "Invalid time format. Time should be provided using ISO8601 format."
+    )
+    .transform((str) => parseISO(str)),
   position: z.object({
     lat: z
       .string()

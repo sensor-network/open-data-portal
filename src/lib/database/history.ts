@@ -14,7 +14,7 @@ export const createOne = async ({
   sensorType,
   locationId,
 }: {
-  date: string | Date;
+  date: Date;
   sensorType: string;
   locationId: number;
 }) => {
@@ -54,8 +54,8 @@ export const findInCombinedFormat = async ({
   locationId,
   sortOrder = "ASC",
 }: {
-  startDate: Date | string;
-  endDate: Date | string;
+  startDate: Date;
+  endDate: Date;
   locationId: number;
   sortOrder?: string;
 }) => {
@@ -94,8 +94,8 @@ export const findMany = async ({
   locationId,
   sortOrder = "ASC",
 }: {
-  startDate: string | Date;
-  endDate: string | Date;
+  startDate: Date;
+  endDate: Date;
   locationId: number;
   sortOrder?: string;
 }) => {
@@ -119,7 +119,7 @@ export const findByFilter = async ({
   locationId,
   sortOrder = "ASC",
 }: {
-  date: string | Date;
+  date: Date;
   sensorType: string;
   locationId: number;
   sortOrder?: string;

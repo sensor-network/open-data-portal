@@ -18,16 +18,13 @@ export const zTimeRange = z
       .default("2022Z" /* new year 2022 */)
       .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
       //.refine(str => new Date(str) >= new Date('2022Z'), 'must be after 2022')
-      .transform((str) => new Date(str).toISOString()),
+      .transform((str) => new Date(str)),
     endTime: z
       .string()
       .default(new Date().toISOString() /* current time */)
-      .refine(
-        (str) => new Date(str).getTime() > 0,
-        "Unable to parse string as Date"
-      )
+      .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
       //.refine(str => new Date(str) <= endOfToday(), "can't be a future date")
-      .transform((str) => new Date(str).toISOString()),
+      .transform((str) => new Date(str)),
   })
   .refine(
     ({ startTime, endTime }) => endTime >= startTime,
