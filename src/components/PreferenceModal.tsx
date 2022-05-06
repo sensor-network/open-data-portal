@@ -85,7 +85,7 @@ const PreferenceModal: React.FC<{
             options={p.options}
             renderInput={(params) => <TextField {...params} />}
             getOptionLabel={(o) => o.name}
-            renderOption={(props, option) => <div>{option.name}</div>}
+            renderOption={(props, option) => <li {...props}>{option.name}</li>}
             defaultValue={p.default}
             isOptionEqualToValue={(option, value) =>
               value.symbol === option.symbol
