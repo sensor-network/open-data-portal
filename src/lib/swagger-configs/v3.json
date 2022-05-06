@@ -7,8 +7,12 @@
   },
   "servers": [
     {
+      "url": "https://sensornetwork.diptsrv003.bth.se/api/v3",
+      "description": "Production Server with HTTPS"
+    },
+    {
       "url": "http://sensornetwork.diptsrv003.bth.se/api/v3",
-      "description": "Production Server"
+      "description": "Production Server with HTTP"
     },
     {
       "url": "http://localhost:3000/api/v3",
