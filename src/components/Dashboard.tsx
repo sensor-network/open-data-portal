@@ -4,6 +4,7 @@ import type { Location } from "~/lib/database/location";
 import { PreferenceContext } from "~/lib/utils/preferences";
 import LocationRow from "./LocationRow";
 import Card from "./Card";
+import styles from "src/styles/Dashboard.module.css";
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
@@ -49,7 +50,7 @@ const Dashboard: React.FC = () => {
       <div style={{ display: "flex" }}>
         {locations ? (
           <>
-            <div style={paneStyle}>
+            <div className={styles.left}>
               <div>
                 {locations?.map((location, index) => (
                   <div key={location.id} style={{ margin: "5px 0" }}>
@@ -62,7 +63,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div style={paneStyle}>
+            <div className={styles.right}>
               <MapWithNoSSR
                 locations={locations}
                 selectedLocation={selectedLocationIndex}

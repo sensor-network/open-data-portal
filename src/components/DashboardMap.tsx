@@ -5,6 +5,7 @@ import "leaflet/dist/images/marker-icon.png";
 import type { Location } from "~/lib/database/location";
 import type { PointTuple } from "leaflet";
 import { getIcon } from "./Map";
+import styles from "src/styles/DashboardMap.module.css";
 
 const DashboardMap: React.FC<{
   locations: Location[];
@@ -12,10 +13,10 @@ const DashboardMap: React.FC<{
   mapCenter: PointTuple;
 }> = ({ locations, selectedLocation, mapCenter }) => {
   return (
-    <div style={{ height: "100%", width: "100%" }}>
+    <div className={styles.entireSection}>
       <MapContainer
         center={mapCenter}
-        zoom={13}
+        zoom={12}
         tap={false}
         style={{ height: "100%", width: "100%", zIndex: 0 }}
       >
