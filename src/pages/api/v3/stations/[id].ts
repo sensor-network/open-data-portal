@@ -1,9 +1,12 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import * as Station from "lib/database/station";
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
 import { ZodError } from "zod";
-import { zIdFromString, zId, zStationExpandParam } from "lib/types/ZodSchemas";
+
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as Station from "~/lib/database/station";
+import { zIdFromString, zId } from "~/lib/validators/id";
+import { zStationExpandParam } from "~/lib/validators/station";
+
+import { authorizeRequest } from "~/lib/utils/api/auth";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   /**
@@ -25,7 +28,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
       if (!station) {
         const message = `Station with id '${stationId}' does not exist`;
-        console.log(`${req.method} /api/v3/stations/[id]:: ${message}`);
+        console.log(`${req.method}: ${req.url}:: ${message}`);
 
         res.status(STATUS.NOT_FOUND).json({ message });
         return;
@@ -35,12 +38,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     } catch (e) {
       if (e instanceof ZodError) {
         console.log(
-          `${req.method}: /api/v3/stations/[id]:: Error parsing request:\n`,
+          `${req.method}: ${req.url}:: Error parsing request:\n`,
           e.flatten()
         );
         res.status(STATUS.BAD_REQUEST).json(e.flatten());
       } else {
-        console.error(`${req.method}: /api/v3/stations/[id]::`, e);
+        console.error(`${req.method}: ${req.url}::`, e);
         res
           .status(STATUS.SERVER_ERROR)
           .json({ message: "Internal server error" });
@@ -50,19 +53,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * PATCH /api/v3/stations/[id]
      **/
-    /**
-     * TODO: Implement more sophisticated authentication
-     */
-    const AUTHENTICATION_SCHEMA = "Bearer";
-    const AUTHENTICATION_TOKEN = process.env.NEXT_PUBLIC_API_KEY;
-    const { authorization } = req.headers;
-
-    if (authorization !== `${AUTHENTICATION_SCHEMA} ${AUTHENTICATION_TOKEN}`) {
-      const errorMessage = `Failed to authenticate the request with the provided authorization-header: '${authorization}'`;
-      console.log(`${req.method} /api/v3/stations/[id]:: ${errorMessage}`);
-
-      res.setHeader("WWW-Authenticate", AUTHENTICATION_SCHEMA);
-      res.status(STATUS.UNAUTHORIZED).json({ error: errorMessage });
+    if (!authorizeRequest(req, res)) {
       return;
     }
 
@@ -78,7 +69,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       });
       if (!station) {
         const message = `Station with id '${stationId}' does not exist`;
-        console.log(`${req.method} /api/v3/stations/[id]:: ${message}`);
+        console.log(`${req.method}: ${req.url}:: ${message}`);
 
         res.status(STATUS.NOT_FOUND).json({ message });
         return;
@@ -103,12 +94,54 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     } catch (e) {
       if (e instanceof ZodError) {
         console.log(
-          `${req.method}: /api/v3/stations/[id]:: Error parsing request body:\n`,
+          `${req.method}: ${req.url}:: Error parsing request body:\n`,
           e.flatten()
         );
         res.status(STATUS.BAD_REQUEST).json(e.flatten());
       } else {
-        console.error(`${req.method}: /api/v3/stations/[id]::`, e);
+        console.error(`${req.method}: ${req.url}::`, e);
+        res
+          .status(STATUS.SERVER_ERROR)
+          .json({ error: "Internal server error" });
+      }
+    }
+  } else if (req.method === "DELETE") {
+    /**
+     * DELETE /api/v3/locations/[id]
+     **/
+    if (!authorizeRequest(req, res)) {
+      return;
+    }
+
+    try {
+      /* parse request parameters from query and body */
+      const stationId = zIdFromString.parse(req.query.id);
+
+      let station = await Station.findByStationId({
+        stationId,
+        expandSensors: false,
+        expandLocation: false,
+      });
+      if (!station) {
+        const message = `Station with id '${stationId}' does not exist`;
+        console.log(`${req.method}: ${req.url}:: ${message}`);
+
+        res.status(STATUS.NOT_FOUND).json({ message });
+        return;
+      }
+
+      const { changedRows } = await Station.deleteById({ id: stationId });
+
+      res.status(STATUS.OK).json({ status: "Success", deletedValue: station });
+    } catch (e) {
+      if (e instanceof ZodError) {
+        console.log(
+          `${req.method}: ${req.url}:: Error parsing request body:\n`,
+          e.flatten()
+        );
+        res.status(STATUS.BAD_REQUEST).json(e.flatten());
+      } else {
+        console.error(`${req.method}: ${req.url}::`, e);
         res
           .status(STATUS.SERVER_ERROR)
           .json({ error: "Internal server error" });
@@ -118,8 +151,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     /**
      * {unknown} /api/v3/stations/[id]
      **/
-    console.log(`${req.method}: /api/v3/stations/[id]:: Method not allowed`);
-    res.setHeader("Allow", "GET, PATCH");
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
+    res.setHeader("Allow", "GET, PATCH, DELETE");
     res
       .status(STATUS.NOT_ALLOWED)
       .json({ error: `Method '${req.method}' not allowed.` });

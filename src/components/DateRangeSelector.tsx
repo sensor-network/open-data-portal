@@ -6,9 +6,9 @@ import TextField from "@mui/material/TextField";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
 import { DatePicker, LocalizationProvider } from "@mui/lab";
 
-import styles from "src/styles/DateRangeSelector.module.css";
+import styles from "~/styles/DateRangeSelector.module.css";
 
-const BLUE = "#185693";
+import { PRIMARY_BLUE_COLOR } from "~/lib/constants";
 const NOW = new Date();
 /**
  * available predefined ranges to select from, NOTE: 'Custom' starts as 'today'
@@ -16,23 +16,59 @@ const NOW = new Date();
  **/
 const DATE_RANGES = [
   { label: "today", startDate: startOfDay(new Date()), endDate: endOfDay(NOW) },
-  { label: "1 week", startDate: sub(new Date(), { weeks: 1 }), endDate: endOfDay(NOW) },
-  { label: "1 month", startDate: sub(new Date(), { months: 1 }), endDate: endOfDay(NOW) },
-  { label: "3 months", startDate: sub(new Date(), { months: 3 }), endDate: endOfDay(NOW) },
-  { label: "this year", startDate: startOfYear(new Date()), endDate: endOfDay(NOW) },
-  { label: "1 year", startDate: sub(new Date(), { years: 1 }), endDate: endOfDay(NOW) },
-  { label: "3 years", startDate: sub(new Date(), { years: 3 }), endDate: endOfDay(NOW) },
+  {
+    label: "1 week",
+    startDate: sub(new Date(), { weeks: 1 }),
+    endDate: endOfDay(NOW),
+  },
+  {
+    label: "1 month",
+    startDate: sub(new Date(), { months: 1 }),
+    endDate: endOfDay(NOW),
+  },
+  {
+    label: "3 months",
+    startDate: sub(new Date(), { months: 3 }),
+    endDate: endOfDay(NOW),
+  },
+  {
+    label: "this year",
+    startDate: startOfYear(new Date()),
+    endDate: endOfDay(NOW),
+  },
+  {
+    label: "1 year",
+    startDate: sub(new Date(), { years: 1 }),
+    endDate: endOfDay(NOW),
+  },
+  {
+    label: "3 years",
+    startDate: sub(new Date(), { years: 3 }),
+    endDate: endOfDay(NOW),
+  },
   { label: "Max", startDate: new Date(1), endDate: endOfDay(NOW) },
-  { label: "Custom", startDate: startOfDay(new Date()), endDate: endOfDay(NOW) },
+  {
+    label: "Custom",
+    startDate: startOfDay(new Date()),
+    endDate: endOfDay(NOW),
+  },
 ];
 
-
 type DateSelectorProps = {
-  label: string, minDate: Date, maxDate: Date,
-  date: Date, setDate: Dispatch<SetStateAction<Date>>,
-}
+  label: string;
+  minDate: Date;
+  maxDate: Date;
+  date: Date;
+  setDate: Dispatch<SetStateAction<Date>>;
+};
 /* This is a wrapper-component for MUI-DatePicker */
-const DateSelector = ({ label, date, setDate, minDate, maxDate }: DateSelectorProps) => {
+const DateSelector = ({
+  label,
+  date,
+  setDate,
+  minDate,
+  maxDate,
+}: DateSelectorProps) => {
   const [tempDate, setTempDate] = useState<Date | null>(date);
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -41,23 +77,30 @@ const DateSelector = ({ label, date, setDate, minDate, maxDate }: DateSelectorPr
         value={tempDate}
         minDate={minDate}
         maxDate={maxDate}
-        onChange={newDate => setTempDate(newDate)}
-        onAccept={newDate => {
+        onChange={(newDate) => setTempDate(newDate)}
+        onAccept={(newDate) => {
           if (newDate instanceof Date) {
             setDate(newDate);
           }
         }}
-        renderInput={params => <TextField {...params}/>}
+        renderInput={(params) => <TextField {...params} />}
       />
     </LocalizationProvider>
   );
 };
 
 type ComponentProps = {
-  startDate: Date, setStartDate: Dispatch<SetStateAction<Date>>,
-  endDate: Date, setEndDate: Dispatch<SetStateAction<Date>>,
-}
-const DateRangeSelector = ({ startDate, setStartDate, endDate, setEndDate }: ComponentProps) => {
+  startDate: Date;
+  setStartDate: Dispatch<SetStateAction<Date>>;
+  endDate: Date;
+  setEndDate: Dispatch<SetStateAction<Date>>;
+};
+const DateRangeSelector = ({
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+}: ComponentProps) => {
   const [activeRangeIndex, setActiveRangeIndex] = useState<number>(0);
 
   /* update parent on mount to be in sync */
@@ -88,17 +131,20 @@ const DateRangeSelector = ({ startDate, setStartDate, endDate, setEndDate }: Com
 
   return (
     <div style={{ width: "100%" }}>
-
       <div className={styles.bar}>
         {DATE_RANGES.map((curr, idx) => (
           <div
             key={curr.label}
             className={styles.item}
-            style={idx === activeRangeIndex ? { borderBottom: `4px solid ${BLUE}` } : {}}
+            style={
+              idx === activeRangeIndex
+                ? { borderBottom: `4px solid ${PRIMARY_BLUE_COLOR}` }
+                : {}
+            }
             onClick={() => selectRange(idx)}
           >
             {curr.label === "Custom" ? (
-              <InsertInvitationIcon sx={{ color: BLUE }}/>
+              <InsertInvitationIcon sx={{ color: PRIMARY_BLUE_COLOR }} />
             ) : (
               <p className={styles.itemText}>{curr.label}</p>
             )}
@@ -126,7 +172,6 @@ const DateRangeSelector = ({ startDate, setStartDate, endDate, setEndDate }: Com
           />
         </div>
       )}
-
     </div>
   );
 };

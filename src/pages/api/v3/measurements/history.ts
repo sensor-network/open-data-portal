@@ -1,27 +1,27 @@
 import { NextApiRequest, NextApiResponse } from "next";
-
-import { HTTP_STATUS as STATUS } from "lib/httpStatusCodes";
-import * as History from "lib/database/history";
-import * as Measurement from "lib/database/measurement";
-import * as Location from "lib/database/location";
-import * as Sensor from "lib/database/sensor";
+import { add, startOfDay, endOfDay, format } from "date-fns";
 import { z, ZodError } from "zod";
-import { zTime } from "lib/types/ZodSchemas";
-import type { CombinedFormat } from "lib/database/history";
 
-import { add, format } from "date-fns";
+import { HTTP_STATUS as STATUS } from "~/lib/constants";
+import * as History from "~/lib/database/history";
+import * as Measurement from "~/lib/database/measurement";
+import * as Location from "~/lib/database/location";
+import * as Sensor from "~/lib/database/sensor";
+import type { CombinedFormat } from "~/lib/database/history";
 
+import { zTimeRange } from "~/lib/validators/time";
+import { getAverage, getMin, getMax, round } from "~/lib/utils/math";
+import { defineDataDensity } from "~/lib/utils/define-data-density";
+import findLast from "~/lib/utils/find-last";
 import {
-  getAverage,
-  getMin,
-  getMax,
-  round,
-  defineDataDensity,
-  findLast,
-} from "lib/utilityFunctions";
-import { parseUnit as parseTempUnit } from "lib/units/temperature";
-import { parseUnit as parseCondUnit } from "lib/units/conductivity";
-import { PH } from "src/lib/units/ph";
+  parseUnit as parseTempUnit,
+  Temperature,
+} from "~/lib/units/temperature";
+import {
+  Conductivity,
+  parseUnit as parseCondUnit,
+} from "~/lib/units/conductivity";
+import { PH } from "~/lib/units/ph";
 
 const DAILY_DENSITIES = ["5min", "30min", "1h", "12h"] as const;
 const HISTORY_DENSITIES = ["1d", "1w", "2w", "1mon", "1y"] as const;
@@ -39,15 +39,15 @@ const DENSITY_OPTIONS = {
 };
 
 export type SummarizedMeasurement = {
-  time: string;
+  time: Date;
   sensors: {
     [key: string]: { min: number; avg: number; max: number };
   };
 };
 export type Summary = {
   locationName: string;
-  startTime: string;
-  endTime: string;
+  startTime: Date;
+  endTime: Date;
   sensors: {
     [key: string]: {
       min: number;
@@ -61,9 +61,7 @@ export type Summary = {
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   if (req.method !== "GET") {
-    console.log(
-      `${req.method}: /api/v3/measurements/history:: Method not allowed`
-    );
+    console.log(`${req.method}: ${req.url}:: Method not allowed`);
     res.setHeader("Allow", "GET");
     res
       .status(STATUS.NOT_ALLOWED)
@@ -73,7 +71,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
   try {
     /* parse necessary parameters */
-    const { startTime, endTime } = zTime.parse(req.query);
+    const { startTime, endTime } = zTimeRange.parse(req.query);
     /* whether we should include all measurements or just summarize */
     const includeMeasurements = z
       .enum(["true", "false"])
@@ -121,8 +119,8 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     const summary: Summary = {
       locationName: location.name,
-      startTime: format(new Date(startTime), "yyyy-MM-dd"),
-      endTime: format(new Date(endTime), "yyyy-MM-dd"),
+      startTime,
+      endTime,
       sensors: {},
     };
     let measurements: SummarizedMeasurement[] = [];
@@ -147,26 +145,26 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     if (!rows.length) {
       const message = `No measurements found for location '${location.name}' between ${startTime} and ${endTime}.`;
-      console.log(`${req.method}: /api/v3/measurements/history:: ${message}`);
+      console.log(`${req.method}: ${req.url}:: ${message}`);
       res.status(STATUS.NOT_FOUND).json({ message });
       return;
     }
 
     /* convert to correct units */
     const converted = rows.map((row) => {
-      if (row.type === "temperature") {
+      if (row.type === Temperature.keyName) {
         Object.assign(row, {
           min: temperatureUnit.fromKelvin(row.min),
           avg: temperatureUnit.fromKelvin(row.avg),
           max: temperatureUnit.fromKelvin(row.max),
         });
-      } else if (row.type === "conductivity") {
+      } else if (row.type === Conductivity.keyName) {
         Object.assign(row, {
           min: conductivityUnit.fromSiemensPerMeter(row.min),
           avg: conductivityUnit.fromSiemensPerMeter(row.avg),
           max: conductivityUnit.fromSiemensPerMeter(row.max),
         });
-      } else if (row.type === "ph") {
+      } else if (row.type === PH.keyName) {
         Object.assign(row, {
           min: new PH(row.min).getValue(),
           avg: new PH(row.avg).getValue(),
@@ -193,17 +191,27 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           converted,
           (row: CombinedFormat) => row.type === type
         )?.avg;
+        if (
+          first === undefined ||
+          last === undefined ||
+          first === null ||
+          last === null
+        ) {
+          return;
+        }
         Object.assign(summary.sensors, {
           [type]: {
-            start: first ? round(first) : null,
-            end: last ? round(last) : null,
+            start: round(first),
+            end: round(last),
           },
         });
       });
     }
 
-    let currentTime = new Date(startTime);
-    while (currentTime <= new Date(endTime)) {
+    /* if we should include measurements, then we need to do some more work */
+    /* aggregate the result in chunks of the given density */
+    let currentTime = startTime;
+    while (currentTime <= endTime) {
       const nextTime = add(currentTime, nextDateOptions);
       const inRange = converted.filter(
         (row) => currentTime <= row.time && row.time < nextTime
@@ -215,7 +223,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
       }
 
       const measurement: SummarizedMeasurement = {
-        time: format(currentTime, "yyyy-MM-dd'T'HH:mm:ss'Z'"),
+        time: currentTime,
         sensors: {},
       };
 
@@ -223,6 +231,9 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const values = inRange
           .filter((row) => row.type === type)
           .map((row) => ({ min: row.min, avg: row.avg, max: row.max }));
+        if (!values.length) {
+          return;
+        }
         Object.assign(measurement.sensors, {
           [type]: {
             min: round(getMin(values.map((v) => v.min))),
@@ -231,18 +242,17 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
           },
         });
       });
-
       measurements.push(measurement);
       currentTime = nextTime;
     }
 
     sensorTypes.forEach((type) => {
       /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
-      if (summary.sensors.hasOwnProperty(type)) {
+      if (type in summary.sensors) {
         Object.assign(summary.sensors[type], {
-          min: round(getMin(measurements.map((m) => m.sensors[type].min))),
-          avg: round(getAverage(measurements.map((m) => m.sensors[type].avg))),
-          max: round(getMax(measurements.map((m) => m.sensors[type].max))),
+          min: round(getMin(measurements.map((m) => m.sensors[type]?.min))),
+          avg: round(getAverage(measurements.map((m) => m.sensors[type]?.avg))),
+          max: round(getMax(measurements.map((m) => m.sensors[type]?.max))),
         });
       }
     });
@@ -253,12 +263,12 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   } catch (e) {
     if (e instanceof ZodError) {
       console.log(
-        `${req.method}: /api/v3/measurements/history:: Error parsing query params:\n`,
+        `${req.method}: ${req.url}:: Error parsing query params:\n`,
         e.flatten()
       );
       res.status(STATUS.BAD_REQUEST).json(e.flatten());
     } else {
-      console.error(`${req.method}: /api/v3/measurements/history::`, e);
+      console.error(`${req.method}: ${req.url}::`, e);
       res.status(STATUS.SERVER_ERROR).json({ error: "Internal server error" });
     }
   }

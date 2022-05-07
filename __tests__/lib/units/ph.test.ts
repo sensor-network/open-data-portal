@@ -1,5 +1,5 @@
-import { PH } from "../../../src/lib/units/ph";
-import { DECIMAL_PLACES } from '../../../src/lib/constants';
+import { PH } from "~/lib/units/ph";
+import { DECIMAL_PLACES } from "~/lib/constants";
 
 it("should only accept values between 0 <= value <= 14", () => {
   expect(() => new PH(0)).not.toThrow();

@@ -1,9 +1,9 @@
-import Card from "src/components/Card";
 import { useEffect, useState, useContext } from "react";
 import type { PointTuple } from "leaflet";
-import type { Location } from "src/lib/database/location";
-import { PreferenceContext } from "../pages/_app";
-import LocationRow from "src/components/LocationRow";
+import type { Location } from "~/lib/database/location";
+import { PreferenceContext } from "~/lib/utils/preferences";
+import LocationRow from "./LocationRow";
+import Card from "./Card";
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
@@ -55,7 +55,7 @@ const Dashboard: React.FC = () => {
                   <div key={location.id} style={{ margin: "5px 0" }}>
                     <LocationRow
                       key={location.id}
-                      locName={location.name}
+                      locationName={location.name}
                       selected={index === selectedLocationIndex}
                     />
                   </div>

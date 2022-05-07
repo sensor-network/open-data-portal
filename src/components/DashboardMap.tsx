@@ -2,7 +2,7 @@ import { MapContainer, Marker, TileLayer } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/images/marker-icon.png";
-import type { Location } from "src/lib/database/location";
+import type { Location } from "~/lib/database/location";
 import type { PointTuple } from "leaflet";
 import { getIcon } from "./Map";
 

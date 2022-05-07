@@ -15,10 +15,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import CircleIcon from "@mui/icons-material/Circle";
 import { Skeleton } from "@mui/material";
 
-import { PreferenceContext } from "src/pages/_app";
-import style from "src/styles/ComparisonGraph.module.css";
-import { useWidth } from "src/lib/hooks/useWidth";
-import { capitalize } from "src/lib/utilityFunctions";
+import {
+  getPreferredUnitSymbol,
+  PreferenceContext,
+} from "~/lib/utils/preferences";
+import { useWidth } from "~/lib/hooks";
+import capitalize from "~/lib/utils/capitalize";
+
+import style from "~/styles/ComparisonGraph.module.css";
 
 const ComparisonGraph = ({
   data,
@@ -39,7 +43,7 @@ const ComparisonGraph = ({
       : windowWidth < 1400
       ? Math.floor(data.length / 10)
       : Math.floor(data.length / 15);
-  }, [windowWidth]);
+  }, [windowWidth, data, error]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -54,11 +58,11 @@ const ComparisonGraph = ({
           <div className={style.dataPayload}>
             {payload.map((row) => {
               /* use optional chaining for sensors without units, e.g. ph */
-              const unit = preferences[`${row.dataKey}Unit`]?.symbol;
-              const capitalized = capitalize(unit);
+              const unitKey = row.name.toLowerCase() + "Unit";
+              const unit = getPreferredUnitSymbol(unitKey, preferences);
               return (
                 <p key={row.name} style={{ color: row.stroke }}>
-                  <strong>{row.name}:</strong> {row.value} {capitalized}
+                  <strong>{row.name}:</strong> {row.value} {capitalize(unit)}
                 </p>
               );
             })}

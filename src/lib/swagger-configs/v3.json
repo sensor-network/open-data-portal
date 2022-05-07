@@ -7,8 +7,12 @@
   },
   "servers": [
     {
+      "url": "https://sensornetwork.diptsrv003.bth.se/api/v3",
+      "description": "Production Server with HTTPS"
+    },
+    {
       "url": "http://sensornetwork.diptsrv003.bth.se/api/v3",
-      "description": "Production Server"
+      "description": "Production Server with HTTP"
     },
     {
       "url": "http://localhost:3000/api/v3",
@@ -1384,6 +1388,147 @@
             }
           }
         }
+      },
+      "delete": {
+        "tags": ["Locations"],
+        "summary": "Delete a location",
+        "description": "Delete a location. The locationId must be given in the URL. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "deleteLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the location to get",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The location was deleted successfully. The deleted value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "deletedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Hästö"
+                        },
+                        "position": {
+                          "type": "object",
+                          "properties": {
+                            "lat": {
+                              "type": "number",
+                              "example": 56.183016
+                            },
+                            "lng": {
+                              "type": "number",
+                              "example": 15.58817
+                            }
+                          }
+                        },
+                        "radiusMeters": {
+                          "type": "number",
+                          "example": 100
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Location with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/stations": {
@@ -1899,7 +2044,7 @@
           {
             "name": "id",
             "in": "path",
-            "description": "The id of the station to get",
+            "description": "The id of the station to update",
             "required": true,
             "schema": {
               "type": "number",
@@ -2005,6 +2150,163 @@
                     "fieldErrors": {
                       "type": "object",
                       "properties": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The request was not authenticated. You must provide a valid `Bearer` token in the `Authorization`-header.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Failed to authenticate the request with the provided authorization-header: 'undefined'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Station with id '1' does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Stations"],
+        "summary": "Delete a station",
+        "description": "Delete a station. The stationId must be given in the URL. Authorization is required by a `Bearer` token in the `Authorization`-header.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "operationId": "deleteStation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the station to delete",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The station was deleted successfully. The deleted value is returned.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "Success"
+                    },
+                    "deletedValue": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "number",
+                          "example": 1
+                        },
+                        "location": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "number",
+                              "example": 1
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "Hästö"
+                            },
+                            "position": {
+                              "type": "object",
+                              "properties": {
+                                "lat": {
+                                  "type": "number",
+                                  "example": 56.183016
+                                },
+                                "lng": {
+                                  "type": "number",
+                                  "example": 15.58817
+                                }
+                              }
+                            },
+                            "radiusMeters": {
+                              "type": "number",
+                              "example": 100
+                            }
+                          }
+                        },
+                        "sensors": {
+                          "type": "array",
+                          "items": {
+                            "type": "number",
+                            "example": 1
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The query-parameters failed to parse correctly. Response JSON contains information what could not be parsed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "formErrors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "id has to be positive"
+                      }
+                    },
+                    "fieldErrors": {
+                      "type": "object"
                     }
                   }
                 }
@@ -2639,9 +2941,123 @@
         }
       }
     },
-    "/sensors/status": {
+    "/locations/closest": {
       "get": {
-        "tags": ["Sensors"],
+        "tags": ["Locations"],
+        "summary": "Gets the first closest location based on user geoinformation",
+        "description": "Retrieves a JSON array with location id, location name, the radius which encapsulates the location, latitude and longitude.",
+        "operationId": "getClosest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Gräsvik"
+                    },
+                    "position": {
+                      "type": "object",
+                      "properties": {
+                        "lat": {
+                          "type": "number",
+                          "example": 56.183016,
+                          "format": "float"
+                        },
+                        "lng": {
+                          "type": "number",
+                          "example": 15.58817,
+                          "format": "float"
+                        }
+                      }
+                    },
+                    "radiusMeters": {
+                      "type": "number",
+                      "example": 100,
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The requested resource could not be found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "No location found close enough."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "An internal server error occurred while executing the query. Please submit a bug-report at the github-repo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Gets the health of the application",
+        "description": "Endpoint to see if the services are available. Returns two properties, server and database. Responses are OK or DOWN",
+        "operationId": "getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful operation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "server": {
+                      "type": "string",
+                      "example": "UP"
+                    },
+                    "database": {
+                      "type": "string",
+                      "example": "UP"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/sensors": {
+      "get": {
+        "tags": ["Health"],
         "summary": "Gets a collection of sensors including the last known status of each sensor",
         "description": "When a sensor tries to post a measurement, we record the result of the request. If it is successful, the sensor's status is updated to `OK`, else the status is set to the appropriate error message that occured during the failed request, for example `too_big` (i.e. the measurement wasn't in the valid range), `ER_DUP_ENTRY` (i.e. the sensor had already posted a measurement with the same time). With this endpoint, you can get a list of all sensors with their last known status, so that you could easily see if all the sensors are sending correct measurements.",
         "operationId": "getSensorStatus",
@@ -2672,6 +3088,82 @@
                         "type": "string",
                         "format": "date-time",
                         "example": "2022-04-11T22:30:49.000Z"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/stations": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Gets a the latest status of the stations and its sensors",
+        "description": "When a sensor tries to post a measurement, we record the result of the request. If it is successful, the sensor's status is updated to `OK`, else the status is set to the appropriate error message that occured during the failed request, for example `too_big` (i.e. the measurement wasn't in the valid range), `ER_DUP_ENTRY` (i.e. the sensor had already posted a measurement with the same time). With this endpoint, you can get a list of all sensors with their last known status, so that you could easily see if all the sensors are sending correct measurements. The stations status is then based on the status of its sensors.",
+        "operationId": "getStationStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The list of all the stations with the sensor-statuses expanded..",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "location": {
+                        "type": "integer",
+                        "example": "1"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "OK"
+                      },
+                      "lastActive": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2022-04-11T22:30:49.000Z"
+                      },
+                      "sensors": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "example": 1
+                            },
+                            "name": {
+                              "type": "string",
+                              "example": "temperature"
+                            },
+                            "firmware": {
+                              "type": "string",
+                              "example": "1.0.0"
+                            },
+                            "type": {
+                              "type": "string",
+                              "example": "temperature"
+                            },
+                            "status": {
+                              "type": "string",
+                              "example": "OK"
+                            },
+                            "lastActive": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2022-04-11T22:30:49.000Z"
+                            }
+                          }
+                        }
                       }
                     }
                   }

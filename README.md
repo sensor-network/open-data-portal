@@ -89,13 +89,7 @@ $ npm run build
 
 #### Test
 
-In order to run the tests, you need to start up the test database:
-
-```bash
-$ docker compose -f test-db.yml up
-```
-
-Wait until you see that the database is ready for connections (usually < 10s). Then, you can run the tests:
+Run all tests:
 
 ```bash
 $ npm test
@@ -163,21 +157,21 @@ that) by changing the configuration object in [fill-db.ts](./scripts/fill-db.ts)
 ```js
 const c = {
   /* define time range of when to insert measurements */
-  START_TIME: new Date("2021-01-01Z"),
-  END_TIME: new Date("2024Z"),
+  START_TIME: new Date("2022-01-01Z"),
+  END_TIME: new Date("2023Z"),
 
   /* select time interval between measurements (seconds) */
-  DATA_DENSITY: 5 * 60,
+  DATA_DENSITY: 30 * 60,
 
   /* define what sensors are sending the data */
   TEMPERATURE_SENSOR_ID: 1,
-  PH_SENSOR_ID: 2,
-  CONDUCTIVITY_SENSOR_ID: 3,
+  PH_SENSOR_ID: 3,
+  CONDUCTIVITY_SENSOR_ID: 2,
 
   /* specify the coordinates which the measurement is coming from. */
   LOCATION: {
-    LAT: 56.2,
-    LONG: 15.6,
+    LAT: 56.182469,
+    LONG: 15.589325,
   },
 
   /* define ranges for measurements (in SI-units) */
@@ -193,6 +187,9 @@ const c = {
   TEMP_CHANGE_RATE: 0.1,
   COND_CHANGE_RATE: 0.1,
   PH_CHANGE_RATE: 0.1,
+
+  /* define timeout between inserts (ms) */
+  TIMEOUT: 5000,
 };
 ```
 

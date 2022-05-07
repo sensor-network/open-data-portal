@@ -1,11 +1,11 @@
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import LinearProgress from '@mui/material/LinearProgress';
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import LinearProgress from "@mui/material/LinearProgress";
+import { PRIMARY_BLUE_COLOR } from "~/lib/constants";
 
-const BLUE = "#185693";
 export const theme = createTheme({
   palette: {
     primary: {
-      main: BLUE,
+      main: PRIMARY_BLUE_COLOR,
     },
   },
 });
@@ -13,7 +13,7 @@ export const theme = createTheme({
 export const CustomProgressBar = () => {
   return (
     <ThemeProvider theme={theme}>
-      <LinearProgress color="primary"/>
+      <LinearProgress color="primary" />
     </ThemeProvider>
   );
 };

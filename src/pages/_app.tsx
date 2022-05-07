@@ -1,26 +1,19 @@
-import "src/styles/globals.css";
-import { AppType } from "next/dist/shared/lib/utils";
+import type { AppType } from "next/dist/shared/lib/utils";
 import NextNProgress from "nextjs-progressbar";
-import { createContext, useState } from "react";
+import { useState } from "react";
 import Cookies from "js-cookie";
 
-import Navbar from "src/components/Navbar";
-import Footer from "src/components/Footer";
-import { loadPreferences } from "~/lib/utils/load-preferences";
-import { useWidth } from "../lib/hooks/useWidth";
-import { useLocations } from "../lib/hooks/useLocations";
-import type { Location } from "~/lib/database/location";
-import type { Preferences } from "~/lib/utils/load-preferences";
+import Navbar from "~/components/Navbar";
+import Footer from "~/components/Footer";
+import { loadPreferences, PreferenceContext } from "~/lib/utils/preferences";
+import {
+  NAV_HEIGHT,
+  MOBILE_BREAKPOINT,
+  PRIMARY_BLUE_COLOR,
+} from "~/lib/constants";
+import { useWidth, useLocations } from "~/lib/hooks";
 
-export type PreferenceContextType = {
-  preferences: Preferences;
-  locations: Location[] | undefined;
-};
-export const PreferenceContext = createContext<PreferenceContextType>(
-  {} as PreferenceContextType
-);
-export const NAV_HEIGHT = 60;
-const MOBILE_BREAKPOINT = 768;
+import "~/styles/globals.css";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
   const [preferences, setPreferences] = useState(() =>
@@ -33,7 +26,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
       <NextNProgress
-        color={"#185693"}
+        color={PRIMARY_BLUE_COLOR}
         height={8}
         options={{ showSpinner: false }}
       />
