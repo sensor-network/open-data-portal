@@ -39,7 +39,7 @@ const LocationRow: React.FC<{
   });
 
   if (error || !measurements)
-    return <div>No data found for {locationName}</div>;
+    return null;
   if (isLoading || !sensorTypes) return <CustomProgressBar />;
 
   const sensors = measurements[0].sensors;
