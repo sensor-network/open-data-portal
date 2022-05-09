@@ -1,8 +1,8 @@
 /* get the minimum from an array of values that may contain null */
-export const getMin = (values: (number | null)[]) => {
+export const getMin = (values: (number | null | undefined)[]) => {
   let min = Number.MAX_SAFE_INTEGER;
   for (const value of values) {
-    if (value !== null && value < min) {
+    if (value !== null && value !== undefined && value < min) {
       min = value;
     }
   }
