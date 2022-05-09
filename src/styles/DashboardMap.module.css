@@ -5,19 +5,19 @@
 
 @media only screen and (max-height: 850px) {
 
-    .entireSection{
+    /*.entireSection{
         height: 75%;
-    }
+    }*/
 
 
 }
 
 @media only screen and (max-width: 850px) {
 
-    .entireSection{
+    /*.entireSection{
         width: 75%;
         height: 75%;
-    }
+    }*/
 
     
 }

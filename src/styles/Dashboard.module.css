@@ -1,29 +1,26 @@
 .left{
-    width: 50%;
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-    justify-content:center;
-    position: relative;
+    height: 100%;
+    margin: 0;
   }
 
 .right{
-    width: 50%;
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
+    height: 100%;
+    margin: 0;
   }
+
+.container{
+    width: 100%;
+    min-height: 100vh;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+}
 
 @media only screen and (max-width: 850px) {
 
-    .left{
-        width: 100%;
-    }
-
-    .right{
-        width: 0;
+    .container{
+        grid-template-columns: 1fr;
     }
     
 }
