@@ -152,114 +152,131 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 
     /* convert to correct units */
     const converted = rows.map((row) => {
-      if (row.type === Temperature.keyName) {
-        Object.assign(row, {
-          min: temperatureUnit.fromKelvin(row.min),
-          avg: temperatureUnit.fromKelvin(row.avg),
-          max: temperatureUnit.fromKelvin(row.max),
-        });
-      } else if (row.type === Conductivity.keyName) {
-        Object.assign(row, {
-          min: conductivityUnit.fromSiemensPerMeter(row.min),
-          avg: conductivityUnit.fromSiemensPerMeter(row.avg),
-          max: conductivityUnit.fromSiemensPerMeter(row.max),
-        });
-      } else if (row.type === PH.keyName) {
-        Object.assign(row, {
-          min: new PH(row.min).getValue(),
-          avg: new PH(row.avg).getValue(),
-          max: new PH(row.max).getValue(),
-        });
-      } else {
-        Object.assign(row, {
-          min: round(row.min),
-          avg: round(row.avg),
-          max: round(row.max),
-        });
+      let convert: (v: number) => number;
+      switch (row.type) {
+        case Temperature.keyName:
+          convert = (v) => temperatureUnit.fromKelvin(v);
+          break;
+        case Conductivity.keyName:
+          convert = (v) => conductivityUnit.fromSiemensPerMeter(v);
+          break;
+        case PH.keyName:
+          convert = (v) => new PH(v).getValue();
+          break;
+        default:
+          convert = (v) => round(v);
+          break;
       }
+      Object.assign(row, {
+        min: row.min === null ? null : convert(row.min),
+        avg: row.avg === null ? null : convert(row.avg),
+        max: row.max === null ? null : convert(row.max),
+      });
       return row;
     });
 
     /* set start & end here for each sensor, rest of the properties are set later... */
     const sensorTypes = await Sensor.findAllTypes();
-    if (converted.length) {
-      sensorTypes.forEach((type) => {
-        const first = converted.find(
-          (row: CombinedFormat) => row.type === type
-        )?.avg;
-        const last = findLast(
-          converted,
-          (row: CombinedFormat) => row.type === type
-        )?.avg;
-        if (
-          first === undefined ||
-          last === undefined ||
-          first === null ||
-          last === null
-        ) {
-          return;
-        }
-        Object.assign(summary.sensors, {
-          [type]: {
-            start: round(first),
-            end: round(last),
-          },
-        });
+    sensorTypes.forEach((type) => {
+      const first = converted.find(
+        (row: CombinedFormat) => row.type === type
+      )?.avg;
+      const last = findLast(
+        converted,
+        (row: CombinedFormat) => row.type === type
+      )?.avg;
+      if (
+        first === undefined ||
+        last === undefined ||
+        first === null ||
+        last === null
+      ) {
+        return;
+      }
+      Object.assign(summary.sensors, {
+        [type]: {
+          start: round(first),
+          end: round(last),
+        },
       });
-    }
+    });
 
     /* if we should include measurements, then we need to do some more work */
     /* aggregate the result in chunks of the given density */
-    let currentTime = startTime;
-    while (currentTime <= endTime) {
-      const nextTime = add(currentTime, nextDateOptions);
-      const inRange = converted.filter(
-        (row) => currentTime <= row.time && row.time < nextTime
-      );
+    if (includeMeasurements) {
+      let currentTime = startTime;
+      while (currentTime <= endTime) {
+        const nextTime = add(currentTime, nextDateOptions);
+        const inRange = converted.filter(
+          (row) => currentTime <= row.time && row.time < nextTime
+        );
 
-      if (!inRange.length) {
+        if (!inRange.length) {
+          currentTime = nextTime;
+          continue;
+        }
+
+        const measurement: SummarizedMeasurement = {
+          time: currentTime,
+          sensors: {},
+        };
+
+        sensorTypes.forEach((type) => {
+          const values = inRange
+            .filter((row) => row.type === type)
+            .map((row) => ({ min: row.min, avg: row.avg, max: row.max }));
+          if (!values.length) {
+            return;
+          }
+
+          const min = getMin(values.map((v) => v.min));
+          const avg = getAverage(values.map((v) => v.avg));
+          const max = getMax(values.map((v) => v.max));
+          Object.assign(measurement.sensors, {
+            [type]: {
+              min: min === null ? null : round(min),
+              avg: avg === null ? null : round(avg),
+              max: max === null ? null : round(max),
+            },
+          });
+        });
+        measurements.push(measurement);
         currentTime = nextTime;
-        continue;
       }
-
-      const measurement: SummarizedMeasurement = {
-        time: currentTime,
-        sensors: {},
-      };
 
       sensorTypes.forEach((type) => {
-        const values = inRange
-          .filter((row) => row.type === type)
-          .map((row) => ({ min: row.min, avg: row.avg, max: row.max }));
-        if (!values.length) {
-          return;
+        /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
+        if (type in summary.sensors) {
+          const min = getMin(measurements.map((m) => m.sensors[type]?.min));
+          const avg = getAverage(measurements.map((m) => m.sensors[type]?.avg));
+          const max = getMax(measurements.map((m) => m.sensors[type]?.max));
+          Object.assign(summary.sensors[type], {
+            min: min === null ? null : round(min),
+            avg: avg === null ? null : round(avg),
+            max: max === null ? null : round(max),
+          });
         }
-        Object.assign(measurement.sensors, {
-          [type]: {
-            min: round(getMin(values.map((v) => v.min))),
-            avg: round(getAverage(values.map((v) => v.avg))),
-            max: round(getMax(values.map((v) => v.max))),
-          },
-        });
       });
-      measurements.push(measurement);
-      currentTime = nextTime;
+
+      res.status(STATUS.OK).json({ summary, measurements });
+    } else {
+      /** if we should not include measurements, we summarize directly from the db response */
+      sensorTypes.forEach((type) => {
+        const values = converted.filter((row) => row.type === type);
+        if (type in summary.sensors) {
+          const min = getMin(values.map((m) => m.min));
+          const avg = getAverage(values.map((m) => m.avg));
+          const max = getMax(values.map((m) => m.max));
+          Object.assign(summary.sensors[type], {
+            min: min === null ? null : round(min),
+            avg: avg === null ? null : round(avg),
+            max: max === null ? null : round(max),
+          });
+        }
+      });
+
+      res.status(STATUS.OK).json({ summary });
     }
-
-    sensorTypes.forEach((type) => {
-      /* if property 'column' is undefined, we never assigned a start/end meaning the data is empty */
-      if (type in summary.sensors) {
-        Object.assign(summary.sensors[type], {
-          min: round(getMin(measurements.map((m) => m.sensors[type]?.min))),
-          avg: round(getAverage(measurements.map((m) => m.sensors[type]?.avg))),
-          max: round(getMax(measurements.map((m) => m.sensors[type]?.max))),
-        });
-      }
-    });
-
-    res
-      .status(STATUS.OK)
-      .json(includeMeasurements ? { summary, measurements } : { summary });
   } catch (e) {
     if (e instanceof ZodError) {
       console.log(
