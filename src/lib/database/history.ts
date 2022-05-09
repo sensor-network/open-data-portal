@@ -4,9 +4,9 @@ import mysql, { RowDataPacket, OkPacket } from "mysql2/promise";
 export type CombinedFormat = {
   type: string;
   time: Date;
-  min: number;
-  avg: number;
-  max: number;
+  min: number | null;
+  avg: number | null;
+  max: number | null;
 };
 
 export const createOne = async ({

@@ -1,12 +1,16 @@
 /* calculate average from an array of values that may contain null */
-export const getAverage = (values: number[]) => {
+export const getAverage = (values: (number | null | undefined)[]) => {
+  //console.log(values);
   let [sum, validValues] = [0, 0];
-  for (let i = 0; i < values.length; i++) {
-    const value = Number(values[i]);
-    if (!isNaN(value)) {
+  for (const value of values) {
+    if (value !== null && value !== undefined) {
       sum += value;
       validValues++;
     }
+  }
+  /** return null if there were no numbers in the array */
+  if (validValues === 0) {
+    return null;
   }
   return sum / validValues;
 };
