@@ -17,7 +17,9 @@ const ENDPOINT = "/api/v3/measurements?";
 const LocationRow: React.FC<{
   locationName: string;
   selected: boolean;
-}> = ({ locationName, selected }) => {
+  dontSelectThisOne: () => void;
+  canSelectThisOne: () => void;
+}> = ({ locationName, selected, dontSelectThisOne, canSelectThisOne }) => {
   const { preferences } = useContext(PreferenceContext);
   const sensorTypes = useSensorTypes("/api/v3/sensors/types");
 
@@ -36,10 +38,11 @@ const LocationRow: React.FC<{
 
   const { measurements, isLoading, error } = useMeasurements(url, {
     refreshInterval: 5000,
+    onSuccess: () => canSelectThisOne(),
+    onError: () => dontSelectThisOne(),
   });
 
-  if (error || !measurements)
-    return null;
+  if (error || !measurements) return null;
   if (isLoading || !sensorTypes) return <CustomProgressBar />;
 
   const sensors = measurements[0].sensors;
