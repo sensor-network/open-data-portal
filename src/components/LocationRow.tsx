@@ -42,8 +42,8 @@ const LocationRow: React.FC<{
     onError: () => dontSelectThisOne(),
   });
 
-  if (error || !measurements) return null;
   if (isLoading || !sensorTypes) return <CustomProgressBar />;
+  if (error || !measurements) return null;
 
   const sensors = measurements[0].sensors;
   const date = new Date(measurements[0].time);
