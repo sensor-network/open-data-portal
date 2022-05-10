@@ -33,32 +33,10 @@
     font-size: inherit;
 }
 
-/* Extra small devices (phones, 600px and down) */
-@media only screen and (max-width: 600px) {
-
-    .entireSection{
-
-    }
-
-    .sensors{
-
-    }
-
-    .sensor{
-
-    }
-
-    .loc{
-        
-    }
-
-}
-
-/* Small devices (portrait tablets and large phones, 600px and up) */
 @media only screen and (max-width: 750px) {
 
     .entireSection{
-        font-size: xx-small;
+        font-size: small;
     }
 
 
@@ -67,32 +45,25 @@
 @media only screen and (min-width: 750px) {
 
     .entireSection{
-        font-size: x-small;
+        font-size: medium;
     }
 }
 
-@media only screen and (min-width: 1000px) {
-
-    .entireSection{
-        font-size: small;
-    }
-}
-
-@media only screen and (min-width: 1300px) {
+@media only screen and (min-width: 992px) {
 
     .entireSection{
         font-size: medium;
     }
 }
 
-@media only screen and (min-width: 1700px) {
+@media only screen and (min-width: 1300px) {
 
     .entireSection{
         font-size: large;
     }
 }
 
-@media only screen and (min-width: 2300px) {
+@media only screen and (min-width: 1700px) {
 
     .entireSection{
         font-size: x-large;

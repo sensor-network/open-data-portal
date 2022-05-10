@@ -75,7 +75,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <Card title="Dashboard" styles={{ margin: "40px 0 0 0" }}>
-      <div style={{ display: "flex" }}>
+      <div className={styles.container}>
         {locations ? (
           <>
             <div style={paneStyle}>
