@@ -17,10 +17,23 @@
 
 }
 
-@media only screen and (max-width: 850px) {
+@media only screen and (max-width: 992px) {
 
-    .container{
-        grid-template-columns: 1fr;
-    }
-    
+  .container{
+    grid-template-columns: 1fr;
+  }
+  .right{
+    width: 100%;
+    min-height: 50vh;
+  }
+
+  .left{
+    min-height: 75vh;
+  }
+}
+
+@media only screen and (max-width: 530px){
+  .left{
+    width: 95%;
+  }
 }
