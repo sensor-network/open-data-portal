@@ -5,6 +5,8 @@ import { PreferenceContext } from "~/lib/utils/preferences";
 import LocationRow from "./LocationRow";
 import Card from "./Card";
 
+import styles from "~/styles/LocationRow.module.css";
+
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
 const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
