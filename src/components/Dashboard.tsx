@@ -5,7 +5,7 @@ import { PreferenceContext } from "~/lib/utils/preferences";
 import LocationRow from "./LocationRow";
 import Card from "./Card";
 
-import styles from "~/styles/LocationRow.module.css";
+import styles from "src/styles/Dashboard.module.css";
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
@@ -16,14 +16,6 @@ const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
   selectedLocation: number;
   mapCenter: PointTuple;
 }>;
-
-const paneStyle = {
-  width: "50%",
-  minHeight: "80vh",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
 
 const mapCenter: PointTuple = [56.178516, 15.60261];
 
@@ -80,7 +72,7 @@ const Dashboard: React.FC = () => {
       <div className={styles.container}>
         {locations ? (
           <>
-            <div style={paneStyle}>
+            <div className={styles.left}>
               <div>
                 {locations?.map((location, index) => (
                   <div key={location.id} style={{ margin: "5px 0" }}>
@@ -95,7 +87,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </div>
             </div>
-            <div style={paneStyle}>
+            <div className={styles.right}>
               <MapWithNoSSR
                 locations={locations}
                 selectedLocation={selectedLocationIndex}
