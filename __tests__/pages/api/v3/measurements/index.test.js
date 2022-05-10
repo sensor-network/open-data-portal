@@ -39,7 +39,6 @@ jest.mock("~/lib/database/sensor", () => ({
 jest.mock("~/lib/database/station", () => ({
   __esModule: true,
   findByStationId: jest.fn().mockImplementation(async ({ stationId }) => {
-    console.log("called with id:", stationId);
     return stationId === 1
       ? { id: 1, location: 1, sensors: [1, 2] }
       : stationId === 2
@@ -352,6 +351,37 @@ describe("POST: /api/v3/measurements", () => {
         ],
       });
     });
+
+    describe("valid variants", () => {
+      /** for these tests, dont test entire response body */
+      const baseBody = {
+        time: "2022-01-01T00:00:00Z",
+        stationId: 1,
+        position: { lat: 0, long: 0 },
+        sensors: [{ id: 1, value: 5, unit: "c" }],
+      };
+
+      it("should take different time formats into account", async () => {
+        const { req, res } = mockReqRes({
+          body: {
+            ...baseBody,
+            time: "2022-01-01T14:37:45+02",
+          },
+        });
+
+        await handler(req, res);
+
+        expect(res._getStatusCode()).toEqual(201);
+        expect(res._getJSONData()).toEqual({
+          errors: [],
+          insertedMeasurements: [
+            expect.objectContaining({
+              time: "2022-01-01T12:37:45.000Z", // <-- time is converted to UTC
+            }),
+          ],
+        });
+      });
+    });
   });
 
   describe("invalid insertions", () => {
@@ -390,6 +420,25 @@ describe("POST: /api/v3/measurements", () => {
       expect(res._getJSONData()).toEqual({
         message: "No inserted measurements",
         errors: [{ sensorId: 10, status: "SENSOR_NOT_FOUND" }],
+      });
+    });
+
+    it("should return 400 when a non-linked sensor is used", async () => {
+      const { req, res } = mockReqRes({
+        body: {
+          time: "2022-01-01Z",
+          stationId: 1,
+          position: { lat: 0, long: 0 },
+          sensors: [{ id: 3, value: 5, unit: "c" }], // <-- sensor 3 is linked to station 2
+        },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toEqual(400);
+      expect(res._getJSONData()).toEqual({
+        message: "No inserted measurements",
+        errors: [{ sensorId: 3, status: "SENSOR_NOT_LINKED" }],
       });
     });
 
