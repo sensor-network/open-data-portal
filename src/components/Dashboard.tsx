@@ -1,10 +1,9 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useCallback, useMemo } from "react";
 import type { PointTuple } from "leaflet";
 import type { Location } from "~/lib/database/location";
 import { PreferenceContext } from "~/lib/utils/preferences";
 import LocationRow from "./LocationRow";
 import Card from "./Card";
-import styles from "src/styles/Dashboard.module.css";
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
@@ -31,26 +30,55 @@ const Dashboard: React.FC = () => {
   const TIMEOUT_MS = 5000;
 
   const [selectedLocationIndex, setSelectedIndex] = useState(0);
+  const maxSelectableIndex = useMemo(() => {
+    if (!locations) return 0;
+    return locations.length - 1;
+  }, [locations]);
+
+  const [unselectableIndices, setUnselectableIndices] = useState<number[]>([]);
+  const dontSelectThis = (index: number) => {
+    // only add if not already in
+    if (unselectableIndices.includes(index)) return;
+    setUnselectableIndices((prev) => [...prev, index]);
+  };
+  const canSelectThis = (index: number) => {
+    // remove index from unselectable
+    setUnselectableIndices((prev) => prev.filter((i) => i !== index));
+  };
+
+  const getNextIdx: (currentIdx: number) => number = useCallback(
+    (currentIdx) => {
+      // get next idx with wrap around, dont select unselectable locations
+      const nextIdx = currentIdx === maxSelectableIndex ? 0 : currentIdx + 1;
+      // recursively call until we get a valid idx
+      if (!unselectableIndices.includes(nextIdx)) {
+        return nextIdx;
+      }
+      return getNextIdx(nextIdx);
+    },
+    [unselectableIndices, maxSelectableIndex]
+  );
+
+  const selectNextLocation = () => {
+    setSelectedIndex((prev) => getNextIdx(prev));
+    setTimeout(selectNextLocation, TIMEOUT_MS);
+  };
 
   useEffect(() => {
-    /* initialize an interval when locations arrive */
+    /* initialize a timeout when locations arrive */
     if (locations) {
-      setInterval(() => {
-        /* on every iteration, increment the selected location with wrap-around */
-        setSelectedIndex((prev) => {
-          if (prev === locations.length - 1) return 0;
-          return prev + 1;
-        });
-      }, TIMEOUT_MS);
+      setTimeout(selectNextLocation, TIMEOUT_MS);
     }
   }, [locations]);
+
+  useEffect(() => console.log(unselectableIndices));
 
   return (
     <Card title="Dashboard" styles={{ margin: "40px 0 0 0" }}>
       <div style={{ display: "flex" }}>
         {locations ? (
           <>
-            <div className={styles.left}>
+            <div style={paneStyle}>
               <div>
                 {locations?.map((location, index) => (
                   <div key={location.id} style={{ margin: "5px 0" }}>
@@ -58,12 +86,14 @@ const Dashboard: React.FC = () => {
                       key={location.id}
                       locationName={location.name}
                       selected={index === selectedLocationIndex}
+                      dontSelectThisOne={() => dontSelectThis(index)}
+                      canSelectThisOne={() => canSelectThis(index)}
                     />
                   </div>
                 ))}
               </div>
             </div>
-            <div className={styles.right}>
+            <div style={paneStyle}>
               <MapWithNoSSR
                 locations={locations}
                 selectedLocation={selectedLocationIndex}
