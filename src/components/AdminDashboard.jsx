@@ -6,31 +6,28 @@ import { fetcher } from "~/lib/utils/fetch";
 import { getAverage } from "~/lib/utils/math";
 
 // Reformats the given sensor-health-data to a format accepted by HealthDashboard
-function formatSensorStatus(sensorData) {
-  let formatted = {
-    name: "Sensors",
-    status: 1.0 /** assume all sensors are up */,
-    lastCheckTime: 0,
-    datapoints: [],
-    elements: [],
-  };
-  for (const sensor of sensorData) {
-    const { id, name, firmware, status, lastActive } = sensor;
-    formatted.elements.push({
-      name: `Id: ${id}, Name: ${name}, Firmware: ${firmware}`,
-      status: status === "OK" ? 1.0 : 0.0,
+function formatSensorStatus(sensors) {
+  const formatted = []; 
+  for (const sensor of sensors) {
+    
+    const {id, type, status, lastActive } = sensor; 
+      formatted.push({
+      name: `(${id}) ${type[0].toUpperCase() + type.slice(1)}`, 
+      status: status === "ok" ? 1.0 : 0.0,
       lastCheckTime: lastActive,
-      datapoints: [],
-    });
+      elements: null, 
+    }); 
     if (lastActive > formatted.lastCheckTime) {
       formatted.lastCheckTime = sensorData[i].lastActive;
     }
   }
 
-  formatted.status = getAverage(formatted.elements.map((elem) => elem.status));
-
+  formatted.status = getAverage(formatted.map((elem) => elem.status)); 
   return formatted;
 }
+
+
+
 
 // Reformats the given station-health-data to a format accepted by HealthDashboard
 function formatStationStatus(stationData) {
@@ -38,22 +35,22 @@ function formatStationStatus(stationData) {
     name: "Stations",
     status: 1.0 /** assume all stations are up */,
     lastCheckTime: 0,
-    datapoints: [],
     elements: [],
   };
   for (const station of stationData) {
     const { id, location, status, lastActive } = station;
     formatted.elements.push({
-      name: `Id: ${id}, Location: ${location}`,
+      name: `Station: ${id}, Location: ${location}`,
       status: status === "OK" ? 1.0 : status === "FAULTY" ? 0.0 : 0.5,
       lastCheckTime: lastActive,
-      datapoints: [],
+      elements: formatSensorStatus(station.sensors),
     });
   }
 
   formatted.status = getAverage(formatted.elements.map((elem) => elem.status));
   return formatted;
 }
+
 
 // Fetches the data from health/status and puts the data in healthData
 function formatServerStatus(servicesData) {
@@ -64,7 +61,7 @@ function formatServerStatus(servicesData) {
     status: status.server === "UP" ? 1.0 : 0.0,
     lastCheckTime: new Date(),
     datapoints: [],
-    elements: [],
+    elements: null,
   };
 
   const database = {
@@ -72,7 +69,7 @@ function formatServerStatus(servicesData) {
     status: status.database === "UP" ? 1.0 : 0.0,
     lastCheckTime: new Date(),
     datapoints: [],
-    elements: [],
+    elements: null,
   };
 
   const formatted = {
@@ -95,21 +92,17 @@ const AdminView = () => {
     fetcher: fetcher,
     refreshInterval: 10e3,
   });
-  const { data: sensorHealth } = useSWR("/api/v3/health/sensors", {
-    fetcher: fetcher,
-    refreshInterval: 10e3,
-  });
 
   const healthData = useMemo(() => {
-    if (!sensorHealth || !servicesHealth || !stationHealth) {
+    if (!servicesHealth || !stationHealth) {
       return null;
     }
+
     return [
       formatServerStatus(servicesHealth),
       formatStationStatus(stationHealth),
-      formatSensorStatus(sensorHealth),
     ];
-  }, [servicesHealth, stationHealth, sensorHealth]);
+  }, [servicesHealth, stationHealth]);
 
   return (
     <Card title="Admin view" styles={{ margin: "40px 0 0 0" }}>
