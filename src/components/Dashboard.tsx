@@ -24,6 +24,7 @@ const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
   locations: Location[];
   selectedLocation: number;
   mapCenter: PointTuple;
+  unselectableIndices: number[];
 }>;
 
 /** reducer for a state with unique array elements, only two actions
@@ -117,6 +118,7 @@ const Dashboard: React.FC = () => {
                 locations={locations}
                 selectedLocation={selectedLocationIndex}
                 mapCenter={MAP_CENTER}
+                unselectableIndices={unselectableIndices}
               />
             </div>
           </>

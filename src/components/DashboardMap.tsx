@@ -11,7 +11,8 @@ const DashboardMap: React.FC<{
   locations: Location[];
   selectedLocation: number;
   mapCenter: PointTuple;
-}> = ({ locations, selectedLocation, mapCenter }) => {
+  unselectableIndices: number[];
+}> = ({ locations, selectedLocation, mapCenter, unselectableIndices }) => {
   return (
     <div className={styles.entireSection}>
       <MapContainer
@@ -25,11 +26,13 @@ const DashboardMap: React.FC<{
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {locations.map((l, idx) => (
-          <Marker
+          unselectableIndices.includes(idx) === false && (
+            <Marker
             key={l.id}
             position={[l.position.lat, l.position.long]}
             icon={idx === selectedLocation ? getIcon("red") : getIcon("blue")}
           />
+          )
         ))}
       </MapContainer>
     </div>
