@@ -55,6 +55,7 @@ const Dashboard: React.FC = () => {
 
   const selectNextLocation = () => {
     if (!locations) return;
+    if (unselectableIndices.length >= locations.length) return;
     const getNextId: (arg0: number) => number = (currentId: number) => {
       // get next idx with wrap around, dont select unselectable locations
       const nextId = currentId === locations.length - 1 ? 0 : currentId + 1;
