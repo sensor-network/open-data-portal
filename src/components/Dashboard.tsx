@@ -20,12 +20,7 @@ const INITIAL_DELAY = 5000;
 import dynamic from "next/dynamic";
 const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
   ssr: false,
-}) as React.FC<{
-  locations: Location[];
-  selectedLocation: number;
-  mapCenter: PointTuple;
-  unselectableIndices: number[];
-}>;
+});
 
 /** reducer for a state with unique array elements, only two actions
  * allowed - push and pop. push only adds an element if it is not already
