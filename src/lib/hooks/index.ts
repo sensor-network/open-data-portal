@@ -1,3 +1,4 @@
+export * from "./use-interval";
 export * from "./use-locations";
 export * from "./use-measurements";
 export * from "./use-sensor-types";
