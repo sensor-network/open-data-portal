@@ -1,4 +1,4 @@
-import { endOfDay, formatRelative } from "date-fns";
+import { formatRelative } from "date-fns";
 import { useMemo, useContext } from "react";
 import { useMeasurements, useSensorTypes } from "~/lib/hooks";
 import { urlWithParams } from "~/lib/utils/fetch";
@@ -12,12 +12,17 @@ import { CustomProgressBar } from "./CustomProgressBar";
 import { PRIMARY_BLUE_COLOR } from "~/lib/constants";
 import styles from "~/styles/LocationRow.module.css";
 
+const REFRESH_DATA_INTERVAL = 5000;
+const RED_BORDER_COLOR = "#CB2B3E"; // <-- same color as marker-icon
+
 const ENDPOINT = "/api/v3/measurements?";
 
 const LocationRow: React.FC<{
   locationName: string;
   selected: boolean;
-}> = ({ locationName, selected }) => {
+  dontSelectThisOne: () => void;
+  canSelectThisOne: () => void;
+}> = ({ locationName, selected, dontSelectThisOne, canSelectThisOne }) => {
   const { preferences } = useContext(PreferenceContext);
   const sensorTypes = useSensorTypes("/api/v3/sensors/types");
 
@@ -27,7 +32,7 @@ const LocationRow: React.FC<{
         pageSize: 1,
         sortOrder: "desc",
         locationName,
-        endTime: endOfDay(new Date()).toISOString(),
+        endTime: new Date().toISOString(),
         temperatureUnit: preferences.temperatureUnit.symbol,
         conductivityUnit: preferences.conductivityUnit.symbol,
       }),
@@ -35,16 +40,17 @@ const LocationRow: React.FC<{
   );
 
   const { measurements, isLoading, error } = useMeasurements(url, {
-    refreshInterval: 5000,
+    refreshInterval: REFRESH_DATA_INTERVAL,
+    onSuccess: () => canSelectThisOne(),
+    onError: () => dontSelectThisOne(),
   });
 
-  if (error || !measurements)
-    return <div>No data found for {locationName}</div>;
   if (isLoading || !sensorTypes) return <CustomProgressBar />;
+  if (error || !measurements) return null;
 
   const sensors = measurements[0].sensors;
   const date = new Date(measurements[0].time);
-  const borderColor = selected ? "red" : PRIMARY_BLUE_COLOR;
+  const borderColor = selected ? RED_BORDER_COLOR : PRIMARY_BLUE_COLOR;
 
   return (
     <div

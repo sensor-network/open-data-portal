@@ -5,17 +5,19 @@ import "leaflet/dist/images/marker-icon.png";
 import type { Location } from "~/lib/database/location";
 import type { PointTuple } from "leaflet";
 import { getIcon } from "./Map";
+import styles from "src/styles/DashboardMap.module.css";
 
 const DashboardMap: React.FC<{
   locations: Location[];
   selectedLocation: number;
   mapCenter: PointTuple;
-}> = ({ locations, selectedLocation, mapCenter }) => {
+  unselectableIndices: number[];
+}> = ({ locations, selectedLocation, mapCenter, unselectableIndices }) => {
   return (
-    <div style={{ height: "100%", width: "100%" }}>
+    <div className={styles.entireSection}>
       <MapContainer
         center={mapCenter}
-        zoom={13}
+        zoom={12}
         tap={false}
         style={{ height: "100%", width: "100%", zIndex: 0 }}
       >
@@ -24,11 +26,13 @@ const DashboardMap: React.FC<{
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {locations.map((l, idx) => (
-          <Marker
+          unselectableIndices.includes(idx) === false && (
+            <Marker
             key={l.id}
             position={[l.position.lat, l.position.long]}
             icon={idx === selectedLocation ? getIcon("red") : getIcon("blue")}
           />
+          )
         ))}
       </MapContainer>
     </div>
