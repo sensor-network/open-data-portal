@@ -13,7 +13,7 @@ function formatSensorStatus(sensors) {
   for (const sensor of sensors) {
     const { id, type, status, lastActive } = sensor;
     formatted.push({
-      name: `(${id}) ${type[0].toUpperCase() + type.slice(1)}`,
+      name: `(Id: ${id}) ${type[0].toUpperCase() + type.slice(1)}`,
       status: status === "ok" ? 1.0 : 0.0,
       lastCheckTime: lastActive,
       elements: null,
