@@ -7,7 +7,20 @@ Open Data Portal for Waterquality Sensor Data
 
 ## Introduction
 
-TODO: Add brief introduction.
+An Open Source, Full Stack Application for storing, distributing and visualising Water Measurements around the Karlskrona Archipelago.
+Its main purpose is its integration of the sister repo [Sensor Collector](https://github.com/sensor-network/sensor-collector) where different water measurements are measured and sent over HTTP to the API.
+
+Built using:
+- [Next.js](https://nextjs.org) for backend, including a REST API
+- [React](https://beta.reactjs.org) for frontend
+- [Swagger](https://swagger.io) for API Documentation
+- MySQL (with its [Node package](https://github.com/mysqljs/mysql)) for database
+packaged using [Docker](https://www.docker.com) containers.
+
+Other dependencies worth mentioning are:
+- [React Leaflet](https://react-leaflet.js.org) for Open Street Map integration
+- [Recharts](https://recharts.org/en-US/) for Visualizations.
+- Styled using [MUI](https://mui.com)
 
 ## Architecture Overview
 
@@ -27,7 +40,7 @@ This application can be built and run in two ways:
 - [Docker](https://docker.com)
 - [Docker Compose](https://docs.docker.com/compose/)
 
-#### Build
+#### Build [Optional]
 
 If you want to build the application image yourself, you can
 
@@ -73,7 +86,12 @@ $ cd open-data-portal
 2. Install the project's dependencies:
 
 ```bash
-$ npm install
+# Using npm
+$ npm i
+# Using pnpm
+$ pnpm i
+# Using yarn
+$ yarn i
 ```
 
 3. Verify the credentials in `.env`. By default, it contains the credentials used to connect to the dockerized database
@@ -84,7 +102,12 @@ $ npm install
 Build an optimized production version of the app:
 
 ```bash
+# Using npm
 $ npm run build
+# Using pnpm
+$ pnpm build
+# Using yarn
+$ yarn build
 ```
 
 #### Test
@@ -92,42 +115,51 @@ $ npm run build
 Run all tests:
 
 ```bash
+# Using npm
 $ npm test
+# Using pnpm
+$ pnpm test
+# Using yarn
+$ yarn test
 ```
 
-Tests can also be run in `watch`-mode while developing to have them re-run each compilation:
-
-```bash
-$ npm test:watch
-```
+Tests can also be run in `watch`-mode while developing to have them re-run each compilation by adding `:test` to the command.
 
 ##### Mutation tests
 
 You can also run mutation tests using [Stryker](https://stryker-mutator.io/docs/stryker-js/introduction).
 
-**NOTE: Currently Stryker is not compatible with Next.js/Jest. The workaround is to use Babel by renaming [babelrc.js](babelrc.js) to `.babelrc.js`.**
+**NOTE: Currently Stryker is not compatible with Next.js/Jest by default. The workaround is to use Babel by renaming [babelrc.js](babelrc.js) to `.babelrc.js`.**
 
 ```sh
 $ stryker run
 
 // Mutation tests takes time. Report from last time:
-INFO MutationTestExecutor Done in 18 minutes 15 seconds.
+INFO MutationTestExecutor Done in 58 minutes 45 seconds.
 ```
-
-**_Note: This project currently does not have a significant test-base. This will be done in the future._**
 
 #### Run
 
 Run developer version with fast refresh:
 
 ```bash
+# Using npm
 $ npm run dev
+# Using pnpm
+$ pnpm dev
+# Using yarn
+$ yarn dev
 ```
 
 Or start a built production version:
 
 ```bash
+# Using npm
 $ npm run start
+# Using pnpm
+$ pnpm start
+# Using yarn
+$ yarn start
 ```
 
 In case you dont have a database running, you can also run a containerized database to go along with the application
@@ -147,7 +179,12 @@ When you first launch the application, the database will be empty. We have inclu
 although somewhat realistic data which can be executed using
 
 ```bash
+# Using npm
 $ npm run fill-db
+# Using pnpm
+$ pnpm fill-db
+# Using yarn
+$ yarn fill-db
 ```
 
 It will automatically create the sensors if they dont exist, and fill the database with random data from these sensors.
