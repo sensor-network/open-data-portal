@@ -4,17 +4,20 @@ import HealthDashboard from "./HealthDashboard";
 import useSWR from "swr";
 import { fetcher } from "~/lib/utils/fetch";
 import { getAverage } from "~/lib/utils/math";
+import capitalize from "~/lib/utils/capitalize";
 
 const REFRESH_INTERVAL = 10e3;
 
 // Reformats the given sensor-health-data to a format accepted by HealthDashboard
 function formatSensorStatus(sensors) {
+  console.log(sensors);
+
   const formatted = [];
   for (const sensor of sensors) {
     const { id, type, status, lastActive } = sensor;
     formatted.push({
-      name: `(Id: ${id}) ${type[0].toUpperCase() + type.slice(1)}`,
-      status: status === "ok" ? 1.0 : 0.0,
+      name: `(Id: ${id}) ${capitalize(type)}`,
+      status: status.toUpperCase() === "OK" ? 1.0 : 0.0,
       lastCheckTime: lastActive,
       elements: null,
     });
