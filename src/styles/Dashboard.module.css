@@ -1,39 +1,43 @@
-.left{
-    height: 100%;
-    margin: 0;
-  }
+.left,
+.right {
+  height: 100%;
+  margin: 0;
+}
 
-.right{
-    height: 100%;
-    margin: 0;
-  }
+.left {
+  margin-right: 10px;
+}
 
-.container{
-    width: 100%;
-    min-height: 100vh;
+.right {
+  margin-left: 10px;
+}
 
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+.container {
+  width: 100%;
+  min-height: 75vh;
 
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
 
 @media only screen and (max-width: 992px) {
-
-  .container{
+  .container {
     grid-template-columns: 1fr;
   }
-  .right{
+  .right {
     width: 100%;
+    margin-left: 0;
     min-height: 75vh;
   }
 
-  .left{
+  .left {
     min-height: 75vh;
+    margin-right: 0;
   }
 }
 
-@media only screen and (max-width: 530px){
-  .left{
+@media only screen and (max-width: 530px) {
+  .left {
     width: 95%;
   }
 }
