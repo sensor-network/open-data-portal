@@ -4,7 +4,7 @@
  **/
 
 import React from "react";
-import "date-fns";
+import { format } from "date-fns";
 import { makeStyles } from "@mui/styles";
 import {
   Table,
@@ -13,8 +13,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  LinearProgress,
-  Typography,
   Collapse,
   List,
   ListItem,
@@ -22,7 +20,6 @@ import {
   ListItemIcon,
   Tooltip,
 } from "@mui/material";
-import ErrorIcon from "@mui/icons-material/Error";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
@@ -50,24 +47,6 @@ const useStyles = makeStyles((theme) => ({
     width: "100px",
   },
 }));
-
-const errorDisplay = {
-  height: "300px",
-  width: "100%",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  background: "white",
-};
-
-const ErrorDisplay: React.FC<{ error: any }> = ({ error }) => {
-  return (
-    <div style={errorDisplay} className="error-display">
-      <ErrorIcon color="error" />
-      <Typography variant="h5">{error}</Typography>
-    </div>
-  );
-};
 
 const StatusIcon: React.FC<{
   status: number;
@@ -115,9 +94,8 @@ const HealthBar: React.FC<{
         <StatusIcon
           status={component.status}
           title={
-            component.lastCheckTime
-              ? new Date(component.lastCheckTime).toString()
-              : ""
+            component.lastCheckTime &&
+            format(component.lastCheckTime, "yyyy-MM-dd HH:mm:ss")
           }
           style={{ margin: "8px 0px" }}
         />
@@ -149,9 +127,11 @@ const HealthBar: React.FC<{
                     <StatusIcon
                       status={subComponent.status}
                       title={
-                        subComponent.lastCheckTime
-                          ? new Date(subComponent.lastCheckTime).toString()
-                          : ""
+                        subComponent.lastCheckTime &&
+                        format(
+                          subComponent.lastCheckTime,
+                          "yyyy-MM-dd HH:mm:ss"
+                        )
                       }
                     />
                   </ListItemIcon>

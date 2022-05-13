@@ -18,7 +18,7 @@ function formatSensorStatus(sensors) {
     formatted.push({
       name: `(Id: ${id}) ${capitalize(type)}`,
       status: status.toUpperCase() === "OK" ? 1.0 : 0.0,
-      lastCheckTime: lastActive,
+      lastCheckTime: new Date(lastActive),
       elements: null,
     });
     if (lastActive > formatted.lastCheckTime) {
@@ -43,7 +43,7 @@ function formatStationStatus(stationData) {
     formatted.elements.push({
       name: `Station: ${id}, Location: ${location.name}`,
       status: status === "OK" ? 1.0 : status === "FAULTY" ? 0.0 : 0.5,
-      lastCheckTime: lastActive,
+      lastCheckTime: new Date(lastActive),
       elements: formatSensorStatus(station.sensors),
     });
   }
@@ -60,7 +60,6 @@ function formatServerStatus(servicesData) {
     name: "Server",
     status: status.server === "UP" ? 1.0 : 0.0,
     lastCheckTime: new Date(),
-    datapoints: [],
     elements: null,
   };
 
