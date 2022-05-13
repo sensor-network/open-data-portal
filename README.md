@@ -17,6 +17,8 @@
     - [Initial setup](#initial-setup)
     - [Build](#build-1)
     - [Test](#test)
+      - [Unit tests](#unit-tests)
+      - [Integration tests](#integration-tests) 
       - [Mutation tests](#mutation-tests)
     - [Run](#run-1)
     - [Load database](#load-database)
@@ -148,7 +150,7 @@ $ yarn test
 
 Tests can also be run in `watch`-mode while developing to have them re-run each compilation by using `test:watch` command.
 
-###### Integration tests
+##### Integration tests
 
 Unfortunatly, no automated integration tests are available at this time.
 
