@@ -8,9 +8,12 @@
   align-items: center;
 }
 
+.content {
+  padding: 10px;
+}
+
 .students {
   display: flex;
-  width: max-content;
   gap: 15px;
   flex-wrap: wrap;
   margin: 0;
