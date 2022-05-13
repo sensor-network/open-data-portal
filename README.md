@@ -3,7 +3,23 @@
 
 # open-data-portal
 
-Open Data Portal for Waterquality Sensor Data
+## Table of Contents
+- [Introduction](#introduction)
+- [Architecture Overview](#architecture-overview)
+- [How to Use](#how-to-use)
+  * [Using Docker](#using-docker)
+    + [Prerequisites](#prerequisites)
+    + [Build](#build)
+    + [Run](#run)
+  * [From source](#from-source)
+    + [Prerequisites](#prerequisites-1)
+    + [Initial setup](#initial-setup)
+    + [Build](#build-1)
+    + [Test](#test)
+      - [Mutation tests](#mutation-tests)
+    + [Run](#run-1)
+    + [Load database](#load-database)
+- [License](#license)
 
 ## Introduction
 
@@ -33,14 +49,14 @@ can be found [here](https://github.com/sensor-network/sensor-collector).
 
 This application can be built and run in two ways:
 
-### Using Docker and Docker Compose (Packaged with a mySQL database)
-
+### Using Docker
+__Packaged with a mySQL database__
 #### Prerequisites
 
 - [Docker](https://docker.com)
 - [Docker Compose](https://docs.docker.com/compose/)
 
-#### Build [Optional]
+#### Build
 
 If you want to build the application image yourself, you can
 
@@ -116,14 +132,14 @@ Run all tests:
 
 ```bash
 # Using npm
-$ npm test
+$ npm run test
 # Using pnpm
 $ pnpm test
 # Using yarn
 $ yarn test
 ```
 
-Tests can also be run in `watch`-mode while developing to have them re-run each compilation by adding `:test` to the command.
+Tests can also be run in `watch`-mode while developing to have them re-run each compilation by using `test:watch` command.
 
 ##### Mutation tests
 
