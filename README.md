@@ -4,21 +4,22 @@
 # open-data-portal
 
 ## Table of Contents
+
 - [Introduction](#introduction)
 - [Architecture Overview](#architecture-overview)
 - [How to Use](#how-to-use)
-  * [Using Docker](#using-docker)
-    + [Prerequisites](#prerequisites)
-    + [Build](#build)
-    + [Run](#run)
-  * [From source](#from-source)
-    + [Prerequisites](#prerequisites-1)
-    + [Initial setup](#initial-setup)
-    + [Build](#build-1)
-    + [Test](#test)
+  - [Using Docker](#using-docker)
+    - [Prerequisites](#prerequisites)
+    - [Build](#build)
+    - [Run](#run)
+  - [From source](#from-source)
+    - [Prerequisites](#prerequisites-1)
+    - [Initial setup](#initial-setup)
+    - [Build](#build-1)
+    - [Test](#test)
       - [Mutation tests](#mutation-tests)
-    + [Run](#run-1)
-    + [Load database](#load-database)
+    - [Run](#run-1)
+    - [Load database](#load-database)
 - [License](#license)
 
 ## Introduction
@@ -27,13 +28,15 @@ An Open Source, Full Stack Application for storing, distributing and visualising
 Its main purpose is its integration of the sister repo [Sensor Collector](https://github.com/sensor-network/sensor-collector) where different water measurements are measured and sent over HTTP to the API.
 
 Built using:
+
 - [Next.js](https://nextjs.org) for backend, including a REST API
 - [React](https://beta.reactjs.org) for frontend
 - [Swagger](https://swagger.io) for API Documentation
 - MySQL (with its [Node package](https://github.com/mysqljs/mysql)) for database
-packaged using [Docker](https://www.docker.com) containers.
+  packaged using [Docker](https://www.docker.com) containers.
 
 Other dependencies worth mentioning are:
+
 - [React Leaflet](https://react-leaflet.js.org) for Open Street Map integration
 - [Recharts](https://recharts.org/en-US/) for Visualizations.
 - Styled using [MUI](https://mui.com)
@@ -50,7 +53,9 @@ can be found [here](https://github.com/sensor-network/sensor-collector).
 This application can be built and run in two ways:
 
 ### Using Docker
-__Packaged with a mySQL database__
+
+**Packaged with a mySQL database**
+
 #### Prerequisites
 
 - [Docker](https://docker.com)
@@ -128,6 +133,8 @@ $ yarn build
 
 #### Test
 
+##### Unit tests
+
 Run all tests:
 
 ```bash
@@ -140,6 +147,10 @@ $ yarn test
 ```
 
 Tests can also be run in `watch`-mode while developing to have them re-run each compilation by using `test:watch` command.
+
+###### Integration tests
+
+Unfortunatly, no automated integration tests are available at this time.
 
 ##### Mutation tests
 
