@@ -10,14 +10,13 @@ const REFRESH_INTERVAL = 10e3;
 
 // Reformats the given sensor-health-data to a format accepted by HealthDashboard
 function formatSensorStatus(sensors) {
-  console.log(sensors);
-
   const formatted = [];
   for (const sensor of sensors) {
     const { id, type, status, lastActive } = sensor;
     formatted.push({
-      name: `(Id: ${id}) ${capitalize(type)}`,
+      name: `Sensor: ${id}: ${type === "ph" ? "pH" : capitalize(type)}`,
       status: status.toUpperCase() === "OK" ? 1.0 : 0.0,
+      statusMessage: status,
       lastCheckTime: new Date(lastActive),
       elements: null,
     });
@@ -26,8 +25,13 @@ function formatSensorStatus(sensors) {
     }
   }
 
+  // get the latest lastCheckTime of the sensors
+  formatted.lastCheckTime = formatted.reduce(
+    (acc, elem) => (elem.lastCheckTime > acc ? elem.lastCheckTime : acc),
+    formatted.lastCheckTime
+  );
   formatted.status = getAverage(formatted.map((elem) => elem.status));
-  return formatted;
+  return formatted.sort((a, b) => a.name.localeCompare(b.name)); // sort by name (which will actually sort by the id)
 }
 
 // Reformats the given station-health-data to a format accepted by HealthDashboard
@@ -43,11 +47,17 @@ function formatStationStatus(stationData) {
     formatted.elements.push({
       name: `Station: ${id}, Location: ${location.name}`,
       status: status === "OK" ? 1.0 : status === "FAULTY" ? 0.0 : 0.5,
+      statusMessage: status,
       lastCheckTime: new Date(lastActive),
       elements: formatSensorStatus(station.sensors),
     });
   }
 
+  // get the latest lastCheckTime of the stations
+  formatted.lastCheckTime = formatted.elements.reduce(
+    (acc, elem) => (elem.lastCheckTime > acc ? elem.lastCheckTime : acc),
+    formatted.lastCheckTime
+  );
   formatted.status = getAverage(formatted.elements.map((elem) => elem.status));
   return formatted;
 }
@@ -59,6 +69,7 @@ function formatServerStatus(servicesData) {
   const server = {
     name: "Server",
     status: status.server === "UP" ? 1.0 : 0.0,
+    statusMessage: status.server,
     lastCheckTime: new Date(),
     elements: null,
   };
@@ -66,6 +77,7 @@ function formatServerStatus(servicesData) {
   const database = {
     name: "Database",
     status: status.database === "UP" ? 1.0 : 0.0,
+    statusMessage: status.database,
     lastCheckTime: new Date(),
     elements: null,
   };
@@ -112,6 +124,7 @@ const AdminView = () => {
 
   return (
     <Card title="Admin view" styles={{ margin: "40px 0 0 0" }}>
+      <p>Hover the icon to see a detailed status message</p>
       {healthData && <HealthDashboard data={healthData} />}
     </Card>
   );

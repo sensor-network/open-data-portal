@@ -4,7 +4,7 @@
  **/
 
 import React from "react";
-import { format } from "date-fns";
+import { formatRelative } from "date-fns";
 import { makeStyles } from "@mui/styles";
 import {
   Table,
@@ -73,7 +73,7 @@ const StatusIcon: React.FC<{
 export type HealthBarComponent = {
   name: string;
   status: number;
-  statusMessage: string;
+  statusMessage?: string;
   lastCheckTime: Date;
   elements: HealthBarComponent[] | null;
 };
@@ -93,10 +93,7 @@ const HealthBar: React.FC<{
       <TableCell align="left" style={{ width: "1%" }}>
         <StatusIcon
           status={component.status}
-          title={
-            component.lastCheckTime &&
-            format(component.lastCheckTime, "yyyy-MM-dd HH:mm:ss")
-          }
+          title={component.statusMessage ? component.statusMessage : ""}
           style={{ margin: "8px 0px" }}
         />
       </TableCell>
@@ -111,27 +108,27 @@ const HealthBar: React.FC<{
             }}
           />
         </ListItem>
-
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {subComponents.map((subComponent) => {
               return Array.isArray(subComponent.elements) ? (
-                <HealthBar
-                  key={subComponent.name}
-                  component={subComponent}
-                  subComponents={subComponent.elements}
-                />
+                <Table key={subComponent.name}>
+                  <TableBody>
+                    <HealthBar
+                      component={subComponent}
+                      subComponents={subComponent.elements}
+                    />
+                  </TableBody>
+                </Table>
               ) : (
                 <ListItem key={subComponent.name}>
                   <ListItemIcon>
                     <StatusIcon
                       status={subComponent.status}
                       title={
-                        subComponent.lastCheckTime &&
-                        format(
-                          subComponent.lastCheckTime,
-                          "yyyy-MM-dd HH:mm:ss"
-                        )
+                        subComponent.statusMessage
+                          ? subComponent.statusMessage
+                          : ""
                       }
                     />
                   </ListItemIcon>
@@ -142,14 +139,18 @@ const HealthBar: React.FC<{
                       margin: "1.0em",
                     }}
                   />
+                  <ListItemText
+                    primary={formatRelative(
+                      subComponent.lastCheckTime,
+                      new Date()
+                    )}
+                    style={{ textAlign: "right", width: "300px" }}
+                  />
                 </ListItem>
               );
             })}
           </List>
         </Collapse>
-      </TableCell>
-      <TableCell align="left">
-        {component.status === 1 ? "Healthy" : "Unhealthy"}
       </TableCell>
     </TableRow>
   );
@@ -163,13 +164,6 @@ const HealthDashboard: React.FC<{
   return (
     <Paper className={classes.root}>
       <Table className={classes.table} size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell align="left" />
-            <TableCell align="center">Component</TableCell>
-            <TableCell align="left">Status</TableCell>
-          </TableRow>
-        </TableHead>
         <TableBody>
           {data.map((item) => {
             return (
