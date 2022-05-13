@@ -1,0 +1,19 @@
+.footer {
+  width: 100%;
+  border-top: 1px solid #185693;
+  box-shadow: 0 0 5px 0 #185693;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.students {
+  display: flex;
+  width: max-content;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0 0 25px 0;
+  list-style: none;
+}
