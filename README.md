@@ -132,14 +132,14 @@ Run all tests:
 
 ```bash
 # Using npm
-$ npm test
+$ npm run test
 # Using pnpm
 $ pnpm test
 # Using yarn
 $ yarn test
 ```
 
-Tests can also be run in `watch`-mode while developing to have them re-run each compilation by adding `:test` to the command.
+Tests can also be run in `watch`-mode while developing to have them re-run each compilation by using `test:watch` command.
 
 ##### Mutation tests
 
