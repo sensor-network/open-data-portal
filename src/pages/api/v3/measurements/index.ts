@@ -4,6 +4,7 @@ import { OkPacket } from "mysql2/promise";
 
 import * as Measurement from "~/lib/database/measurement";
 import * as Sensor from "~/lib/database/sensor";
+import * as Station from "~/lib/database/station";
 import * as Location from "~/lib/database/location";
 
 import { HTTP_STATUS as STATUS } from "~/lib/constants";
@@ -220,7 +221,24 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     for (const body of arrayedBody) {
       try {
         /* validate request body */
-        const { time, position, sensors } = zCreateMeasurement.parse(body);
+        const { time, position, stationId, sensors } =
+          zCreateMeasurement.parse(body);
+
+        /* validate that the provided sensors are linked to the provided station */
+        const station = await Station.findByStationId({
+          stationId,
+          expandLocation: false,
+          expandSensors: false,
+        });
+        if (!station) {
+          // TODO: should we automatically create the station?
+          const message = `Station with id ${stationId} not found.`;
+          console.log(`${req.method}: ${req.url}:: ${message}`);
+          res.status(STATUS.NOT_FOUND).json({ message });
+          return;
+        }
+        /* casting to number cause we didn't expand the sensors */
+        const sensorIdsAtStation = station.sensors as number[];
 
         /* find location in the db from the lat,long specified */
         const closestLocation = await Location.findClosest(position);
@@ -246,20 +264,30 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
               sensorErrors.push({ sensorId: id, status: "SENSOR_NOT_FOUND" });
               continue;
             }
-
+            if (!sensorIdsAtStation.includes(id)) {
+              sensorErrors.push({ sensorId: id, status: "SENSOR_NOT_LINKED" });
+              continue;
+            }
             /* convert the value to SI-unit if there is one */
             let convertedValue = value;
-            if (sensor.type === Temperature.keyName) {
-              convertedValue = parseTemperature(value, unit || "k").asKelvin();
-            } else if (sensor.type === Conductivity.keyName) {
-              convertedValue = parseConductivity(
-                value,
-                unit || "spm"
-              ).asSiemensPerMeter();
-            } else if (sensor.type === PH.keyName) {
-              convertedValue = new PH(value).getValue();
-            } else {
-              convertedValue = round(value);
+            switch (sensor.type) {
+              case Temperature.keyName:
+                convertedValue = parseTemperature(
+                  value,
+                  unit || "k"
+                ).asKelvin();
+                break;
+              case Conductivity.keyName:
+                convertedValue = parseConductivity(
+                  value,
+                  unit || "spm"
+                ).asSiemensPerMeter();
+                break;
+              case PH.keyName:
+                convertedValue = new PH(value).getValue();
+                break;
+              default:
+                convertedValue = round(value);
             }
 
             /* insert measurement into db */

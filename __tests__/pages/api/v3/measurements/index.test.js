@@ -2,13 +2,57 @@ import { createMocks } from "node-mocks-http";
 import handler from "~/pages/api/v3/measurements";
 import { createOne, findMany } from "~/lib/database/measurement";
 
+const mockedDB = {
+  location: [
+    { id: 1, name: "foo", position: { lat: 0, long: 0 }, radiusMeters: 100 },
+    { id: 2, name: "bar", position: { lat: 10, long: 10 }, radiusMeters: 200 },
+  ],
+  sensor: [
+    { id: 1, name: "temp1", type: "temperature" },
+    { id: 2, name: "cond1", type: "conductivity" },
+    { id: 3, name: "ph1", type: "ph" },
+    { id: 4, name: "rand1", type: "random-sensor-type" },
+  ],
+};
+
 /* Mock the database modules. */
+jest.mock("~/lib/database/location", () => ({
+  __esModule: true,
+  /* simple select from the locations by exact match (not testing this function here) */
+  findClosest: jest.fn().mockImplementation(async ({ lat, long }) => {
+    return mockedDB.location.find(
+      (l) => l.position.lat === lat && l.position.long === long
+    );
+  }),
+  // create a new location and return inserted id = 3
+  createOne: jest.fn().mockImplementation(async () => 3),
+}));
+
+jest.mock("~/lib/database/sensor", () => ({
+  __esModule: true,
+  findById: jest.fn().mockImplementation(async ({ id }) => {
+    return mockedDB.sensor.find((s) => s.id === id);
+  }),
+  updateStatus: jest.fn().mockImplementation(async () => void 0),
+}));
+
+jest.mock("~/lib/database/station", () => ({
+  __esModule: true,
+  findByStationId: jest.fn().mockImplementation(async ({ stationId }) => {
+    return stationId === 1
+      ? { id: 1, location: 1, sensors: [1, 2] }
+      : stationId === 2
+      ? { id: 2, location: 2, sensors: [3, 4] }
+      : null;
+  }),
+}));
+
 jest.mock("~/lib/database/measurement", () => ({
   __esModule: true,
   createOne: jest.fn().mockImplementation(async () => void 0),
   findMany: jest.fn().mockImplementation(async () => [
     {
-      locationName: "test",
+      locationName: "foo",
       position: {
         lat: 0,
         long: 0,
@@ -16,32 +60,21 @@ jest.mock("~/lib/database/measurement", () => ({
       time: new Date("2022-01-01T00:00:00.000Z"),
       sensors: {
         temperature: 278.15,
+        conductivity: 5,
+      },
+    },
+    {
+      locationName: "bar",
+      position: {
+        lat: 10,
+        long: 10,
+      },
+      time: new Date("2022-01-01T00:00:00.000Z"),
+      sensors: {
+        ph: 7.0,
       },
     },
   ]),
-}));
-jest.mock("~/lib/database/location", () => ({
-  __esModule: true,
-  /* simulate there being a single entry at (lat,lng) = (0, 0) with id 1 */
-  findClosest: jest.fn().mockImplementation(async ({ lat, long }) => {
-    return lat === 0 && long === 0 ? { id: 1 } : null;
-  }),
-  // create a new location and return inserted id = 2
-  createOne: jest.fn().mockImplementation(async () => 2),
-}));
-
-const sensorDb = [
-  { id: 1, name: "temp1", type: "temperature" },
-  { id: 2, name: "cond1", type: "conductivity" },
-  { id: 3, name: "ph1", type: "ph" },
-  { id: 4, name: "orp1", type: "random-sensor-type" },
-];
-jest.mock("~/lib/database/sensor", () => ({
-  __esModule: true,
-  findById: jest
-    .fn()
-    .mockImplementation(async ({ id }) => sensorDb.find((s) => s.id === id)),
-  updateStatus: jest.fn().mockImplementation(async () => void 0),
 }));
 
 describe("POST: /api/v3/measurements", () => {
@@ -65,6 +98,7 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
+          stationId: 1,
           position: { lat: 0, long: 0 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
@@ -73,7 +107,7 @@ describe("POST: /api/v3/measurements", () => {
       /* call the api endpoint (act) */
       await handler(req, res);
 
-      /* there should have been 2 calls to the database (assert)*/
+      /* there should have been 1 calls to the database (assert)*/
       expect(createOne.mock.calls.length).toEqual(1);
       expect(res._getStatusCode()).toEqual(201);
       expect(res._getJSONData()).toEqual({
@@ -94,11 +128,11 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
+          stationId: 1,
           position: { lat: 0, long: 0 },
           sensors: [
             { id: 1, value: 300 },
             { id: 2, value: 5 },
-            { id: 3, value: 5 },
           ],
         },
       });
@@ -107,7 +141,7 @@ describe("POST: /api/v3/measurements", () => {
       await handler(req, res);
 
       /* there should have been 2 calls to the database (assert)*/
-      expect(createOne.mock.calls.length).toEqual(3);
+      expect(createOne.mock.calls.length).toEqual(2);
       expect(res._getStatusCode()).toEqual(201);
       expect(res._getJSONData()).toEqual({
         insertedMeasurements: [
@@ -123,12 +157,6 @@ describe("POST: /api/v3/measurements", () => {
             value: 5,
             time: "2022-01-01T00:00:00.000Z",
           },
-          {
-            sensorId: 3,
-            locationId: 1,
-            value: 5,
-            time: "2022-01-01T00:00:00.000Z",
-          },
         ],
         errors: [],
       });
@@ -139,22 +167,32 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
-          position: { lat: 0, long: 0 },
-          sensors: [{ id: 4, value: 5, unit: "c" }],
+          stationId: 2,
+          position: { lat: 10, long: 10 },
+          sensors: [
+            { id: 3, value: 7 },
+            { id: 4, value: 5 },
+          ],
         },
       });
 
       /* call the api endpoint (act) */
       await handler(req, res);
 
-      /* there should have been 2 calls to the database (assert)*/
-      expect(createOne.mock.calls.length).toEqual(1);
+      /* there should have been 2 call to the database (assert)*/
+      expect(createOne.mock.calls.length).toEqual(2);
       expect(res._getStatusCode()).toEqual(201);
       expect(res._getJSONData()).toEqual({
         insertedMeasurements: [
           {
+            sensorId: 3,
+            locationId: 2,
+            value: 7,
+            time: "2022-01-01T00:00:00.000Z",
+          },
+          {
             sensorId: 4,
-            locationId: 1,
+            locationId: 2,
             value: 5,
             time: "2022-01-01T00:00:00.000Z",
           },
@@ -167,7 +205,8 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
-          position: { lat: 10, long: 10 },
+          stationId: 1,
+          position: { lat: 20, long: 20 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
       });
@@ -180,7 +219,7 @@ describe("POST: /api/v3/measurements", () => {
         insertedMeasurements: [
           {
             sensorId: 1,
-            locationId: 2,
+            locationId: 3,
             value: 278.15,
             time: "2022-01-01T00:00:00.000Z",
           },
@@ -194,6 +233,7 @@ describe("POST: /api/v3/measurements", () => {
         body: [
           {
             time: "2022-01-01T00:00:00Z",
+            stationId: 1,
             position: { lat: 0, long: 0 },
             sensors: [
               { id: 1, value: 5, unit: "c" },
@@ -202,6 +242,7 @@ describe("POST: /api/v3/measurements", () => {
           },
           {
             time: "2022-01-01T01:00:00Z",
+            stationId: 1,
             position: { lat: 0, long: 0 },
             sensors: [
               { id: 1, value: 10, unit: "c" },
@@ -251,14 +292,17 @@ describe("POST: /api/v3/measurements", () => {
         body: [
           {
             time: "2022-01-01T00:00:00Z",
+            stationId: 1,
             position: { lat: 0, long: 0 },
             sensors: [
               { id: 1, value: 5, unit: "c" },
               { id: 2, value: 5, unit: "c" }, // invalid unit
+              { id: 3, value: 7 }, // unlinked sensor
             ],
           },
           {
             time: "December 15th", // invalid time format
+            stationId: 1,
             position: { lat: 0, long: 0 },
             sensors: [
               { id: 1, value: 10, unit: "c" },
@@ -284,9 +328,11 @@ describe("POST: /api/v3/measurements", () => {
         ],
         errors: [
           { sensorId: 2, status: "INVALID_ENUM_VALUE" },
+          { sensorId: 3, status: "SENSOR_NOT_LINKED" },
           {
             body: {
               time: "December 15th", // invalid time format
+              stationId: 1,
               position: { lat: 0, long: 0 },
               sensors: [
                 { id: 1, value: 10, unit: "c" },
@@ -305,6 +351,37 @@ describe("POST: /api/v3/measurements", () => {
         ],
       });
     });
+
+    describe("valid variants", () => {
+      /** for these tests, dont test entire response body */
+      const baseBody = {
+        time: "2022-01-01T00:00:00Z",
+        stationId: 1,
+        position: { lat: 0, long: 0 },
+        sensors: [{ id: 1, value: 5, unit: "c" }],
+      };
+
+      it("should take different time formats into account", async () => {
+        const { req, res } = mockReqRes({
+          body: {
+            ...baseBody,
+            time: "2022-01-01T14:37:45+02",
+          },
+        });
+
+        await handler(req, res);
+
+        expect(res._getStatusCode()).toEqual(201);
+        expect(res._getJSONData()).toEqual({
+          errors: [],
+          insertedMeasurements: [
+            expect.objectContaining({
+              time: "2022-01-01T12:37:45.000Z", // <-- time is converted to UTC
+            }),
+          ],
+        });
+      });
+    });
   });
 
   describe("invalid insertions", () => {
@@ -312,6 +389,7 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
+          stationId: 1,
           position: { lat: 0, long: 0 },
           sensors: [{ id: 1, value: 5, unit: "k" }], // <-- 5 K is too small
         },
@@ -330,6 +408,7 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
+          stationId: 1,
           position: { lat: 0, long: 0 },
           sensors: [{ id: 10, value: 5, unit: "c" }],
         },
@@ -344,6 +423,25 @@ describe("POST: /api/v3/measurements", () => {
       });
     });
 
+    it("should return 400 when a non-linked sensor is used", async () => {
+      const { req, res } = mockReqRes({
+        body: {
+          time: "2022-01-01Z",
+          stationId: 1,
+          position: { lat: 0, long: 0 },
+          sensors: [{ id: 3, value: 5, unit: "c" }], // <-- sensor 3 is linked to station 2
+        },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toEqual(400);
+      expect(res._getJSONData()).toEqual({
+        message: "No inserted measurements",
+        errors: [{ sensorId: 3, status: "SENSOR_NOT_LINKED" }],
+      });
+    });
+
     it("should return 400 if a duplicate entry is sent", async () => {
       /* override the mock to throw duplcate-entry this time */
       createOne.mockImplementationOnce(async () => {
@@ -355,6 +453,7 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
+          stationId: 1,
           position: { lat: 0, long: 0 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
@@ -369,7 +468,55 @@ describe("POST: /api/v3/measurements", () => {
       });
     });
 
-    it("should return 400 if", async () => {});
+    it("should return 400 if stationId is not provided", async () => {
+      const { req, res } = mockReqRes({
+        body: {
+          time: "2022-01-01Z",
+          position: { lat: 0, long: 0 },
+          sensors: [{ id: 1, value: 5, unit: "c" }],
+        },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toEqual(400);
+      expect(res._getJSONData()).toEqual({
+        message: "No inserted measurements",
+        errors: [
+          {
+            body: {
+              time: "2022-01-01Z",
+              position: { lat: 0, long: 0 },
+              sensors: [{ id: 1, value: 5, unit: "c" }],
+            },
+            error: {
+              formErrors: [],
+              fieldErrors: {
+                stationId: ["Required"],
+              },
+            },
+          },
+        ],
+      });
+    });
+
+    it("should return 404 if the station is not found", async () => {
+      const { req, res } = mockReqRes({
+        body: {
+          time: "2022-01-01Z",
+          stationId: 3,
+          position: { lat: 0, long: 0 },
+          sensors: [{ id: 1, value: 5, unit: "c" }],
+        },
+      });
+
+      await handler(req, res);
+
+      expect(res._getStatusCode()).toEqual(404);
+      expect(res._getJSONData()).toEqual({
+        message: "Station with id 3 not found.",
+      });
+    });
 
     it("should return 401 if the correct authorization is not provided", async () => {
       const { req, res } = mockReqRes({
@@ -409,7 +556,7 @@ describe("GET: /api/v3/measurements", () => {
         page: 1,
         pageSize: 100,
         lastPage: 1,
-        totalRows: 1,
+        totalRows: 2,
         hasPreviousPage: false,
         hasNextPage: false,
       },
@@ -421,13 +568,25 @@ describe("GET: /api/v3/measurements", () => {
       measurements: [
         {
           time: "2022-01-01T00:00:00.000Z",
-          locationName: "test",
+          locationName: "foo",
           position: {
             lat: 0,
             long: 0,
           },
           sensors: {
             temperature: 278.15,
+            conductivity: 5,
+          },
+        },
+        {
+          time: "2022-01-01T00:00:00.000Z",
+          locationName: "bar",
+          position: {
+            lat: 10,
+            long: 10,
+          },
+          sensors: {
+            ph: 7.0,
           },
         },
       ],
