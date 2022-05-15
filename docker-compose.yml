@@ -1,5 +1,5 @@
 # Use root/example as user/password credentials
-version: '3.1'
+version: "3.1"
 
 services:
   # mySQL Database with init-scripts from ./db/init
@@ -14,9 +14,9 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - ./db/init:/docker-entrypoint-initdb.d   # Link init scripts to the container
-      - ./db/mysql:/var/lib/mysql  # Link a volume from host to persist the data
-    user: mysql   # fixes symlink issues with mysql.sock on macOS
+      - ./db/init:/docker-entrypoint-initdb.d # Link init scripts to the container
+      - ./db/mysql:/var/lib/mysql # Link a volume from host to persist the data
+    user: mysql # fixes symlink issues with mysql.sock on macOS
 
   # Open Data Portal Web Application with API, built using `./Dockerfile`
   app:

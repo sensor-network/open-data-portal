@@ -25,15 +25,18 @@ const DashboardMap: React.FC<{
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {locations.map((l, idx) => (
-          unselectableIndices.includes(idx) === false && (
-            <Marker
-            key={l.id}
-            position={[l.position.lat, l.position.long]}
-            icon={idx === selectedLocation ? getIcon("red") : getIcon("blue")}
-          />
-          )
-        ))}
+        {locations.map(
+          (l, idx) =>
+            unselectableIndices.includes(idx) === false && (
+              <Marker
+                key={l.id}
+                position={[l.position.lat, l.position.long]}
+                icon={
+                  idx === selectedLocation ? getIcon("red") : getIcon("blue")
+                }
+              />
+            )
+        )}
       </MapContainer>
     </div>
   );

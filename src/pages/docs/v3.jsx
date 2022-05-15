@@ -19,7 +19,7 @@ export default function Docs() {
       <Head>
         <title>API Documentation v3</title>
       </Head>
-      <div id={"swaggerContainer"}/>
+      <div id={"swaggerContainer"} />
     </div>
   );
 }

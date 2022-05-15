@@ -18,7 +18,7 @@
     - [Build](#build-1)
     - [Test](#test)
       - [Unit tests](#unit-tests)
-      - [Integration tests](#integration-tests) 
+      - [Integration tests](#integration-tests)
       - [Mutation tests](#mutation-tests)
     - [Run](#run-1)
     - [Load database](#load-database)

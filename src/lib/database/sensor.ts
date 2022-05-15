@@ -1,44 +1,62 @@
 import { getConnectionPool } from "./connection";
-import mysql, { RowDataPacket, OkPacket } from 'mysql2/promise';
+import mysql, { RowDataPacket, OkPacket } from "mysql2/promise";
 
 export type Sensor = {
-  id: number,
-  name: string,
-  firmware: string,
-  type: string,
-  status?: string,
-  lastActive?: Date
-}
+  id: number;
+  name: string;
+  firmware: string;
+  type: string;
+  status?: string;
+  lastActive?: Date;
+};
 
-export const createOne = async (
-  { name, firmware, type }: { name: string | null, firmware: string | null, type: string },
-) => {
+export const createOne = async ({
+  name,
+  firmware,
+  type,
+}: {
+  name: string | null;
+  firmware: string | null;
+  type: string;
+}) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       INSERT INTO sensor (name, firmware, type)
       VALUES (?, ?, ?)
-  `, [name, firmware, type]);
+  `,
+    [name, firmware, type]
+  );
   const okPacket = result[0] as OkPacket;
   return okPacket.insertId;
 };
 
-export const findById = async (
-  { id, includeStatus = false }: { id: number, includeStatus?: boolean },
-) => {
+export const findById = async ({
+  id,
+  includeStatus = false,
+}: {
+  id: number;
+  includeStatus?: boolean;
+}) => {
   let query: string;
   if (includeStatus) {
-    query = mysql.format(`
+    query = mysql.format(
+      `
         SELECT id, name, firmware, type, status, last_active AS lastActive
         FROM sensor
         WHERE id = ?
-    `, [id]);
-  }
-  else {
-    query = mysql.format(`
+    `,
+      [id]
+    );
+  } else {
+    query = mysql.format(
+      `
         SELECT id, name, firmware, type
         FROM sensor
         WHERE id = ?
-    `, [id]);
+    `,
+      [id]
+    );
   }
   const connection = await getConnectionPool();
   const result = await connection.query(query);
@@ -46,63 +64,82 @@ export const findById = async (
   return rows[0] as Sensor;
 };
 
-export const findByName = async (
-  { name, includeStatus = false }: { name: string, includeStatus?: boolean }
-) => {
+export const findByName = async ({
+  name,
+  includeStatus = false,
+}: {
+  name: string;
+  includeStatus?: boolean;
+}) => {
   let query: string;
   if (includeStatus) {
-    query = mysql.format(`
+    query = mysql.format(
+      `
         SELECT id, name, firmware, type, status, last_active AS lastActive
         FROM sensor
         WHERE name = ?
-    `, [name]);
-  }
-  else {
-    query = mysql.format(`
+    `,
+      [name]
+    );
+  } else {
+    query = mysql.format(
+      `
         SELECT id, name, firmware, type
         FROM sensor
         WHERE name = ?
-    `, [name]);
+    `,
+      [name]
+    );
   }
   const connection = await getConnectionPool();
   const result = await connection.query(query);
   return result[0] as Sensor[];
 };
 
-export const findByType = async (
-  { type, includeStatus = false }: { type: string, includeStatus?: boolean }
-) => {
+export const findByType = async ({
+  type,
+  includeStatus = false,
+}: {
+  type: string;
+  includeStatus?: boolean;
+}) => {
   let query: string;
   if (includeStatus) {
-    query = mysql.format(`
+    query = mysql.format(
+      `
         SELECT id, name, firmware, type, status, last_active AS lastActive
         FROM sensor
         WHERE type = ?
-    `, [type]);
-  }
-  else {
-    query = mysql.format(`
+    `,
+      [type]
+    );
+  } else {
+    query = mysql.format(
+      `
         SELECT id, name, firmware, type
         FROM sensor
         WHERE type = ?
-    `, [type]);
+    `,
+      [type]
+    );
   }
   const connection = await getConnectionPool();
   const result = await connection.query(query);
   return result[0] as Sensor[];
 };
 
-export const findMany = async (
-  { includeStatus = false }: { includeStatus?: boolean }
-) => {
+export const findMany = async ({
+  includeStatus = false,
+}: {
+  includeStatus?: boolean;
+}) => {
   let query: string;
   if (includeStatus) {
     query = `
         SELECT id, name, firmware, type, status, last_active AS lastActive
         FROM sensor
     `;
-  }
-  else {
+  } else {
     query = `
         SELECT id, name, firmware, type
         FROM sensor
@@ -113,40 +150,61 @@ export const findMany = async (
   return result[0] as Sensor[];
 };
 
-export const updateFirmware = async (
-  { id, firmware }: { id: number, firmware: string }
-) => {
+export const updateFirmware = async ({
+  id,
+  firmware,
+}: {
+  id: number;
+  firmware: string;
+}) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       UPDATE sensor
       SET firmware = ?
       WHERE id = ?
-  `, [firmware, id]);
+  `,
+    [firmware, id]
+  );
   return result[0] as OkPacket;
 };
 
-export const updateName = async (
-  { id, name }: { id: number, name: string }
-) => {
+export const updateName = async ({
+  id,
+  name,
+}: {
+  id: number;
+  name: string;
+}) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       UPDATE sensor
       SET name = ?
       WHERE id = ?
-  `, [name, id]);
+  `,
+    [name, id]
+  );
   return result[0] as OkPacket;
 };
 
-export const updateStatus = async (
-  { id, status }: { id: number, status: string }
-) => {
+export const updateStatus = async ({
+  id,
+  status,
+}: {
+  id: number;
+  status: string;
+}) => {
   const connection = await getConnectionPool();
-  const result = await connection.query(`
+  const result = await connection.query(
+    `
       UPDATE sensor
       SET status      = ?,
           last_active = NOW()
       WHERE id = ?
-  `, [status, id]);
+  `,
+    [status, id]
+  );
   return result[0] as OkPacket;
 };
 
@@ -157,5 +215,5 @@ export const findAllTypes = async () => {
       FROM sensor
   `);
   const rows = result[0] as RowDataPacket[];
-  return rows.map(row => row.type) as string[];
+  return rows.map((row) => row.type) as string[];
 };
