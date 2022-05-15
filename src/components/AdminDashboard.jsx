@@ -4,32 +4,34 @@ import HealthDashboard from "./HealthDashboard";
 import useSWR from "swr";
 import { fetcher } from "~/lib/utils/fetch";
 import { getAverage } from "~/lib/utils/math";
+import capitalize from "~/lib/utils/capitalize";
+
+const REFRESH_INTERVAL = 10e3;
 
 // Reformats the given sensor-health-data to a format accepted by HealthDashboard
-function formatSensorStatus(sensorData) {
-  let formatted = {
-    name: "Sensors",
-    status: 1.0 /** assume all sensors are up */,
-    lastCheckTime: 0,
-    datapoints: [],
-    elements: [],
-  };
-  for (const sensor of sensorData) {
-    const { id, name, firmware, status, lastActive } = sensor;
-    formatted.elements.push({
-      name: `Id: ${id}, Name: ${name}, Firmware: ${firmware}`,
-      status: status === "OK" ? 1.0 : 0.0,
-      lastCheckTime: lastActive,
-      datapoints: [],
+function formatSensorStatus(sensors) {
+  const formatted = [];
+  for (const sensor of sensors) {
+    const { id, type, status, lastActive } = sensor;
+    formatted.push({
+      name: `Sensor: ${id}: ${type === "ph" ? "pH" : capitalize(type)}`,
+      status: status.toUpperCase() === "OK" ? 1.0 : 0.0,
+      statusMessage: status,
+      lastCheckTime: new Date(lastActive),
+      elements: null,
     });
     if (lastActive > formatted.lastCheckTime) {
       formatted.lastCheckTime = sensorData[i].lastActive;
     }
   }
 
-  formatted.status = getAverage(formatted.elements.map((elem) => elem.status));
-
-  return formatted;
+  // get the latest lastCheckTime of the sensors
+  formatted.lastCheckTime = formatted.reduce(
+    (acc, elem) => (elem.lastCheckTime > acc ? elem.lastCheckTime : acc),
+    formatted.lastCheckTime
+  );
+  formatted.status = getAverage(formatted.map((elem) => elem.status));
+  return formatted.sort((a, b) => a.name.localeCompare(b.name)); // sort by name (which will actually sort by the id)
 }
 
 // Reformats the given station-health-data to a format accepted by HealthDashboard
@@ -38,19 +40,24 @@ function formatStationStatus(stationData) {
     name: "Stations",
     status: 1.0 /** assume all stations are up */,
     lastCheckTime: 0,
-    datapoints: [],
     elements: [],
   };
   for (const station of stationData) {
     const { id, location, status, lastActive } = station;
     formatted.elements.push({
-      name: `Id: ${id}, Location: ${location}`,
+      name: `Station: ${id}, Location: ${location.name}`,
       status: status === "OK" ? 1.0 : status === "FAULTY" ? 0.0 : 0.5,
-      lastCheckTime: lastActive,
-      datapoints: [],
+      statusMessage: status,
+      lastCheckTime: new Date(lastActive),
+      elements: formatSensorStatus(station.sensors),
     });
   }
 
+  // get the latest lastCheckTime of the stations
+  formatted.lastCheckTime = formatted.elements.reduce(
+    (acc, elem) => (elem.lastCheckTime > acc ? elem.lastCheckTime : acc),
+    formatted.lastCheckTime
+  );
   formatted.status = getAverage(formatted.elements.map((elem) => elem.status));
   return formatted;
 }
@@ -62,24 +69,23 @@ function formatServerStatus(servicesData) {
   const server = {
     name: "Server",
     status: status.server === "UP" ? 1.0 : 0.0,
+    statusMessage: status.server,
     lastCheckTime: new Date(),
-    datapoints: [],
-    elements: [],
+    elements: null,
   };
 
   const database = {
     name: "Database",
     status: status.database === "UP" ? 1.0 : 0.0,
+    statusMessage: status.database,
     lastCheckTime: new Date(),
-    datapoints: [],
-    elements: [],
+    elements: null,
   };
 
   const formatted = {
     name: "Services",
     status: status.database === "UP" ? 1.0 : 0.5, // server is always up, so the status is determined by the database
     lastCheckTime: new Date(),
-    datapoints: [],
     elements: [server, database],
   };
 
@@ -89,30 +95,36 @@ function formatServerStatus(servicesData) {
 const AdminView = () => {
   const { data: servicesHealth } = useSWR("/api/v3/health", {
     fetcher,
-    refreshInterval: 10e3,
+    refreshInterval: REFRESH_INTERVAL,
   });
-  const { data: stationHealth } = useSWR("/api/v3/health/stations", {
-    fetcher: fetcher,
-    refreshInterval: 10e3,
-  });
-  const { data: sensorHealth } = useSWR("/api/v3/health/sensors", {
-    fetcher: fetcher,
-    refreshInterval: 10e3,
-  });
+  const { data: stationHealth } = useSWR(
+    "/api/v3/health/stations?expandLocation=true",
+    {
+      fetcher: fetcher,
+      refreshInterval: REFRESH_INTERVAL,
+    }
+  );
 
   const healthData = useMemo(() => {
-    if (!sensorHealth || !servicesHealth || !stationHealth) {
+    let healthData = [];
+    if (servicesHealth) {
+      const formatted = formatServerStatus(servicesHealth);
+      healthData.push(formatted);
+    }
+    if (stationHealth) {
+      const formatted = formatStationStatus(stationHealth);
+      healthData.push(formatted);
+    }
+
+    if (!healthData.length) {
       return null;
     }
-    return [
-      formatServerStatus(servicesHealth),
-      formatStationStatus(stationHealth),
-      formatSensorStatus(sensorHealth),
-    ];
-  }, [servicesHealth, stationHealth, sensorHealth]);
+    return healthData;
+  }, [servicesHealth, stationHealth]);
 
   return (
     <Card title="Admin view" styles={{ margin: "40px 0 0 0" }}>
+      <p>Hover the icon to see a detailed status message</p>
       {healthData && <HealthDashboard data={healthData} />}
     </Card>
   );

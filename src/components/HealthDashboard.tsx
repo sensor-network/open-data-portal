@@ -4,7 +4,7 @@
  **/
 
 import React from "react";
-import "date-fns";
+import { formatRelative } from "date-fns";
 import { makeStyles } from "@mui/styles";
 import {
   Table,
@@ -13,8 +13,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  LinearProgress,
-  Typography,
   Collapse,
   List,
   ListItem,
@@ -22,7 +20,6 @@ import {
   ListItemIcon,
   Tooltip,
 } from "@mui/material";
-import ErrorIcon from "@mui/icons-material/Error";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
@@ -51,25 +48,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const errorDisplay = {
-  height: "300px",
-  width: "100%",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  background: "white",
-};
-
-const ErrorDisplay = ({ error }) => {
-  return (
-    <div style={errorDisplay} className="error-display">
-      <ErrorIcon color="error" />
-      <Typography variant="h5">{error}</Typography>
-    </div>
-  );
-};
-
-const StatusIcon = ({ status, title, style }) => {
+const StatusIcon: React.FC<{
+  status: number;
+  title: string;
+  style?: {};
+}> = ({ status, title, style = {} }) => {
   let statusIconColor;
   if (status === 1) {
     statusIconColor = "#258933";
@@ -87,8 +70,19 @@ const StatusIcon = ({ status, title, style }) => {
   );
 };
 
-const HealthBar = ({ component, subComponents }) => {
-  const [open, setOpen] = React.useState(false, true);
+export type HealthBarComponent = {
+  name: string;
+  status: number;
+  statusMessage?: string;
+  lastCheckTime: Date;
+  elements: HealthBarComponent[] | null;
+};
+
+const HealthBar: React.FC<{
+  component: HealthBarComponent;
+  subComponents: HealthBarComponent[];
+}> = ({ component, subComponents }) => {
+  const [open, setOpen] = React.useState(false);
 
   function handleClick() {
     setOpen(!open);
@@ -99,11 +93,7 @@ const HealthBar = ({ component, subComponents }) => {
       <TableCell align="left" style={{ width: "1%" }}>
         <StatusIcon
           status={component.status}
-          title={
-            component.lastCheckTime
-              ? new Date(component.lastCheckTime).toString()
-              : ""
-          }
+          title={component.statusMessage ? component.statusMessage : ""}
           style={{ margin: "8px 0px" }}
         />
       </TableCell>
@@ -112,111 +102,82 @@ const HealthBar = ({ component, subComponents }) => {
           {open ? <ExpandLess /> : <ExpandMore />}
           <ListItemText
             primary={component.name}
-            size="small"
-            dense="true"
             style={{
               width: "200px",
               margin: "0.1em",
             }}
           />
-          <div>
-            {component.datapoints &&
-              component.datapoints.map((item) => {
-                return (
-                  <StatusIcon
-                    key={item.timestamp}
-                    status={item.value}
-                    title={new Date(parseInt(item.timestamp)).toString()}
-                  />
-                );
-              })}
-          </div>
         </ListItem>
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
             {subComponents.map((subComponent) => {
-              return (
+              return Array.isArray(subComponent.elements) ? (
+                <Table key={subComponent.name}>
+                  <TableBody>
+                    <HealthBar
+                      component={subComponent}
+                      subComponents={subComponent.elements}
+                    />
+                  </TableBody>
+                </Table>
+              ) : (
                 <ListItem key={subComponent.name}>
                   <ListItemIcon>
                     <StatusIcon
                       status={subComponent.status}
                       title={
-                        subComponent.lastCheckTime
-                          ? new Date(subComponent.lastCheckTime).toString()
+                        subComponent.statusMessage
+                          ? subComponent.statusMessage
                           : ""
                       }
                     />
                   </ListItemIcon>
                   <ListItemText
                     primary={subComponent.name}
-                    size="small"
-                    dense="true"
                     style={{
                       width: "200px",
-                      margin: "0.1em",
+                      margin: "1.0em",
                     }}
                   />
-                  <div>
-                    {subComponent.datapoints.map((item) => {
-                      return (
-                        <StatusIcon
-                          key={item.timestamp}
-                          status={item.value}
-                          title={new Date(parseInt(item.timestamp)).toString()}
-                          style={{
-                            width: "0.8em",
-                            margin: "0.1em",
-                          }}
-                        />
-                      );
-                    })}
-                  </div>
+                  <ListItemText
+                    primary={formatRelative(
+                      subComponent.lastCheckTime,
+                      new Date()
+                    )}
+                    style={{ textAlign: "right", width: "300px" }}
+                  />
                 </ListItem>
               );
             })}
           </List>
         </Collapse>
       </TableCell>
-      <TableCell align="left">
-        {component.status === 1 ? "Healthy" : "Unhealthy"}
-      </TableCell>
     </TableRow>
   );
 };
 
-const HealthDashboard = (props) => {
-  const { data, loading, error } = props;
-
+const HealthDashboard: React.FC<{
+  data: HealthBarComponent[];
+}> = ({ data }) => {
   const classes = useStyles();
 
   return (
     <Paper className={classes.root}>
-      {loading ? (
-        <LinearProgress />
-      ) : error ? (
-        <ErrorDisplay error={error} />
-      ) : (
-        <Table className={classes.table} size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell align="left" />
-              <TableCell align="center">Component</TableCell>
-              <TableCell align="left">Status</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {data.map((item) => {
-              return (
+      <Table className={classes.table} size="small">
+        <TableBody>
+          {data.map((item) => {
+            return (
+              item.elements !== null && (
                 <HealthBar
                   key={item.name}
                   component={item}
                   subComponents={item.elements}
                 />
-              );
-            })}
-          </TableBody>
-        </Table>
-      )}
+              )
+            );
+          })}
+        </TableBody>
+      </Table>
     </Paper>
   );
 };

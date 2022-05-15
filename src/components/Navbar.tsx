@@ -8,6 +8,7 @@ import EqualizerIcon from "@mui/icons-material/BarChart";
 import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import MapIcon from "@mui/icons-material/Map";
+import PortableWifiOffIcon from "@mui/icons-material/PortableWifiOff";
 
 import type { Preferences } from "~/lib/utils/preferences";
 import PreferenceModal from "./PreferenceModal";
@@ -70,6 +71,11 @@ const Navbar: React.FC<{
                 href="/data"
                 Icon={EqualizerIcon}
               />
+              <NavLink
+                text="Status Panel"
+                href="/admin"
+                Icon={PortableWifiOffIcon}
+              />
               <NavLink text="API Docs" href="/docs" Icon={LibraryBooksIcon} />
             </>
           )}
@@ -89,6 +95,7 @@ const Navbar: React.FC<{
           <NavLink href="/" Icon={HomeIcon} />
           <NavLink href="/map" Icon={MapIcon} />
           <NavLink href="/data" Icon={EqualizerIcon} />
+          <NavLink href="/admin" Icon={PortableWifiOffIcon} />
           <NavLink href="/docs" Icon={LibraryBooksIcon} />
         </div>
       )}
