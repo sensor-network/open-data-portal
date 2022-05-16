@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react-hooks";
+import { renderHook, act } from "@testing-library/react-hooks";
 import { useWidth } from "~/lib/hooks";
 
 describe("useWidth", () => {
@@ -19,8 +19,10 @@ describe("useWidth", () => {
     const { result } = renderHook(() => useWidth());
 
     // ACT: change window width and trigger resize-event
-    global.innerWidth = 1000;
-    global.dispatchEvent(new Event("resize"));
+    act(() => {
+      global.innerWidth = 1000;
+      global.dispatchEvent(new Event("resize"));
+    });
 
     // ASSERT: check if the width is correct
     expect(result.current).toBe(1000);
