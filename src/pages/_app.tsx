@@ -3,6 +3,7 @@ import NextNProgress from "nextjs-progressbar";
 import { useState } from "react";
 import Cookies from "js-cookie";
 
+import Head from "next/head";
 import Navbar from "~/components/Navbar";
 import Footer from "~/components/Footer";
 import { loadPreferences, PreferenceContext } from "~/lib/utils/preferences";
@@ -25,6 +26,15 @@ const MyApp: AppType = ({ Component, pageProps }) => {
 
   return (
     <>
+      <Head>
+        <title>Sensor Network | Open Data Portal</title>
+        {/** TODO: ADD META TAGS FOR SEO */}
+        <meta
+          name="description"
+          content="Data portal for Karlskrona Archipelago Water Quality"
+        />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
       <NextNProgress
         color={PRIMARY_BLUE_COLOR}
         height={8}
