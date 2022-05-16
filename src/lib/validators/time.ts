@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isValid } from "date-fns";
+import { endOfToday } from "date-fns";
 
 export const zTime = z
   .string()
@@ -12,18 +13,17 @@ export const zTime = z
  **/
 export const zTimeRange = z
   .object({
-    /* FIXME: Sort out proper ranges later */
     startTime: z
       .string()
       .default("2022Z" /* new year 2022 */)
       .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
-      //.refine(str => new Date(str) >= new Date('2022Z'), 'must be after 2022')
+      .refine((str) => new Date(str) >= new Date("2022Z"), "must be after 2022")
       .transform((str) => new Date(str)),
     endTime: z
       .string()
       .default(new Date().toISOString() /* current time */)
       .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
-      //.refine(str => new Date(str) <= endOfToday(), "can't be a future date")
+      .refine((str) => new Date(str) <= endOfToday(), "can't be a future date")
       .transform((str) => new Date(str)),
   })
   .refine(
