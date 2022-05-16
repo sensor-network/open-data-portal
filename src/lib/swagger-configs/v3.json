@@ -366,6 +366,10 @@
                     "format": "date-time",
                     "example": "2022-01-01T00:00:00+02"
                   },
+                  "stationId": {
+                    "type": "integer",
+                    "example": 1
+                  },
                   "position": {
                     "type": "object",
                     "properties": {
