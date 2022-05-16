@@ -52,6 +52,8 @@ can be found [here](https://github.com/sensor-network/sensor-collector).
 
 ## How to Use
 
+_For a detailed usage guide of the system, please read the documentation at [/docs](/docs/)._
+
 This application can be built and run in two ways:
 
 ### Using Docker
