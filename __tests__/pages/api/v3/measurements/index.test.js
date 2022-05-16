@@ -4,8 +4,18 @@ import { createOne, findMany } from "~/lib/database/measurement";
 
 const mockedDB = {
   location: [
-    { id: 1, name: "foo", position: { lat: 0, long: 0 }, radiusMeters: 100 },
-    { id: 2, name: "bar", position: { lat: 10, long: 10 }, radiusMeters: 200 },
+    {
+      id: 1,
+      name: "foo",
+      position: { lat: 56, long: 15 },
+      radiusMeters: 100,
+    },
+    {
+      id: 2,
+      name: "bar",
+      position: { lat: 56, long: 16 },
+      radiusMeters: 200,
+    },
   ],
   sensor: [
     { id: 1, name: "temp1", type: "temperature" },
@@ -54,8 +64,8 @@ jest.mock("~/lib/database/measurement", () => ({
     {
       locationName: "foo",
       position: {
-        lat: 0,
-        long: 0,
+        lat: 56,
+        long: 15,
       },
       time: new Date("2022-01-01T00:00:00.000Z"),
       sensors: {
@@ -66,8 +76,8 @@ jest.mock("~/lib/database/measurement", () => ({
     {
       locationName: "bar",
       position: {
-        lat: 10,
-        long: 10,
+        lat: 56,
+        long: 16,
       },
       time: new Date("2022-01-01T00:00:00.000Z"),
       sensors: {
@@ -99,7 +109,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 1,
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
       });
@@ -129,7 +139,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 1,
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [
             { id: 1, value: 300 },
             { id: 2, value: 5 },
@@ -168,7 +178,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 2,
-          position: { lat: 10, long: 10 },
+          position: { lat: 56, long: 16 },
           sensors: [
             { id: 3, value: 7 },
             { id: 4, value: 5 },
@@ -206,7 +216,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 1,
-          position: { lat: 20, long: 20 },
+          position: { lat: 56, long: 15.5 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
       });
@@ -234,7 +244,7 @@ describe("POST: /api/v3/measurements", () => {
           {
             time: "2022-01-01T00:00:00Z",
             stationId: 1,
-            position: { lat: 0, long: 0 },
+            position: { lat: 56, long: 15 },
             sensors: [
               { id: 1, value: 5, unit: "c" },
               { id: 2, value: 5, unit: "spm" },
@@ -243,7 +253,7 @@ describe("POST: /api/v3/measurements", () => {
           {
             time: "2022-01-01T01:00:00Z",
             stationId: 1,
-            position: { lat: 0, long: 0 },
+            position: { lat: 56, long: 15 },
             sensors: [
               { id: 1, value: 10, unit: "c" },
               { id: 2, value: 10, unit: "spm" },
@@ -293,7 +303,7 @@ describe("POST: /api/v3/measurements", () => {
           {
             time: "2022-01-01T00:00:00Z",
             stationId: 1,
-            position: { lat: 0, long: 0 },
+            position: { lat: 56, long: 15 },
             sensors: [
               { id: 1, value: 5, unit: "c" },
               { id: 2, value: 5, unit: "c" }, // invalid unit
@@ -303,7 +313,7 @@ describe("POST: /api/v3/measurements", () => {
           {
             time: "December 15th", // invalid time format
             stationId: 1,
-            position: { lat: 0, long: 0 },
+            position: { lat: 56, long: 15 },
             sensors: [
               { id: 1, value: 10, unit: "c" },
               { id: 2, value: 10, unit: "spm" },
@@ -333,7 +343,7 @@ describe("POST: /api/v3/measurements", () => {
             body: {
               time: "December 15th", // invalid time format
               stationId: 1,
-              position: { lat: 0, long: 0 },
+              position: { lat: 56, long: 15 },
               sensors: [
                 { id: 1, value: 10, unit: "c" },
                 { id: 2, value: 10, unit: "spm" },
@@ -357,7 +367,7 @@ describe("POST: /api/v3/measurements", () => {
       const baseBody = {
         time: "2022-01-01T00:00:00Z",
         stationId: 1,
-        position: { lat: 0, long: 0 },
+        position: { lat: 56, long: 15 },
         sensors: [{ id: 1, value: 5, unit: "c" }],
       };
 
@@ -390,7 +400,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 1,
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [{ id: 1, value: 5, unit: "k" }], // <-- 5 K is too small
         },
       });
@@ -409,7 +419,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 1,
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [{ id: 10, value: 5, unit: "c" }],
         },
       });
@@ -428,7 +438,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 1,
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [{ id: 3, value: 5, unit: "c" }], // <-- sensor 3 is linked to station 2
         },
       });
@@ -454,7 +464,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 1,
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
       });
@@ -472,7 +482,7 @@ describe("POST: /api/v3/measurements", () => {
       const { req, res } = mockReqRes({
         body: {
           time: "2022-01-01Z",
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
       });
@@ -486,7 +496,7 @@ describe("POST: /api/v3/measurements", () => {
           {
             body: {
               time: "2022-01-01Z",
-              position: { lat: 0, long: 0 },
+              position: { lat: 56, long: 15 },
               sensors: [{ id: 1, value: 5, unit: "c" }],
             },
             error: {
@@ -505,7 +515,7 @@ describe("POST: /api/v3/measurements", () => {
         body: {
           time: "2022-01-01Z",
           stationId: 3,
-          position: { lat: 0, long: 0 },
+          position: { lat: 56, long: 15 },
           sensors: [{ id: 1, value: 5, unit: "c" }],
         },
       });
@@ -570,8 +580,8 @@ describe("GET: /api/v3/measurements", () => {
           time: "2022-01-01T00:00:00.000Z",
           locationName: "foo",
           position: {
-            lat: 0,
-            long: 0,
+            lat: 56,
+            long: 15,
           },
           sensors: {
             temperature: 278.15,
@@ -582,8 +592,8 @@ describe("GET: /api/v3/measurements", () => {
           time: "2022-01-01T00:00:00.000Z",
           locationName: "bar",
           position: {
-            lat: 10,
-            long: 10,
+            lat: 56,
+            long: 16,
           },
           sensors: {
             ph: 7.0,
