@@ -6,3 +6,4 @@ Here are some documents on learning how to use and maintain the system
 
 - [API Usage](api-usage.md)
 - [Checklist when adding a new sensor](add-new-sensor.md)
+- [Other mainenance](maintenance.md)

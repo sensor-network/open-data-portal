@@ -1,7 +1,6 @@
 import { isValid, parseISO } from "date-fns";
 import { z } from "zod";
-import { zId } from "./id";
-
+import { MIN_LAT, MAX_LAT, MIN_LONG, MAX_LONG } from "../constants";
 export const zCreateMeasurement = z.object({
   time: z
     .string()
@@ -14,16 +13,28 @@ export const zCreateMeasurement = z.object({
     lat: z
       .string()
       .transform((str) => Number(str))
-      .refine((num) => num >= -90, "should be greater than or equal to -90")
-      .refine((num) => num <= 90, "should be less than or equal to 90")
-      .or(z.number().gte(-90).lte(90)), // no need to transform if input is already a number (e.g. when coming from req. body)
+      .refine(
+        (num) => num >= MIN_LAT,
+        `should be greater than or equal to ${MIN_LAT}`
+      )
+      .refine(
+        (num) => num <= MAX_LAT,
+        `should be less than or equal to ${MAX_LAT}`
+      )
+      .or(z.number().gte(MIN_LAT).lte(MAX_LAT)), // no need to transform if input is already a number (e.g. when coming from req. body)
 
     long: z
       .string()
       .transform((str) => Number(str))
-      .refine((num) => num >= -180, "should be greater than or equal to -180")
-      .refine((num) => num <= 180, "should be less than or equal to 180")
-      .or(z.number().gte(-180).lte(180)), // no need to transform if input is already a number (e.g. when coming from req. body)
+      .refine(
+        (num) => num >= MIN_LONG,
+        `should be greater than or equal to ${MIN_LONG}`
+      )
+      .refine(
+        (num) => num <= MAX_LONG,
+        `should be less than or equal to ${MAX_LONG}`
+      )
+      .or(z.number().gte(MIN_LONG).lte(MAX_LONG)), // no need to transform if input is already a number (e.g. when coming from req. body)
   }),
   stationId: z.number().positive().int(),
   sensors: z.array(

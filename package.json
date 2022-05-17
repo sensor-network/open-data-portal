@@ -24,7 +24,6 @@
     "isarray": "^2.0.5",
     "js-cookie": "^3.0.1",
     "leaflet": "^1.7.1",
-    "moment": "^2.29.1",
     "mysql2": "^2.3.3",
     "next": "^12.1.0",
     "nextjs-progressbar": "^0.0.14",

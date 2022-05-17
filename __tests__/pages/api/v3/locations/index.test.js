@@ -8,9 +8,14 @@ import {
 } from "~/lib/database/location";
 
 const locationDb = [
-  { id: 1, name: "foo", position: { lat: 0, long: 0 }, radiusMeters: 100 },
-  { id: 2, name: "bar", position: { lat: 10, long: 10 }, radiusMeters: 200 },
-  { id: 3, name: "baz", position: { lat: 20, long: 20 }, radiusMeters: 300 },
+  { id: 1, name: "foo", position: { lat: 55.8, long: 14 }, radiusMeters: 100 },
+  {
+    id: 2,
+    name: "bar",
+    position: { lat: 56.3, long: 16.5 },
+    radiusMeters: 200,
+  },
+  { id: 3, name: "baz", position: { lat: 56, long: 15 }, radiusMeters: 300 },
 ];
 
 jest.mock("~/lib/database/location", () => ({
@@ -125,7 +130,7 @@ describe("GET: /api/v3/locations", () => {
 
   describe("filter by lat/lng", () => {
     it("should return the matched locations", async () => {
-      const { req, res } = mockReqRes({ query: { lat: "10", long: "10" } });
+      const { req, res } = mockReqRes({ query: { lat: "56.3", long: "16.5" } });
 
       await handler(req, res);
 
@@ -135,14 +140,14 @@ describe("GET: /api/v3/locations", () => {
     });
 
     it("should return 404 if no locations matched", async () => {
-      const { req, res } = mockReqRes({ query: { lat: "-10", long: "-10" } });
+      const { req, res } = mockReqRes({ query: { lat: "56", long: "14.5" } });
 
       await handler(req, res);
 
       expect(findByLatLong.mock.calls.length).toEqual(1);
       expect(res._getStatusCode()).toEqual(404);
       expect(res._getJSONData()).toEqual({
-        message: "No location found matching { lat: -10, long: -10 }.",
+        message: "No location found matching { lat: 56, long: 14.5 }.",
       });
     });
   });
@@ -165,7 +170,7 @@ describe("POST: /api/v3/locations", () => {
 
   it("should return 400 if provided with an invalid body", async () => {
     const { req, res } = mockReqRes({
-      body: { name: "foo", position: { lat: 0, long: 0 }, radius: 100 },
+      body: { name: "foo", position: { lat: 56, long: 15 }, radius: 100 },
     });
 
     await handler(req, res);
@@ -200,7 +205,7 @@ describe("POST: /api/v3/locations", () => {
 
   it("should return 500 if there were errors in the db", async () => {
     const { req, res } = mockReqRes({
-      body: { name: "foo", lat: 0, long: 0, rad: 100 },
+      body: { name: "foo", lat: 56, long: 15, rad: 100 },
     });
 
     /* override the mock to throw during this test*/
@@ -217,7 +222,7 @@ describe("POST: /api/v3/locations", () => {
 
   it("should create a location", async () => {
     const { req, res } = mockReqRes({
-      body: { name: "foo", lat: 0, long: 0, rad: 100 },
+      body: { name: "foo", lat: 56, long: 16, rad: 100 },
     });
 
     await handler(req, res);
@@ -227,7 +232,7 @@ describe("POST: /api/v3/locations", () => {
     expect(res._getJSONData()).toEqual({
       id: 1,
       name: "foo",
-      position: { lat: 0, long: 0 },
+      position: { lat: 56, long: 16 },
       radiusMeters: 100,
     });
   });

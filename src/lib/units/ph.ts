@@ -2,8 +2,8 @@ import { ZodError } from "zod";
 import { DECIMAL_PLACES } from "src/lib/constants";
 
 const ROUND_FACTOR = Math.pow(10, DECIMAL_PLACES);
-const MIN_PH = 0;
-const MAX_PH = 14;
+export const MIN_PH = 5;
+export const MAX_PH = 9;
 
 /* pH doesn't have any unit, but we take this step to validate the range, and keep the system coherent */
 export class PH {

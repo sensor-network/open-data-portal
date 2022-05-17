@@ -5,6 +5,12 @@ export const SRID = 4326;
 
 export const PRIMARY_BLUE_COLOR = "#185693";
 
+// Coordinates to cover Blekinge. Extend if needed.
+export const MIN_LAT = 55.8;
+export const MAX_LAT = 56.3;
+export const MIN_LONG = 14;
+export const MAX_LONG = 16.5;
+
 export const HTTP_STATUS = {
   /* 2xx Success */
   OK: 200,

@@ -4,18 +4,18 @@ import { findClosest } from "~/lib/database/location";
 import { haversine } from "~/lib/utils/math";
 
 const locationDb = [
-  { id: 1, name: "foo", position: { lat: 0, long: 0 }, radiusMeters: 100 },
-  { id: 2, name: "bar", position: { lat: 10, long: 10 }, radiusMeters: 200 },
+  { id: 1, name: "foo", position: { lat: 56, long: 15 }, radiusMeters: 100 },
+  { id: 2, name: "bar", position: { lat: 56, long: 16 }, radiusMeters: 200 },
   {
     id: 3,
     name: "baz",
-    position: { lat: 19.99, long: 19.99 },
+    position: { lat: 55.899, long: 15.499 },
     radiusMeters: 1000,
   },
   {
     id: 4,
     name: "buz",
-    position: { lat: 20.005, long: 20.005 },
+    position: { lat: 55.905, long: 15.505 },
     radiusMeters: 1000,
   },
 ];
@@ -48,7 +48,7 @@ describe("GET: /api/v3/locations/closest", () => {
 
   it("should return 200 and the closest location if one is found within their given radius", async () => {
     const { req, res } = mockReqRes({
-      query: { lat: "10.0005", long: "9.9995" },
+      query: { lat: "56.0005", long: "15.9995" },
     });
 
     await handler(req, res);
@@ -60,18 +60,18 @@ describe("GET: /api/v3/locations/closest", () => {
 
   it("should return the closest one if two are within the radius", async () => {
     const { req, res } = mockReqRes({
-      query: { lat: "20", long: "20" },
+      query: { lat: "55.9", long: "15.5" },
     });
 
     await handler(req, res);
 
     expect(findClosest.mock.calls.length).toEqual(1);
     expect(res._getStatusCode()).toBe(200);
-    expect(res._getJSONData()).toEqual(locationDb[3]);
+    expect(res._getJSONData()).toEqual(locationDb[2]);
   });
 
   it("should return 400 if latitude is not provided", async () => {
-    const { req, res } = mockReqRes({ query: { long: "1" } });
+    const { req, res } = mockReqRes({ query: { long: "16" } });
 
     await handler(req, res);
 
@@ -84,7 +84,7 @@ describe("GET: /api/v3/locations/closest", () => {
   });
 
   it("should return 400 if longitude is missing", async () => {
-    const { req, res } = mockReqRes({ query: { lat: "1" } });
+    const { req, res } = mockReqRes({ query: { lat: "56" } });
 
     await handler(req, res);
 
@@ -107,16 +107,16 @@ describe("GET: /api/v3/locations/closest", () => {
       formErrors: [],
       fieldErrors: {
         lat: [
-          "should be greater than or equal to -90",
-          "should be less than or equal to 90",
+          "should be greater than or equal to 55.8",
+          "should be less than or equal to 56.3",
         ],
-        long: ["should be less than or equal to 180"],
+        long: ["should be less than or equal to 16.5"],
       },
     });
   });
 
   it("should return 404 if no location is found within their given radius", async () => {
-    const { req, res } = mockReqRes({ query: { lat: "50", long: "50" } });
+    const { req, res } = mockReqRes({ query: { lat: "55.8", long: "16.5" } });
 
     await handler(req, res);
 
@@ -128,7 +128,7 @@ describe("GET: /api/v3/locations/closest", () => {
   });
 
   it("should return 500 if the db crashes", async () => {
-    const { req, res } = mockReqRes({ query: { lat: "50", long: "50" } });
+    const { req, res } = mockReqRes({ query: { lat: "56", long: "15" } });
 
     findClosest.mockImplementationOnce(() => {
       throw new Error("db error");

@@ -16,7 +16,7 @@ services:
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d # Link init scripts to the container
       - ./db/mysql:/var/lib/mysql # Link a volume from host to persist the data
-    user: mysql # fixes symlink issues with mysql.sock on macOS
+    user: mysql # fixes symlink issues with mysql.sock on macOS. May have to be commented out depending on your system
 
   # Open Data Portal Web Application with API, built using `./Dockerfile`
   app:

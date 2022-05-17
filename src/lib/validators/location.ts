@@ -1,13 +1,15 @@
 import { z } from "zod";
 
+import { MIN_LAT, MIN_LONG, MAX_LAT, MAX_LONG } from "../constants";
+
 /**
  * schema for creating a location entry.
  * since params comes from body, no need to convert from string
  **/
 export const zCreateLocation = z
   .object({
-    lat: z.number().gte(-90).lte(90),
-    long: z.number().gte(-180).lte(180),
+    lat: z.number().gte(MIN_LAT).lte(MAX_LAT),
+    long: z.number().gte(MIN_LONG).lte(MAX_LONG),
     rad: z.number().positive(),
     name: z.string(),
   })
@@ -28,13 +30,25 @@ export const zLatLong = z.object({
   lat: z
     .string()
     .transform((str) => Number(str))
-    .refine((num) => num >= -90, "should be greater than or equal to -90")
-    .refine((num) => num <= 90, "should be less than or equal to 90"),
+    .refine(
+      (num) => num >= MIN_LAT,
+      `should be greater than or equal to ${MIN_LAT}`
+    )
+    .refine(
+      (num) => num <= MAX_LAT,
+      `should be less than or equal to ${MAX_LAT}`
+    ),
   long: z
     .string()
     .transform((str) => Number(str))
-    .refine((num) => num >= -180, "should be greater than or equal to -180")
-    .refine((num) => num <= 180, "should be less than or equal to 180"),
+    .refine(
+      (num) => num >= MIN_LONG,
+      `should be greater than or equal to ${MIN_LONG}`
+    )
+    .refine(
+      (num) => num <= MAX_LONG,
+      `should be less than or equal to ${MAX_LONG}`
+    ),
 });
 
 export const zLocation = z
@@ -43,15 +57,27 @@ export const zLocation = z
       z
         .string()
         .transform((str) => Number(str))
-        .refine((num) => num >= -90, "should be greater than or equal to -90")
-        .refine((num) => num <= 90, "should be less than or equal to 90")
+        .refine(
+          (num) => num >= MIN_LAT,
+          `should be greater than or equal to ${MIN_LAT}`
+        )
+        .refine(
+          (num) => num <= MAX_LAT,
+          `should be less than or equal to ${MAX_LAT}`
+        )
     ),
     long: z.optional(
       z
         .string()
         .transform((str) => Number(str))
-        .refine((num) => num >= -180, "should be greater than or equal to -180")
-        .refine((num) => num <= 180, "should be less than or equal to 180")
+        .refine(
+          (num) => num >= MIN_LONG,
+          `should be greater than or equal to ${MIN_LONG}`
+        )
+        .refine(
+          (num) => num <= MAX_LONG,
+          `should be less than or equal to ${MAX_LONG}`
+        )
     ),
     rad: z.preprocess((rad) => {
       /* radius is optional, if it is left out, it should be null */
