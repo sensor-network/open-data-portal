@@ -32,7 +32,6 @@ const LocationRow: React.FC<{
         pageSize: 1,
         sortOrder: "desc",
         locationName,
-        endTime: new Date().toISOString(),
         temperatureUnit: preferences.temperatureUnit.symbol,
         conductivityUnit: preferences.conductivityUnit.symbol,
       }),
