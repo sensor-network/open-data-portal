@@ -1,6 +1,5 @@
 import { z } from "zod";
-import { isValid } from "date-fns";
-import { endOfToday } from "date-fns";
+import { isValid, endOfToday } from "date-fns";
 
 export const zTime = z
   .string()
@@ -23,7 +22,10 @@ export const zTimeRange = z
       .string()
       .default(new Date().toISOString() /* current time */)
       .refine((str) => isValid(new Date(str)), "Unable to parse string as Date")
-      .refine((str) => new Date(str) <= endOfToday(), "can't be a future date")
+      /** FIXME: Should not accept future dates, but there seems to be some time difference 
+       * between the client and the server which causes the time to be out-of-sync.
+      .refine((str) => new Date(str) <= endOfToday(), "can't be a future date") 
+     */
       .transform((str) => new Date(str)),
   })
   .refine(
