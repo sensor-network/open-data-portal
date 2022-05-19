@@ -11,7 +11,7 @@ import { CustomProgressBar } from "./CustomProgressBar";
 
 import { PRIMARY_BLUE_COLOR } from "~/lib/constants";
 import styles from "~/styles/LocationRow.module.css";
-import { add } from "date-fns";
+import { add, formatISO } from "date-fns";
 
 const REFRESH_DATA_INTERVAL = 5000;
 const RED_BORDER_COLOR = "#CB2B3E"; // <-- same color as marker-icon
@@ -34,7 +34,7 @@ const LocationRow: React.FC<{
         sortOrder: "desc",
         locationName,
         // FIXME: this is a hack to get the latest measurement. should not have to be set explicitely
-        endTime: add(new Date(), { days: 1 }).toISOString(),
+        endTime: formatISO(add(new Date(), { days: 1 })),
         temperatureUnit: preferences.temperatureUnit.symbol,
         conductivityUnit: preferences.conductivityUnit.symbol,
       }),
