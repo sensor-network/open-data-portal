@@ -29,6 +29,8 @@
 An Open Source, Full Stack Application for storing, distributing and visualising Water Measurements around the Karlskrona Archipelago.
 Its main purpose is its integration of the sister repo [Sensor Collector](https://github.com/sensor-network/sensor-collector) where different water measurements are measured and sent over HTTP to the API.
 
+![screenshot dashboard](docs/screenshot_dashboard.jpg)
+
 Built using:
 
 - [Next.js](https://nextjs.org) for backend, including a REST API
