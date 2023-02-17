@@ -12,7 +12,7 @@ services:
       MYSQL_DATABASE: sensor_network
     restart: always
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d # Link init scripts to the container
       - ./db/mysql:/var/lib/mysql # Link a volume from host to persist the data
@@ -24,7 +24,7 @@ services:
       context: .
     image: ghcr.io/sensor-network/open-data-portal-app:latest
     ports:
-      - "3000:3000"
+      - "3010:3000"
     environment:
       NEXT_PUBLIC_DB_HOST: db
       NEXT_PUBLIC_DB_USER: admin
