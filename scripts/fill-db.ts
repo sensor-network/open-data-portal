@@ -134,7 +134,7 @@ export const loadData = async () => {
   const [location] = await connection.query(
     `
       SELECT id
-      FROM Location
+      FROM location
       WHERE ST_Distance_Sphere(position, ST_GeomFromText('POINT(? ?)', 4326)) < radius_meters
   `,
     [c.LOCATION.LAT, c.LOCATION.LONG]
@@ -145,7 +145,7 @@ export const loadData = async () => {
   } else {
     const [new_location] = await connection.query(
       `
-        INSERT INTO Location (name, position, radius_meters)
+        INSERT INTO location (name, position, radius_meters)
         VALUES ('unknown', ST_GeomFromText('POINT(? ?)', 4326), 200)
     `,
       [c.LOCATION.LAT, c.LOCATION.LONG]
