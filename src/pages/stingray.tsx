@@ -3,12 +3,12 @@ import type { PointTuple } from "leaflet";
 import type { Location } from "~/lib/database/location";
 import { PreferenceContext } from "~/lib/utils/preferences";
 import { useInterval } from "~/lib/hooks";
-import LocationRow from "./LocationRow";
-import Card from "./Card";
+import LocationRow from "../components/LocationRow";
+import Card from "../components/Card";
 import styles from "src/styles/Dashboard.module.css";
 
 import { ThemeProvider } from "@mui/material/styles";
-import { theme } from "./CustomProgressBar";
+import { theme } from "../components/CustomProgressBar";
 import { Stack, Slider } from "@mui/material";
 import SlowMotionVideoIcon from "@mui/icons-material/SlowMotionVideo";
 import SpeedIcon from "@mui/icons-material/Speed";
@@ -18,7 +18,7 @@ const INITIAL_DELAY = 5000;
 
 /* load map without ssr due to lack of support with Leaflet */
 import dynamic from "next/dynamic";
-const MapWithNoSSR = dynamic(() => import("./DashboardMap"), {
+const MapWithNoSSR = dynamic(() => import("../components/StingrayMap"), {
   ssr: false,
 });
 

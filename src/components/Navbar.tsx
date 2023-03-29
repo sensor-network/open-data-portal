@@ -66,7 +66,7 @@ const Navbar: React.FC<{
         <div className={style.navHalf}>
           {!isMobile && (
             <>
-              <NavLink text="Stingray" href="/stingray" Icon={DirectionsBoatFilledIcon}/>
+              <NavLink text="Stingray" href="/stingray" Icon={DirectionsBoatFilledIcon} />
               <NavLink text="Map" href="/map" Icon={MapIcon} />
               <NavLink
                 text="Visualize Data"
@@ -95,6 +95,7 @@ const Navbar: React.FC<{
           style={{ bottom: 0, justifyContent: "space-evenly" }}
         >
           <NavLink href="/" Icon={HomeIcon} />
+          <NavLink href="/stingray" Icon={DirectionsBoatFilledIcon} />
           <NavLink href="/map" Icon={MapIcon} />
           <NavLink href="/data" Icon={EqualizerIcon} />
           <NavLink href="/admin" Icon={PortableWifiOffIcon} />
