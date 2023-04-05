@@ -1,6 +1,6 @@
 import type { NextPage } from "next";
 import Container from "@mui/material/Container";
-import StingrayView from "~/components/stingray";
+import StingrayView from "src/components/Stingray";
 
 const StingrayPage: NextPage<{}> = () => {
   return (

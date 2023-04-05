@@ -9,7 +9,7 @@ import LibraryBooksIcon from "@mui/icons-material/LibraryBooks";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import MapIcon from "@mui/icons-material/Map";
 import PortableWifiOffIcon from "@mui/icons-material/PortableWifiOff";
-import DirectionsBoatFilledIcon from '@mui/icons-material/DirectionsBoatFilled';
+import DirectionsBoatFilledIcon from "@mui/icons-material/DirectionsBoatFilled";
 
 import type { Preferences } from "~/lib/utils/preferences";
 import PreferenceModal from "./PreferenceModal";
@@ -66,7 +66,11 @@ const Navbar: React.FC<{
         <div className={style.navHalf}>
           {!isMobile && (
             <>
-              <NavLink text="Stingray" href="/stingray" Icon={DirectionsBoatFilledIcon} />
+              <NavLink
+                text="Stingray"
+                href="/stingray"
+                Icon={DirectionsBoatFilledIcon}
+              />
               <NavLink text="Map" href="/map" Icon={MapIcon} />
               <NavLink
                 text="Visualize Data"
